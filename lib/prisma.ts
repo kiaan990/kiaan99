@@ -7,14 +7,17 @@ function createPrismaClient() {
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
   if (url) {
-    // Cloud: use Turso/libsql
+    // Production: Turso/libsql — dynamic require so local dev doesn't need the package
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaLibSql } = require("@prisma/adapter-libsql");
     const adapter = new PrismaLibSql({ url, authToken });
     return new PrismaClient({ adapter });
   }
 
-  // Local dev: use file-based SQLite
+  // Local dev: file-based SQLite
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const path = require("path");
   const dbPath = path.join(process.cwd(), "prisma", "dev.db");
   const adapter = new PrismaBetterSqlite3({ url: dbPath });
