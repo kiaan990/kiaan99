@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     // Derive calendar name from X-WR-CALNAME or filename
     const calName =
-      comp.getFirstPropertyValue<string>("x-wr-calname") ||
+      (comp.getFirstPropertyValue("x-wr-calname") as string) ||
       file.name.replace(/\.ics$/i, "");
 
     const color = pickColor(existingCount + i);
