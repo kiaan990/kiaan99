@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format, isPast, isToday, parseISO } from "date-fns";
-import { Plus, RefreshCw, BookOpen, AlertCircle, CheckCircle, Clock, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, BookOpen, AlertCircle, CheckCircle, Clock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 
 interface Assignment {
   id: string;
@@ -238,14 +238,48 @@ export default function BrightspacePanel() {
   const [loading, setLoading] = useState(true);
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [coursesOpen, setCoursesOpen] = useState(false);
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   const load = async () => {
-    const res = await fetch("/api/brightspace");
-    const data = await res.json();
-    setCourses(data.courses ?? []);
+    const [bsRes, calRes] = await Promise.all([
+      fetch("/api/brightspace"),
+      fetch("/api/calendar/import"),
+    ]);
+    const bsData = await bsRes.json();
+    const calData = await calRes.json();
+
+    const loadedCourses: Course[] = bsData.courses ?? [];
+
+    // Build a map from calendar name → color (e.g. "EMS220" → "#8b5cf6")
+    const calColorMap: Record<string, string> = {};
+    for (const cal of calData.calendars ?? []) {
+      calColorMap[cal.name.trim().toUpperCase()] = cal.color;
+    }
+
+    // Sync colors: if a Brightspace course code matches a calendar name, patch it
+    for (const course of loadedCourses) {
+      const code = (course.courseCode ?? "").trim().toUpperCase();
+      const matchedColor = calColorMap[code];
+      if (matchedColor && matchedColor !== course.color) {
+        fetch(`/api/brightspace?type=course&id=${course.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ color: matchedColor }),
+        });
+        course.color = matchedColor; // update locally immediately
+      }
+    }
+
+    setCourses(loadedCourses);
     setLoading(false);
-    if (!expanded && data.courses?.[0]) setExpanded(data.courses[0].id);
   };
 
   useEffect(() => { load(); }, []);
@@ -358,7 +392,27 @@ export default function BrightspacePanel() {
 
       <div className="divider" style={{ margin: 0 }} />
 
-      {/* Courses */}
+      {/* Courses — collapsible */}
+      <div>
+        <button
+          onClick={() => setCoursesOpen((o) => !o)}
+          style={{
+            width: "100%", background: "none", border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "0.4rem",
+            padding: "0.1rem 0", textAlign: "left",
+          }}
+        >
+          {coursesOpen
+            ? <ChevronDown size={12} style={{ color: "var(--color-text-faint)" }} />
+            : <ChevronRight size={12} style={{ color: "var(--color-text-faint)" }} />}
+          <span style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>
+            All Courses
+          </span>
+          <span className="badge badge-surface" style={{ marginLeft: "0.25rem" }}>{courses.length}</span>
+        </button>
+      </div>
+
+      {coursesOpen && (
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {loading ? (
           <span style={{ fontSize: "0.8rem", color: "var(--color-text-faint)" }}>Loading…</span>
@@ -370,7 +424,7 @@ export default function BrightspacePanel() {
           courses.map((course) => (
             <div key={course.id}>
               <button
-                onClick={() => setExpanded(expanded === course.id ? null : course.id)}
+                onClick={() => toggle(course.id)}
                 style={{
                   width: "100%",
                   background: "none",
@@ -387,20 +441,19 @@ export default function BrightspacePanel() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-surface-2)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
               >
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: course.color,
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ flex: 1, fontSize: "0.82rem", fontWeight: 500, color: "var(--color-text)" }}>
+                {expanded.has(course.id)
+                  ? <ChevronDown size={12} style={{ color: "var(--color-text-faint)", flexShrink: 0 }} />
+                  : <ChevronRight size={12} style={{ color: "var(--color-text-faint)", flexShrink: 0 }} />}
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: course.color, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: "0.82rem", fontWeight: 500, color: "var(--color-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {course.courseCode ? `${course.courseCode} — ` : ""}{course.name}
                 </span>
                 <span className="badge badge-surface">
-                  {course.assignments.filter((a) => a.status === "pending").length} pending
+                  {course.assignments.filter((a) => {
+                    if (a.status === "submitted" || a.status === "graded") return false;
+                    if (!a.dueDate) return true;
+                    return !isPast(parseISO(a.dueDate)) || isToday(parseISO(a.dueDate));
+                  }).length} upcoming
                 </span>
                 <button
                   className="btn-icon"
@@ -411,7 +464,7 @@ export default function BrightspacePanel() {
                 </button>
               </button>
 
-              {expanded === course.id && (
+              {expanded.has(course.id) && (
                 <div
                   className="animate-fade-in"
                   style={{
@@ -420,15 +473,22 @@ export default function BrightspacePanel() {
                     marginLeft: "0.75rem",
                   }}
                 >
-                  {course.assignments.length === 0 ? (
-                    <p style={{ fontSize: "0.75rem", color: "var(--color-text-faint)", padding: "0.4rem 0" }}>
-                      No assignments
-                    </p>
-                  ) : (
-                    course.assignments.map((a) => (
-                      <AssignmentRow key={a.id} a={a} onUpdate={load} />
-                    ))
-                  )}
+                  {(() => {
+                    const upcoming = course.assignments.filter((a) => {
+                      if (a.status === "submitted" || a.status === "graded") return false;
+                      if (!a.dueDate) return true;
+                      return !isPast(parseISO(a.dueDate)) || isToday(parseISO(a.dueDate));
+                    });
+                    return upcoming.length === 0 ? (
+                      <p style={{ fontSize: "0.75rem", color: "var(--color-text-faint)", padding: "0.4rem 0" }}>
+                        No upcoming assignments
+                      </p>
+                    ) : (
+                      upcoming.map((a) => (
+                        <AssignmentRow key={a.id} a={a} onUpdate={load} />
+                      ))
+                    );
+                  })()}
                   <AddAssignmentForm courseId={course.id} onAdded={load} />
                 </div>
               )}
@@ -436,8 +496,9 @@ export default function BrightspacePanel() {
           ))
         )}
       </div>
+      )}
 
-      <AddCourseForm onAdded={load} />
+      {coursesOpen && <AddCourseForm onAdded={load} />}
     </div>
   );
 }

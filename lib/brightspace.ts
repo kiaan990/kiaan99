@@ -1,21 +1,11 @@
 /**
  * Brightspace (D2L) scraper for Bentley University
- * https://brightspace.bentley.edu/d2l/home
- *
- * Uses Playwright (headless Chromium) to authenticate and extract:
- * - Enrolled courses
- * - Upcoming assignments + due dates
- * - Current grades per course
- *
- * Required env vars:
- *   BRIGHTSPACE_USER  - your Bentley username (e.g. jsmith1)
- *   BRIGHTSPACE_PASS  - your Bentley password
- *
- * IMPORTANT: This scraper is provided for personal/educational use.
- * Review Bentley University's Acceptable Use Policy before running.
+ * Uses D2L's internal JSON API endpoints after authenticating via Microsoft SSO.
  */
 
 const BASE_URL = "https://brightspace.bentley.edu";
+const API_LP = `${BASE_URL}/d2l/api/lp/1.9`;
+const API_LE = `${BASE_URL}/d2l/api/le/1.53`;
 
 export interface ScrapedCourse {
   id: string;
@@ -48,219 +38,193 @@ export interface ScrapeResult {
 }
 
 async function getBrowser() {
-  // Dynamic import to avoid build issues in environments without Playwright
   const { chromium } = await import("playwright");
   return chromium.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-    ],
+    headless: false,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
+}
+
+async function apiGet(page: import("playwright").Page, url: string): Promise<unknown> {
+  const resp = await page.goto(url, { timeout: 20000 });
+  if (!resp?.ok()) return null;
+  const text = await page.textContent("body");
+  try { return JSON.parse(text ?? "null"); } catch { return null; }
 }
 
 export async function scrapeBrightspace(): Promise<ScrapeResult> {
   if (!process.env.BRIGHTSPACE_USER || !process.env.BRIGHTSPACE_PASS) {
-    throw new Error(
-      "BRIGHTSPACE_USER and BRIGHTSPACE_PASS environment variables are required"
-    );
+    throw new Error("BRIGHTSPACE_USER and BRIGHTSPACE_PASS are required");
   }
 
   const browser = await getBrowser();
   const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
   });
   const page = await context.newPage();
 
   try {
-    // Step 1: Navigate to Brightspace login
-    await page.goto(`${BASE_URL}/d2l/login`, {
-      waitUntil: "networkidle",
-      timeout: 30000,
-    });
+    // ── Login via Microsoft SSO ──────────────────────────────────────
+    await page.goto(`${BASE_URL}/d2l/login`, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForSelector('input[type="email"], input[name="loginfmt"]', { timeout: 15000 });
 
-    // Step 2: Handle SSO — Bentley uses Microsoft SSO
-    // Wait for redirect to Microsoft login
-    await page.waitForSelector('input[type="email"], input[name="loginfmt"]', {
-      timeout: 15000,
-    });
+    const email = process.env.BRIGHTSPACE_USER.includes("@")
+      ? process.env.BRIGHTSPACE_USER
+      : `${process.env.BRIGHTSPACE_USER}@falcon.bentley.edu`;
 
-    await page.fill(
-      'input[type="email"], input[name="loginfmt"]',
-      `${process.env.BRIGHTSPACE_USER}@bentley.edu`
-    );
+    await page.fill('input[type="email"], input[name="loginfmt"]', email);
     await page.click('input[type="submit"], button[type="submit"]');
-
     await page.waitForSelector('input[type="password"]', { timeout: 10000 });
     await page.fill('input[type="password"]', process.env.BRIGHTSPACE_PASS);
     await page.click('input[type="submit"], button[type="submit"]');
 
-    // Handle "Stay signed in?" prompt if it appears
+    // Handle "Stay signed in?" if it appears
     try {
-      await page.waitForSelector(
-        'input[id="idBtn_Back"], input[value="No"]',
-        { timeout: 5000 }
-      );
-      await page.click('input[id="idBtn_Back"], input[value="No"]');
-    } catch {
-      // Prompt didn't appear, continue
+      await page.waitForSelector('input[id="idBtn_Back"]', { timeout: 5000 });
+      await page.click('input[id="idBtn_Back"]');
+    } catch { /* no prompt */ }
+
+    // Long timeout for MFA
+    await page.waitForURL(`${BASE_URL}/d2l/home`, { timeout: 90000 });
+    await page.waitForTimeout(1500);
+
+    // ── Fetch enrollments via API ────────────────────────────────────
+    const enrollData = await apiGet(page, `${API_LP}/enrollments/myenrollments/?orgUnitTypeId=3&isActive=1`) as {
+      Items: { OrgUnit: { Id: number; Name: string; Code: string }; Access: { CanAccess: boolean } }[]
+    } | null;
+
+    if (!enrollData?.Items?.length) {
+      return { courses: [], assignments: [], grades: [] };
     }
 
-    // Wait for Brightspace home
-    await page.waitForURL(`${BASE_URL}/d2l/home`, { timeout: 20000 });
-
-    // Step 3: Scrape enrolled courses from the course widget
-    const courses: ScrapedCourse[] = await page.evaluate(() => {
-      const courseCards = document.querySelectorAll(
-        "[data-courseorgunitid], .d2l-my-courses-tile, [data-org-unit-id]"
-      );
-      return Array.from(courseCards)
-        .map((el) => {
-          const id =
-            el.getAttribute("data-courseorgunitid") ||
-            el.getAttribute("data-org-unit-id") ||
-            "";
-          const nameEl = el.querySelector(
-            "h2, h3, .d2l-card-title, [class*='title']"
-          );
-          const name = nameEl?.textContent?.trim() ?? "";
-          const codeMatch = name.match(/^([A-Z]{2,4}\s*\d{3,4})/);
-          return {
-            id,
-            name,
-            courseCode: codeMatch?.[1] ?? "",
-          };
-        })
-        .filter((c) => c.id && c.name);
-    });
+    const courses: ScrapedCourse[] = enrollData.Items
+      .filter((item) => {
+        if (!item.Access.CanAccess) return false;
+        // Only include Spring 2026 courses
+        const name = item.OrgUnit.Name.toLowerCase();
+        const code = item.OrgUnit.Code.toLowerCase();
+        return name.includes("spring 2026") || code.includes("202601") || code.includes("202602");
+      })
+      .map((item) => {
+        const name = item.OrgUnit.Name;
+        const codeMatch = name.match(/^([A-Z]{2,4}\s*\d{3,4})/i);
+        return {
+          id: String(item.OrgUnit.Id),
+          name,
+          courseCode: codeMatch?.[1]?.toUpperCase() ?? item.OrgUnit.Code,
+        };
+      });
 
     const assignments: ScrapedAssignment[] = [];
     const grades: ScrapedGrade[] = [];
 
-    // Step 4: For each course, scrape assignments and grades
-    for (const course of courses.slice(0, 10)) {
-      // Limit to prevent timeout
-      // Assignments
+    // ── For each course, fetch assignments + grades ──────────────────
+    for (const course of courses.slice(0, 12)) {
+      const ouId = course.id;
+
+      // Assignments (dropbox folders)
       try {
-        await page.goto(
-          `${BASE_URL}/d2l/lms/dropbox/user/folders_list.d2l?ou=${course.id}`,
-          { waitUntil: "networkidle", timeout: 20000 }
-        );
+        const folders = await apiGet(page, `${API_LE}/${ouId}/dropbox/folders/`) as {
+          Id: number; Name: string; DueDate: string | null;
+        }[] | null;
 
-        type RawAssignment = Omit<ScrapedAssignment, "dueDate"> & { dueDate: string | null };
-        const rawAssignments: RawAssignment[] = await page.evaluate(
-          (courseMeta) => {
-            const rows = document.querySelectorAll(
-              "tr.d2l-grid-row, .d2l-table-row, tr"
-            );
-            return Array.from(rows)
-              .map((row) => {
-                const cells = row.querySelectorAll("td");
-                if (cells.length < 2) return null;
+        if (Array.isArray(folders)) {
+          for (const folder of folders) {
+            // Check my submissions for this folder
+            let submitted = false;
+            let status: "pending" | "submitted" | "graded" | "missing" = "pending";
 
-                const titleEl = cells[0]?.querySelector("a, strong");
-                const title = titleEl?.textContent?.trim() ?? "";
-                if (!title) return null;
+            try {
+              const subs = await apiGet(page, `${API_LE}/${ouId}/dropbox/folders/${folder.Id}/submissions/mysubmissions/`) as {
+                Feedback: unknown; Files: unknown[]
+              }[] | null;
 
-                const dueDateText = cells[1]?.textContent?.trim() ?? "";
-                let dueDate: string | null = null;
+              if (Array.isArray(subs) && subs.length > 0) {
+                submitted = true;
+                status = subs[0].Feedback ? "graded" : "submitted";
+              }
+            } catch { /* no submission data */ }
 
-                // Parse various date formats D2L uses
-                const dateMatch = dueDateText.match(
-                  /(\w+ \d+,?\s*\d+(?::\d+ [AP]M)?)/i
-                );
-                if (dateMatch) {
-                  const parsed = new Date(dateMatch[1]);
-                  if (!isNaN(parsed.getTime())) {
-                    dueDate = parsed.toISOString();
-                  }
-                }
+            const dueDate = folder.DueDate ? new Date(folder.DueDate) : null;
+            if (dueDate && dueDate < new Date() && !submitted) status = "missing";
 
-                const statusText =
-                  cells[2]?.textContent?.trim().toLowerCase() ?? "";
-                const submitted = statusText.includes("submitted") || statusText.includes("turned in");
-                const status: "pending" | "submitted" | "graded" | "missing" =
-                  statusText.includes("graded")
-                    ? "graded"
-                    : statusText.includes("missing") || statusText.includes("late")
-                    ? "missing"
-                    : submitted
-                    ? "submitted"
-                    : "pending";
+            assignments.push({
+              courseId: ouId,
+              courseName: course.name,
+              title: folder.Name,
+              dueDate,
+              submitted,
+              status,
+            });
+          }
+        }
+      } catch { /* course has no dropbox */ }
 
-                return {
-                  courseId: courseMeta.id,
-                  courseName: courseMeta.name,
-                  title,
-                  dueDate,
-                  submitted,
-                  status,
-                };
-              })
-              .filter(Boolean) as RawAssignment[];
-          },
-          course
-        );
+      // Calendar events — pick up assignments not in dropbox
+      try {
+        const now = new Date().toISOString();
+        const future = new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString();
+        const calEvents = await apiGet(page, `${API_LE}/${ouId}/calendar/events/?startDateTime=${now}&endDateTime=${future}`) as {
+          Title: string;
+          StartDateTime: string | null;
+          EndDateTime: string | null;
+          StartDay: string | null;
+          EndDay: string | null;
+          IsAllDayEvent: boolean;
+        }[] | null;
 
-        assignments.push(
-          ...rawAssignments.map((a) => ({
-            ...a,
-            dueDate: a.dueDate ? new Date(a.dueDate) : null,
-          }))
-        );
-      } catch {
-        // Assignment page unavailable for this course
-      }
+        if (Array.isArray(calEvents)) {
+          const existingTitles = new Set(assignments.filter((a) => a.courseId === ouId).map((a) => a.title.toLowerCase().trim()));
+
+          for (const ev of calEvents) {
+            const title = ev.Title?.trim();
+            if (!title) continue;
+            if (existingTitles.has(title.toLowerCase())) continue; // already from dropbox
+
+            const rawDate = ev.EndDateTime ?? ev.StartDateTime ?? ev.EndDay ?? ev.StartDay;
+            const dueDate = rawDate ? new Date(rawDate) : null;
+
+            // Skip if in the past
+            if (dueDate && dueDate < new Date()) continue;
+
+            assignments.push({
+              courseId: ouId,
+              courseName: course.name,
+              title,
+              dueDate,
+              submitted: false,
+              status: "pending",
+            });
+            existingTitles.add(title.toLowerCase());
+          }
+        }
+      } catch { /* calendar unavailable */ }
 
       // Grades
       try {
-        await page.goto(
-          `${BASE_URL}/d2l/lms/grades/my_grades/main.d2l?ou=${course.id}`,
-          { waitUntil: "networkidle", timeout: 20000 }
-        );
+        const gradeItems = await apiGet(page, `${API_LE}/${ouId}/grades/`) as {
+          Id: number; Name: string; Weight: number | null; MaxPoints: number | null;
+        }[] | null;
 
-        const courseGrades: ScrapedGrade[] = await page.evaluate(
-          (courseMeta) => {
-            const rows = document.querySelectorAll(
-              "tr.d2l-grid-row, .d2l-table-row, tr"
-            );
-            return Array.from(rows)
-              .map((row) => {
-                const cells = row.querySelectorAll("td");
-                if (cells.length < 2) return null;
+        if (Array.isArray(gradeItems)) {
+          for (const item of gradeItems.slice(0, 20)) {
+            try {
+              const myGrade = await apiGet(page, `${API_LE}/${ouId}/grades/${item.Id}/values/myGradeValue`) as {
+                DisplayedGrade: string | null; PointsNumerator: number | null; PointsDenominator: number | null;
+              } | null;
 
-                const category = cells[0]?.textContent?.trim() ?? "";
-                if (!category) return null;
-
-                const gradeText = cells[1]?.textContent?.trim() ?? "";
-                const weightText = cells[2]?.textContent?.trim() ?? "";
-
-                // Parse "earned / possible" pattern
-                const gradeMatch = gradeText.match(
-                  /(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/
-                );
-                const weightMatch = weightText.match(/(\d+(?:\.\d+)?)\s*%/);
-
-                return {
-                  courseId: courseMeta.id,
-                  courseName: courseMeta.name,
-                  category,
-                  earned: gradeMatch ? parseFloat(gradeMatch[1]) : null,
-                  possible: gradeMatch ? parseFloat(gradeMatch[2]) : null,
-                  weight: weightMatch ? parseFloat(weightMatch[1]) : null,
-                };
-              })
-              .filter(Boolean) as ScrapedGrade[];
-          },
-          course
-        );
-
-        grades.push(...courseGrades);
-      } catch {
-        // Grade page unavailable for this course
-      }
+              grades.push({
+                courseId: ouId,
+                courseName: course.name,
+                category: item.Name,
+                earned: myGrade?.PointsNumerator ?? null,
+                possible: myGrade?.PointsDenominator ?? item.MaxPoints ?? null,
+                weight: item.Weight ?? null,
+              });
+            } catch { /* grade not available */ }
+          }
+        }
+      } catch { /* course has no grades */ }
     }
 
     return { courses, assignments, grades };

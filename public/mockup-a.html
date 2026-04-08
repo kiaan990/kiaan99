@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Option A — Terminal Noir</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808;
+    color: #c8c8c8;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .label {
+    font-size: 10px;
+    color: #c9a84c;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .label::before { content: '> '; color: #c9a84c; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .panel {
+    background: #0e0e0e;
+    border: 1px solid #1a1a1a;
+    padding: 18px;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .divider { height: 1px; background: #1a1a1a; }
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #111;
+  }
+  .item:last-child { border-bottom: none; }
+  .cursor { color: #c9a84c; }
+  .dim { color: #444; font-size: 11px; }
+  .tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border: 1px solid #c9a84c44;
+    color: #c9a84c;
+  }
+  .green { color: #3d9970; }
+  .gold { color: #c9a84c; }
+  .faint { color: #333; }
+  .big { font-size: 28px; font-weight: bold; color: #fff; letter-spacing: -1px; }
+  .header-row { display: flex; justify-content: space-between; align-items: center; }
+  .btn {
+    background: none;
+    border: 1px solid #222;
+    color: #444;
+    padding: 3px 10px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .assignment-block {
+    padding: 8px 0 8px 10px;
+    border-left: 1px solid #c9a84c44;
+    margin-bottom: 4px;
+  }
+  .course-row { display: flex; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid #111; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .gpa-big { font-size: 48px; font-weight: bold; color: #c9a84c; letter-spacing: -2px; font-family: 'Courier New'; }
+  .subtitle { font-size: 10px; color: #444; }
+  .tag-surface { font-size: 10px; padding: 1px 7px; border: 1px solid #222; color: #444; }
+</style>
+</head>
+<body>
+<div style="max-width:1200px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between">
+  <div style="color:#c9a84c;font-size:11px;letter-spacing:0.15em">COMMAND_CENTER v2.0 — TERMINAL NOIR</div>
+  <div style="color:#333;font-size:11px">kiaan@bentley ~ Apr 08 2026</div>
+</div>
+<div class="grid">
+
+  <!-- TO-DO -->
+  <div class="panel">
+    <div class="label">To-Do</div>
+    <div class="divider"></div>
+    <div class="item">
+      <span class="cursor">▸</span>
+      <div>
+        <div>Review MA105 problem set</div>
+        <div class="dim">due today</div>
+      </div>
+    </div>
+    <div class="item">
+      <span class="cursor">▸</span>
+      <div>
+        <div>Email Professor Brown</div>
+        <div class="dim">pending</div>
+      </div>
+    </div>
+    <div class="item">
+      <span style="color:#333">✓</span>
+      <div style="text-decoration:line-through;color:#333">
+        <div>Submit EMS104 essay</div>
+        <div class="faint">completed</div>
+      </div>
+    </div>
+    <div class="item">
+      <span class="cursor">▸</span>
+      <div>
+        <div>Read LA100 Chapter 9</div>
+        <div class="dim">Apr 10</div>
+      </div>
+    </div>
+    <div class="item">
+      <span class="cursor">▸</span>
+      <div>
+        <div>CDI101 reflection paper</div>
+        <div class="dim">Apr 12</div>
+      </div>
+    </div>
+    <div style="margin-top:auto;color:#333;font-size:11px">_ add task</div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="panel">
+    <div class="label">Calendar</div>
+    <div class="divider"></div>
+    <div class="item">
+      <div>
+        <div class="gold">Today — Apr 8</div>
+        <div style="margin-top:4px;font-size:11px;color:#555">No events scheduled</div>
+      </div>
+    </div>
+    <div class="item">
+      <div>
+        <div style="color:#aaa">Apr 9 — Wednesday</div>
+        <div style="margin-top:4px;padding-left:8px;border-left:1px solid #c9a84c44">
+          <div style="font-size:12px">MA105 Lecture</div>
+          <div class="dim">9:00 AM — 10:15 AM</div>
+        </div>
+      </div>
+    </div>
+    <div class="item">
+      <div>
+        <div style="color:#aaa">Apr 10 — Thursday</div>
+        <div style="margin-top:4px;padding-left:8px;border-left:1px solid #3d997044">
+          <div style="font-size:12px">Business Law Seminar</div>
+          <div class="dim">2:00 PM — 3:30 PM</div>
+        </div>
+        <div style="margin-top:4px;padding-left:8px;border-left:1px solid #2980b944">
+          <div style="font-size:12px">EMS220 Discussion</div>
+          <div class="dim">4:00 PM — 5:00 PM</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:auto;color:#333;font-size:11px">_ add event</div>
+  </div>
+
+  <!-- BRIGHTSPACE -->
+  <div class="panel">
+    <div class="label">Brightspace</div>
+    <div class="divider"></div>
+    <div style="font-size:10px;color:#444;margin-bottom:2px">NEXT UP</div>
+    <div class="assignment-block">
+      <div>MA105 7.1 Experiments</div>
+      <div class="dim">Apr 9 · Mathematical Foundations</div>
+    </div>
+    <div class="assignment-block">
+      <div>MA105 7.2 Probability</div>
+      <div class="dim">Apr 10 · Mathematical Foundations</div>
+    </div>
+    <div class="divider" style="margin:6px 0"></div>
+    <div style="font-size:10px;color:#444;margin-bottom:4px">ALL COURSES</div>
+    <div class="course-row">
+      <span class="cursor" style="font-size:10px">▸</span>
+      <div class="dot" style="background:#c9a84c"></div>
+      <span style="flex:1;font-size:11px">MA105 — Math Foundations</span>
+      <span class="tag-surface">8</span>
+    </div>
+    <div class="course-row">
+      <span class="cursor" style="font-size:10px">▸</span>
+      <div class="dot" style="background:#3d9970"></div>
+      <span style="flex:1;font-size:11px">LA100 — Business Law</span>
+      <span class="tag-surface">3</span>
+    </div>
+    <div class="course-row">
+      <span class="cursor" style="font-size:10px">▸</span>
+      <div class="dot" style="background:#8e44ad"></div>
+      <span style="flex:1;font-size:11px">EMS220 — Cultural Studies</span>
+      <span class="tag-surface">0</span>
+    </div>
+  </div>
+
+  <!-- GPA + AI -->
+  <div class="panel">
+    <div class="label">GPA</div>
+    <div class="divider"></div>
+    <div class="gpa-big">3.72</div>
+    <div class="subtitle">CUMULATIVE — 6 COURSES</div>
+    <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <span style="color:#555">MA105</span><span class="gold">A−</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <span style="color:#555">LA100</span><span class="gold">B+</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <span style="color:#555">EMS104</span><span class="green">A</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <span style="color:#555">EMS220</span><span style="color:#aaa">B+</span>
+      </div>
+    </div>
+    <div class="divider" style="margin-top:auto"></div>
+    <div class="label" style="margin-bottom:6px">JoeGPT</div>
+    <div style="font-size:11px;color:#555;padding:8px;border:1px solid #1a1a1a;line-height:1.6">
+      > Hey — 3 assignments due this week. MA105 7.1 is tomorrow. Want me to add it to your to-do list?
+    </div>
+    <div style="display:flex;gap:4px;margin-top:4px">
+      <input style="flex:1;background:#111;border:1px solid #1a1a1a;color:#aaa;padding:5px 8px;font-family:inherit;font-size:11px;outline:none" placeholder="_ ask JoeGPT..." />
+    </div>
+  </div>
+
+</div>
+<div style="margin-top:16px;color:#1e1e1e;font-size:10px;letter-spacing:0.1em;text-align:center">OPTION A — TERMINAL NOIR</div>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Option B3 — Aurora</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #060912;
+    color: #c8cfe8;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 28px;
+    overflow-x: hidden;
+  }
+
+  /* Animated gradient mesh background */
+  .bg-mesh {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 15%, rgba(16,185,129,0.07) 0%, transparent 100%),
+      radial-gradient(ellipse 50% 50% at 90% 10%, rgba(99,91,255,0.09) 0%, transparent 100%),
+      radial-gradient(ellipse 70% 40% at 50% 90%, rgba(59,130,246,0.06) 0%, transparent 100%),
+      radial-gradient(ellipse 40% 60% at 80% 60%, rgba(168,85,247,0.06) 0%, transparent 100%);
+    animation: meshMove 16s ease-in-out infinite alternate;
+  }
+  @keyframes meshMove {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+
+  .content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+
+  /* Top bar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+  .logo {
+    font-size: 13px; font-weight: 700; letter-spacing: -0.3px;
+    background: linear-gradient(90deg, #10b981, #635bff, #38bdf8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .date-pill {
+    padding: 5px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    font-size: 11px; color: rgba(255,255,255,0.3);
+  }
+  .avatar-ring {
+    width: 34px; height: 34px; border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(135deg, #10b981, #635bff);
+    cursor: pointer;
+  }
+  .avatar-inner {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: #0c0f1e; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+  }
+
+  /* Quick stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;
+  }
+  .stat-pill {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .stat-pill:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+  .stat-num { font-size: 24px; font-weight: 700; color: #fff; letter-spacing: -1px; }
+  .stat-lbl { font-size: 10px; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+  /* Main grid */
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 18px;
+    min-height: 340px; display: flex; flex-direction: column; gap: 12px;
+    position: relative; overflow: hidden;
+    transition: all 0.25s; backdrop-filter: blur(16px);
+  }
+  .card:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+  }
+  /* Top shimmer line per card */
+  .card-green::before { content:''; position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.4),transparent); }
+  .card-purple::before { content:''; position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,91,255,0.4),transparent); }
+  .card-blue::before { content:''; position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(56,189,248,0.4),transparent); }
+  .card-amber::before { content:''; position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,158,11,0.4),transparent); }
+
+  /* Label */
+  .label { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
+  .label-green { color: #10b981; }
+  .label-purple { color: rgba(99,91,255,0.9); }
+  .label-blue { color: #38bdf8; }
+  .label-amber { color: #f59e0b; }
+
+  .divider { height: 1px; background: rgba(255,255,255,0.05); }
+
+  /* Todo */
+  .todo-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 7px 8px; border-radius: 8px;
+    transition: background 0.15s; cursor: pointer;
+  }
+  .todo-item:hover { background: rgba(16,185,129,0.06); }
+  .check {
+    width: 15px; height: 15px; border-radius: 4px;
+    border: 1.5px solid rgba(16,185,129,0.3); flex-shrink: 0; margin-top: 1px;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+  }
+  .check:hover { border-color: #10b981; }
+  .check.done { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); }
+
+  /* Event */
+  .event {
+    padding: 9px 11px; border-radius: 10px;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.2s; cursor: pointer; display: flex; gap: 10px; align-items: center;
+  }
+  .event:hover { background: rgba(99,91,255,0.07); border-color: rgba(99,91,255,0.2); transform: translateX(3px); }
+  .event-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+
+  /* Assignment */
+  .asn {
+    padding: 9px 11px; border-radius: 10px;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .asn:hover { background: rgba(56,189,248,0.06); border-color: rgba(56,189,248,0.2); transform: translateX(3px); }
+
+  /* Course */
+  .course {
+    display: flex; align-items: center; gap: 9px; padding: 7px 8px;
+    border-radius: 8px; transition: background 0.15s; cursor: pointer;
+  }
+  .course:hover { background: rgba(255,255,255,0.04); }
+  .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Badges */
+  .badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; flex-shrink: 0;
+  }
+  .b-green { background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#10b981; }
+  .b-purple { background:rgba(99,91,255,0.1);border:1px solid rgba(99,91,255,0.2);color:rgba(99,91,255,0.9); }
+  .b-blue { background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);color:#38bdf8; }
+  .b-dim { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.3); }
+  .b-red { background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);color:#f87171; }
+
+  /* GPA */
+  .gpa-row { display:flex;justify-content:space-between;align-items:center;font-size:12px; }
+  .bar { height:2px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:3px;overflow:hidden; }
+  .bar-fill { height:100%;border-radius:2px; }
+
+  /* AI */
+  .ai-bubble {
+    background:rgba(99,91,255,0.07);border:1px solid rgba(99,91,255,0.14);
+    border-radius:3px 11px 11px 11px;padding:9px 12px;
+    font-size:12px;color:rgba(255,255,255,0.45);line-height:1.65;
+  }
+  .ai-row {
+    display:flex;gap:6px;align-items:center;
+    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+    border-radius:11px;padding:7px 10px;
+    transition:border-color 0.2s;
+  }
+  .ai-row:hover { border-color:rgba(99,91,255,0.3); }
+  .ai-row input { flex:1;background:none;border:none;color:rgba(255,255,255,0.45);font-family:inherit;font-size:12px;outline:none; }
+  .send { width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#635bff,#38bdf8);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .add { background:none;border:1px dashed rgba(255,255,255,0.07);border-radius:8px;padding:7px;color:rgba(255,255,255,0.2);font-size:12px;font-family:inherit;cursor:pointer;width:100%;margin-top:auto;transition:all 0.2s; }
+  .add:hover { border-color:rgba(16,185,129,0.3);color:rgba(16,185,129,0.6);background:rgba(16,185,129,0.04); }
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="content">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="logo">⌘ Command Center</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div class="date-pill">Tue, Apr 8 · 1:28 AM</div>
+      <div class="avatar-ring">
+        <div class="avatar-inner">K</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div>
+        <div class="stat-num" style="color:#10b981">4</div>
+        <div class="stat-lbl">Tasks Due</div>
+      </div>
+      <div style="font-size:20px;opacity:0.4">✓</div>
+    </div>
+    <div class="stat-pill">
+      <div>
+        <div class="stat-num" style="color:#38bdf8">5</div>
+        <div class="stat-lbl">Events</div>
+      </div>
+      <div style="font-size:20px;opacity:0.4">📅</div>
+    </div>
+    <div class="stat-pill">
+      <div>
+        <div class="stat-num" style="color:#f87171">11</div>
+        <div class="stat-lbl">Assignments</div>
+      </div>
+      <div style="font-size:20px;opacity:0.4">📚</div>
+    </div>
+    <div class="stat-pill">
+      <div>
+        <div class="stat-num" style="color:#f59e0b">3.72</div>
+        <div class="stat-lbl">GPA</div>
+      </div>
+      <div style="font-size:20px;opacity:0.4">🎓</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+
+    <!-- TO-DO -->
+    <div class="card card-green">
+      <div class="label label-green">To-Do</div>
+      <div class="divider"></div>
+      <div class="todo-item">
+        <div class="check"></div>
+        <div>
+          <div style="font-size:13px;color:#d8ddf2">Review MA105 problem set</div>
+          <div style="font-size:10px;color:#f87171;margin-top:2px">Due today</div>
+        </div>
+      </div>
+      <div class="todo-item">
+        <div class="check"></div>
+        <div>
+          <div style="font-size:13px;color:#d8ddf2">Email Professor Brown</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:2px">No deadline</div>
+        </div>
+      </div>
+      <div class="todo-item" style="opacity:0.35">
+        <div class="check done">
+          <svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" fill="none" stroke="#10b981" stroke-width="1.5"/></svg>
+        </div>
+        <div style="text-decoration:line-through;color:rgba(255,255,255,0.2);font-size:13px">Submit EMS104 essay</div>
+      </div>
+      <div class="todo-item">
+        <div class="check"></div>
+        <div>
+          <div style="font-size:13px;color:#d8ddf2">Read LA100 Chapter 9</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:2px">Apr 10</div>
+        </div>
+      </div>
+      <div class="todo-item">
+        <div class="check"></div>
+        <div>
+          <div style="font-size:13px;color:#d8ddf2">CDI101 reflection paper</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:2px">Apr 12</div>
+        </div>
+      </div>
+      <button class="add">+ Add task</button>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="card card-purple">
+      <div class="label label-purple">Calendar</div>
+      <div class="divider"></div>
+      <div class="event">
+        <div class="event-dot" style="background:#635bff"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d8ddf2">MA105 Lecture</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Apr 9 · 9:00 – 10:15 AM</div>
+        </div>
+        <span class="badge b-purple">Wed</span>
+      </div>
+      <div class="event">
+        <div class="event-dot" style="background:#10b981"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d8ddf2">Business Law Seminar</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Apr 10 · 2:00 – 3:30 PM</div>
+        </div>
+        <span class="badge b-green">Thu</span>
+      </div>
+      <div class="event">
+        <div class="event-dot" style="background:#38bdf8"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d8ddf2">EMS220 Discussion</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Apr 10 · 4:00 – 5:00 PM</div>
+        </div>
+        <span class="badge b-blue">Thu</span>
+      </div>
+      <div class="event">
+        <div class="event-dot" style="background:#a855f7"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d8ddf2">CDI101 Seminar</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Apr 11 · 11:00 AM – 12:00 PM</div>
+        </div>
+        <span class="badge b-dim">Fri</span>
+      </div>
+      <button class="add">+ Add event</button>
+    </div>
+
+    <!-- BRIGHTSPACE -->
+    <div class="card card-blue">
+      <div class="label label-blue">Brightspace</div>
+      <div class="divider"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.18);letter-spacing:0.12em;text-transform:uppercase">Next Up</div>
+      <div class="asn">
+        <div style="width:3px;align-self:stretch;border-radius:2px;background:linear-gradient(#635bff,#38bdf8);flex-shrink:0;min-height:32px"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d8ddf2">MA105 7.1 Experiments</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Math Foundations</div>
+        </div>
+        <span class="badge b-blue">Apr 9</span>
+      </div>
+      <div class="asn">
+        <div style="width:3px;align-self:stretch;border-radius:2px;background:linear-gradient(#10b981,#34d399);flex-shrink:0;min-height:32px"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d8ddf2">LA100 Quiz 4</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Business Law</div>
+        </div>
+        <span class="badge b-green">Apr 11</span>
+      </div>
+      <div class="divider"></div>
+      <div class="course"><div class="cdot" style="background:#635bff"></div><span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5)">MA105</span><span class="badge b-purple">8</span></div>
+      <div class="course"><div class="cdot" style="background:#10b981"></div><span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5)">LA100</span><span class="badge b-green">3</span></div>
+      <div class="course"><div class="cdot" style="background:#a855f7"></div><span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5)">EMS220</span><span class="badge b-dim" style="opacity:0.5">0</span></div>
+    </div>
+
+    <!-- GPA + JoeGPT -->
+    <div class="card card-amber">
+      <div class="label label-amber">GPA</div>
+      <div style="font-size:48px;font-weight:700;color:#f59e0b;letter-spacing:-2px;text-shadow:0 0 40px rgba(245,158,11,0.25)">3.72</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:-8px">Spring 2026 · 6 courses</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div><div class="gpa-row"><span style="color:rgba(255,255,255,0.35)">MA105</span><span style="color:#f59e0b;font-weight:600">A−</span></div><div class="bar"><div class="bar-fill" style="width:90%;background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div></div></div>
+        <div><div class="gpa-row"><span style="color:rgba(255,255,255,0.35)">EMS104</span><span style="color:#10b981;font-weight:600">A</span></div><div class="bar"><div class="bar-fill" style="width:96%;background:linear-gradient(90deg,#10b981,#6ee7b7)"></div></div></div>
+        <div><div class="gpa-row"><span style="color:rgba(255,255,255,0.35)">LA100</span><span style="color:rgba(255,255,255,0.5);font-weight:600">B+</span></div><div class="bar"><div class="bar-fill" style="width:77%;background:linear-gradient(90deg,#555,#888)"></div></div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="label label-purple" style="margin-bottom:2px">JoeGPT</div>
+      <div class="ai-bubble">Hey — MA105 7.1 is due tomorrow. Want me to move it to the top of your to-do list?</div>
+      <div class="ai-row">
+        <input placeholder="Ask JoeGPT anything…" />
+        <button class="send">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5h8M5.5 1.5L9 5l-3.5 3.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div style="text-align:center;margin-top:24px;font-size:10px;color:rgba(255,255,255,0.04);letter-spacing:0.2em">OPTION B3 — AURORA</div>
+</body>
+</html>

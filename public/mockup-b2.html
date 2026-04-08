@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Option B2 — Deep Space</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #04050f;
+    color: #c8cfe8;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 28px;
+    overflow-x: hidden;
+  }
+
+  /* Animated background orbs */
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(80px); pointer-events: none; z-index: 0;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  .orb1 { width: 500px; height: 500px; background: rgba(99,91,255,0.12); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb2 { width: 400px; height: 400px; background: rgba(56,189,248,0.07); bottom: -80px; right: 100px; animation-delay: -4s; }
+  .orb3 { width: 300px; height: 300px; background: rgba(168,85,247,0.08); top: 40%; left: 40%; animation-delay: -8s; }
+
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(30px, 20px) scale(1.05); }
+  }
+
+  .content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+
+  /* Header */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .greeting { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+  .subgreeting { font-size: 12px; color: rgba(255,255,255,0.25); margin-top: 3px; }
+
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #635bff, #38bdf8);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; font-size: 13px;
+    box-shadow: 0 0 20px rgba(99,91,255,0.4);
+    cursor: pointer; transition: box-shadow 0.2s;
+  }
+  .avatar:hover { box-shadow: 0 0 30px rgba(99,91,255,0.6); }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 20px;
+    min-height: 400px;
+    display: flex; flex-direction: column; gap: 14px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    cursor: default;
+    backdrop-filter: blur(12px);
+  }
+  .card::after {
+    content: ''; position: absolute; inset: 0; border-radius: 18px;
+    background: radial-gradient(circle at 50% 0%, rgba(99,91,255,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .card:hover {
+    border-color: rgba(99,91,255,0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,91,255,0.1);
+  }
+
+  /* Section label */
+  .label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(99,91,255,0.8);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .label-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #635bff;
+    box-shadow: 0 0 6px rgba(99,91,255,0.8);
+  }
+
+  .divider { height: 1px; background: rgba(255,255,255,0.05); }
+
+  /* Stat */
+  .stat { font-size: 44px; font-weight: 700; color: #fff; letter-spacing: -2px; line-height: 1; }
+  .stat-sub { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+
+  /* Todo items */
+  .todo-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s; border-radius: 6px; padding: 8px 6px;
+    cursor: pointer;
+  }
+  .todo-item:hover { background: rgba(99,91,255,0.06); }
+  .todo-item:last-child { border-bottom: none; }
+
+  .checkbox {
+    width: 16px; height: 16px; border-radius: 5px;
+    border: 1.5px solid rgba(99,91,255,0.35);
+    flex-shrink: 0; margin-top: 1px;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+  }
+  .checkbox:hover { border-color: #635bff; background: rgba(99,91,255,0.1); }
+  .checkbox.done { background: rgba(99,91,255,0.2); border-color: rgba(99,91,255,0.5); }
+
+  .todo-text { font-size: 13px; color: #d0d5ef; }
+  .todo-text.done { text-decoration: line-through; color: rgba(255,255,255,0.2); }
+  .todo-meta { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+  .urgent { color: #f87171; font-size: 10px; }
+
+  /* Badges */
+  .badge {
+    font-size: 10px; padding: 2px 9px; border-radius: 999px; font-weight: 500;
+    background: rgba(99,91,255,0.12); border: 1px solid rgba(99,91,255,0.2);
+    color: rgba(99,91,255,0.9); flex-shrink: 0;
+  }
+  .badge-cyan { background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.2); color: #38bdf8; }
+  .badge-green { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.2); color: #34d399; }
+  .badge-red { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); color: #f87171; }
+
+  /* Calendar events */
+  .event-card {
+    padding: 10px 12px; border-radius: 11px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .event-card:hover {
+    background: rgba(99,91,255,0.06);
+    border-color: rgba(99,91,255,0.2);
+  }
+  .event-title { font-size: 12px; font-weight: 600; color: #d0d5ef; }
+  .event-meta { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 3px; }
+
+  /* Assignment next-up */
+  .next-card {
+    padding: 11px 13px; border-radius: 11px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .next-card:hover { background: rgba(99,91,255,0.06); border-color: rgba(99,91,255,0.2); transform: translateX(2px); }
+  .accent-bar { width: 3px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 34px; }
+
+  /* Course rows */
+  .course-row {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 8px; border-radius: 9px;
+    transition: background 0.15s; cursor: pointer;
+  }
+  .course-row:hover { background: rgba(255,255,255,0.04); }
+  .cdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* GPA bar */
+  .gpa-bar { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.06); margin-top: 4px; overflow: hidden; }
+  .gpa-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+  /* AI chat */
+  .ai-msg {
+    background: rgba(99,91,255,0.08); border: 1px solid rgba(99,91,255,0.15);
+    border-radius: 4px 12px 12px 12px; padding: 10px 13px;
+    font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.65;
+  }
+  .ai-input-bar {
+    display: flex; gap: 6px; align-items: center;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 8px 12px; margin-top: 6px;
+    transition: border-color 0.2s;
+  }
+  .ai-input-bar:hover { border-color: rgba(99,91,255,0.3); }
+  .ai-input-bar input {
+    flex: 1; background: none; border: none; color: rgba(255,255,255,0.5);
+    font-family: inherit; font-size: 12px; outline: none;
+  }
+  .send-btn {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    background: linear-gradient(135deg, #635bff, #38bdf8);
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.2s;
+  }
+  .send-btn:hover { opacity: 0.85; }
+
+  /* Add button */
+  .add-btn {
+    background: none; border: 1px dashed rgba(255,255,255,0.08); border-radius: 9px;
+    padding: 7px 12px; color: rgba(255,255,255,0.2); font-size: 12px; font-family: inherit;
+    cursor: pointer; width: 100%; text-align: left; transition: all 0.2s;
+    margin-top: auto;
+  }
+  .add-btn:hover { border-color: rgba(99,91,255,0.3); color: rgba(99,91,255,0.7); background: rgba(99,91,255,0.04); }
+
+  /* Pulse dot */
+  .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #34d399;
+    box-shadow: 0 0 8px rgba(52,211,153,0.6);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+    50% { box-shadow: 0 0 14px rgba(52,211,153,0.9); }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="content">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="greeting">Good morning, Kiaan ☀️</div>
+      <div class="subgreeting">Tuesday, April 8 · 3 things need your attention today</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="pulse-dot"></div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.2)">Live sync</span>
+      </div>
+      <div class="avatar">K</div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid">
+
+    <!-- TO-DO -->
+    <div class="card">
+      <div class="label"><div class="label-dot"></div>To-Do</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="stat">4</span>
+        <span class="stat-sub">remaining</span>
+      </div>
+      <div class="divider"></div>
+      <div class="todo-item">
+        <div class="checkbox"></div>
+        <div>
+          <div class="todo-text">Review MA105 problem set</div>
+          <div class="urgent">Due today</div>
+        </div>
+      </div>
+      <div class="todo-item">
+        <div class="checkbox"></div>
+        <div>
+          <div class="todo-text">Email Professor Brown</div>
+          <div class="todo-meta">No deadline</div>
+        </div>
+      </div>
+      <div class="todo-item" style="opacity:0.4">
+        <div class="checkbox done">
+          <svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" fill="none" stroke="#635bff" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="todo-text done">Submit EMS104 essay</div>
+          <div class="todo-meta">Completed Apr 7</div>
+        </div>
+      </div>
+      <div class="todo-item">
+        <div class="checkbox"></div>
+        <div>
+          <div class="todo-text">Read LA100 Chapter 9</div>
+          <div class="todo-meta">Apr 10</div>
+        </div>
+      </div>
+      <div class="todo-item">
+        <div class="checkbox"></div>
+        <div>
+          <div class="todo-text">CDI101 reflection paper</div>
+          <div class="todo-meta">Apr 12</div>
+        </div>
+      </div>
+      <button class="add-btn">+ Add task</button>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="card">
+      <div class="label"><div class="label-dot" style="background:#38bdf8;box-shadow:0 0 6px rgba(56,189,248,0.8)"></div>Calendar</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="stat">5</span>
+        <span class="stat-sub">events this week</span>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.18);text-transform:uppercase;margin-bottom:2px">Upcoming</div>
+      <div class="event-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="event-title">MA105 Lecture</div>
+          <span class="badge">Apr 9</span>
+        </div>
+        <div class="event-meta">9:00 – 10:15 AM · Boyd Hall 210</div>
+      </div>
+      <div class="event-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="event-title">Business Law Seminar</div>
+          <span class="badge badge-green">Apr 10</span>
+        </div>
+        <div class="event-meta">2:00 – 3:30 PM · Adamian 110</div>
+      </div>
+      <div class="event-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="event-title">EMS220 Discussion</div>
+          <span class="badge badge-cyan">Apr 10</span>
+        </div>
+        <div class="event-meta">4:00 – 5:00 PM · Online</div>
+      </div>
+      <button class="add-btn" style="margin-top:auto">+ Add event</button>
+    </div>
+
+    <!-- BRIGHTSPACE -->
+    <div class="card">
+      <div class="label"><div class="label-dot" style="background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.8)"></div>Brightspace</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="stat">11</span>
+        <span class="stat-sub">assignments due</span>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.18);text-transform:uppercase;margin-bottom:4px">Next Up</div>
+      <div class="next-card">
+        <div class="accent-bar" style="background:linear-gradient(180deg,#635bff,#38bdf8)"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d0d5ef">MA105 7.1 Experiments</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Math Foundations</div>
+        </div>
+        <span class="badge badge-cyan" style="font-weight:600">Tomorrow</span>
+      </div>
+      <div class="next-card">
+        <div class="accent-bar" style="background:linear-gradient(180deg,#34d399,#38bdf8)"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#d0d5ef">LA100 Quiz 4</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.2)">Business Law</div>
+        </div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.25)">Apr 11</span>
+      </div>
+      <div class="divider"></div>
+      <div class="course-row">
+        <div class="cdot" style="background:#635bff"></div>
+        <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.6)">MA105</span>
+        <span class="badge">8 due</span>
+      </div>
+      <div class="course-row">
+        <div class="cdot" style="background:#34d399"></div>
+        <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.6)">LA100</span>
+        <span class="badge badge-green">3 due</span>
+      </div>
+      <div class="course-row">
+        <div class="cdot" style="background:#a855f7"></div>
+        <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.6)">EMS220</span>
+        <span class="badge" style="opacity:0.4">0 due</span>
+      </div>
+    </div>
+
+    <!-- GPA + AI -->
+    <div class="card">
+      <div class="label"><div class="label-dot" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.8)"></div>GPA</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="stat" style="color:#f59e0b;text-shadow:0 0 30px rgba(245,158,11,0.3)">3.72</span>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:-6px">Cumulative · Spring 2026</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:rgba(255,255,255,0.4)">MA105</span>
+            <span style="color:#f59e0b;font-weight:600">A−</span>
+          </div>
+          <div class="gpa-bar"><div class="gpa-fill" style="width:90%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:rgba(255,255,255,0.4)">EMS104</span>
+            <span style="color:#34d399;font-weight:600">A</span>
+          </div>
+          <div class="gpa-bar"><div class="gpa-fill" style="width:96%;background:linear-gradient(90deg,#34d399,#6ee7b7)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:rgba(255,255,255,0.4)">LA100</span>
+            <span style="color:rgba(255,255,255,0.6);font-weight:600">B+</span>
+          </div>
+          <div class="gpa-bar"><div class="gpa-fill" style="width:78%;background:linear-gradient(90deg,#636363,#9ca3af)"></div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="label" style="margin-bottom:2px"><div class="label-dot" style="background:#635bff;box-shadow:0 0 6px rgba(99,91,255,0.8)"></div>JoeGPT</div>
+      <div class="ai-msg">
+        Hey — 3 assignments due this week. MA105 7.1 is tomorrow. Want me to add a reminder?
+      </div>
+      <div class="ai-input-bar">
+        <input placeholder="Ask JoeGPT anything…" />
+        <button class="send-btn">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 5.5h9M6 1.5l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div style="text-align:center;margin-top:24px;font-size:10px;color:rgba(255,255,255,0.05);letter-spacing:0.2em">OPTION B2 — DEEP SPACE</div>
+</body>
+</html>

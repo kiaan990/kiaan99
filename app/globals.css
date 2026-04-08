@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Base palette */
-  --color-base: #0d0d0d;
-  --color-surface: #141414;
-  --color-surface-2: #1c1c1c;
-  --color-surface-3: #242424;
-  --color-border: #282828;
-  --color-border-subtle: #1e1e1e;
+  /* Base palette — Deep Space */
+  --color-base: #04050f;
+  --color-surface: rgba(255,255,255,0.03);
+  --color-surface-2: rgba(255,255,255,0.055);
+  --color-surface-3: rgba(255,255,255,0.07);
+  --color-border: rgba(255,255,255,0.08);
+  --color-border-subtle: rgba(255,255,255,0.04);
 
   /* Text */
-  --color-text: #f0ede8;
-  --color-text-muted: #888880;
-  --color-text-faint: #4a4a45;
+  --color-text: #e2e6f8;
+  --color-text-muted: rgba(255,255,255,0.38);
+  --color-text-faint: rgba(255,255,255,0.16);
 
-  /* Gold accent system */
-  --color-gold: #c8922a;
-  --color-gold-light: #e8b84b;
-  --color-gold-dim: #6b4d16;
-  --color-gold-glow: rgba(200, 146, 42, 0.12);
+  /* Accent — Indigo/Violet replacing gold */
+  --color-gold: #635bff;
+  --color-gold-light: #8b85ff;
+  --color-gold-dim: rgba(99,91,255,0.35);
+  --color-gold-glow: rgba(99,91,255,0.12);
 
   /* Status */
-  --color-success: #3d9970;
-  --color-error: #c0392b;
-  --color-warning: #d68910;
-  --color-info: #2980b9;
+  --color-success: #34d399;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+  --color-info: #38bdf8;
 
   /* Fonts */
   --font-sans: var(--font-geist-sans);
@@ -51,12 +51,39 @@ html {
 }
 
 body {
-  background: var(--color-base);
+  background: #04050f;
   color: var(--color-text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
   min-height: 100vh;
+  position: relative;
+}
+
+/* ─── Animated background orbs ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 15%, rgba(99,91,255,0.13) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 40% at 85% 80%, rgba(56,189,248,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 35% 50% at 55% 50%, rgba(168,85,247,0.06) 0%, transparent 70%);
+  animation: orbDrift 14s ease-in-out infinite alternate;
+}
+
+@keyframes orbDrift {
+  0%   { opacity: 1;    transform: scale(1)    translate(0, 0); }
+  50%  { opacity: 0.75; transform: scale(1.04) translate(10px, 12px); }
+  100% { opacity: 1;    transform: scale(1)    translate(-8px, 6px); }
+}
+
+/* All page content needs to sit above the orbs */
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── Scrollbar ─── */
@@ -68,52 +95,72 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: rgba(99,91,255,0.25);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gold-dim);
+  background: rgba(99,91,255,0.5);
 }
 
 /* ─── Selection ─── */
 ::selection {
-  background: var(--color-gold-dim);
-  color: var(--color-gold-light);
+  background: rgba(99,91,255,0.3);
+  color: #c4bfff;
 }
 
 /* ─── Card ─── */
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 0%, rgba(99,91,255,0.06), transparent 60%);
+  pointer-events: none;
+}
+
+.card:hover {
+  border-color: rgba(99,91,255,0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,91,255,0.08);
 }
 
 .card-elevated {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
 }
 
-/* ─── Gold glow effect ─── */
+/* ─── Gold glow effect (now indigo glow) ─── */
 .gold-glow {
-  box-shadow: 0 0 0 1px var(--color-gold-dim), 0 0 20px var(--color-gold-glow);
+  box-shadow: 0 0 0 1px rgba(99,91,255,0.3), 0 0 24px rgba(99,91,255,0.15);
 }
 
 /* ─── Section label ─── */
 .section-label {
   font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: rgba(99,91,255,0.75);
 }
 
 /* ─── Input ─── */
 .input {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
   color: var(--color-text);
   font-family: var(--font-geist-sans);
   font-size: 0.875rem;
@@ -126,8 +173,8 @@ body {
   color: var(--color-text-faint);
 }
 .input:focus {
-  border-color: var(--color-gold-dim);
-  box-shadow: 0 0 0 2px var(--color-gold-glow);
+  border-color: rgba(99,91,255,0.45);
+  box-shadow: 0 0 0 3px rgba(99,91,255,0.1);
 }
 
 /* ─── Select ─── */
@@ -138,20 +185,21 @@ select.input {
 
 /* ─── Button ─── */
 .btn-gold {
-  background: var(--color-gold);
-  color: #0d0d0d;
+  background: #635bff;
+  color: #fff;
   font-weight: 600;
   font-size: 0.8rem;
   padding: 0.45rem 1rem;
-  border-radius: 7px;
+  border-radius: 9px;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
 .btn-gold:hover {
-  background: var(--color-gold-light);
+  background: #7b74ff;
+  box-shadow: 0 4px 16px rgba(99,91,255,0.35);
 }
 .btn-gold:active {
   transform: scale(0.97);
@@ -162,15 +210,16 @@ select.input {
   color: var(--color-text-muted);
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.09);
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   white-space: nowrap;
 }
 .btn-ghost:hover {
   color: var(--color-text);
-  border-color: var(--color-gold-dim);
+  border-color: rgba(99,91,255,0.35);
+  background: rgba(99,91,255,0.07);
 }
 
 .btn-icon {
@@ -179,7 +228,7 @@ select.input {
   border: none;
   cursor: pointer;
   padding: 0.3rem;
-  border-radius: 5px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -187,7 +236,7 @@ select.input {
 }
 .btn-icon:hover {
   color: var(--color-text);
-  background: var(--color-surface-2);
+  background: rgba(255,255,255,0.07);
 }
 
 /* ─── Badge ─── */
@@ -201,86 +250,69 @@ select.input {
   letter-spacing: 0.04em;
 }
 .badge-gold {
-  background: var(--color-gold-glow);
-  color: var(--color-gold-light);
-  border: 1px solid var(--color-gold-dim);
+  background: rgba(99,91,255,0.12);
+  color: #9d97ff;
+  border: 1px solid rgba(99,91,255,0.25);
 }
 .badge-surface {
-  background: var(--color-surface-3);
+  background: rgba(255,255,255,0.05);
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 .badge-error {
-  background: rgba(192, 57, 43, 0.12);
-  color: #e74c3c;
-  border: 1px solid rgba(192, 57, 43, 0.3);
+  background: rgba(248,113,113,0.1);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.25);
 }
 .badge-success {
-  background: rgba(61, 153, 112, 0.12);
-  color: #2ecc71;
-  border: 1px solid rgba(61, 153, 112, 0.3);
+  background: rgba(52,211,153,0.1);
+  color: #34d399;
+  border: 1px solid rgba(52,211,153,0.25);
 }
 .badge-warning {
-  background: rgba(214, 137, 16, 0.12);
-  color: #f39c12;
-  border: 1px solid rgba(214, 137, 16, 0.3);
+  background: rgba(251,191,36,0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(251,191,36,0.25);
 }
 
 /* ─── Animations ─── */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.35s ease forwards;
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 6px rgba(99,91,255,0.5); }
+  50%       { box-shadow: 0 0 14px rgba(99,91,255,0.9); }
 }
 
-.animate-slide-in {
-  animation: slideInLeft 0.3s ease forwards;
-}
+.animate-fade-in  { animation: fadeIn 0.35s ease forwards; }
+.animate-slide-in { animation: slideInLeft 0.3s ease forwards; }
+.animate-spin     { animation: spin 1s linear infinite; }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* ─── Stagger delays for list items ─── */
+/* ─── Stagger delays ─── */
 .stagger > *:nth-child(1) { animation-delay: 0ms; }
 .stagger > *:nth-child(2) { animation-delay: 50ms; }
 .stagger > *:nth-child(3) { animation-delay: 100ms; }
 .stagger > *:nth-child(4) { animation-delay: 150ms; }
 .stagger > *:nth-child(5) { animation-delay: 200ms; }
-.stagger > *:nth-child(n + 6) { animation-delay: 250ms; }
+.stagger > *:nth-child(n+6) { animation-delay: 250ms; }
 
 /* ─── Modal backdrop ─── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -291,7 +323,7 @@ select.input {
 /* ─── Divider ─── */
 .divider {
   height: 1px;
-  background: var(--color-border);
+  background: rgba(255,255,255,0.06);
   margin: 0.75rem 0;
 }
 
@@ -308,8 +340,8 @@ select.input {
 .checkbox {
   width: 16px;
   height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid var(--color-border);
+  border-radius: 5px;
+  border: 1.5px solid rgba(99,91,255,0.3);
   background: transparent;
   cursor: pointer;
   appearance: none;
@@ -318,8 +350,8 @@ select.input {
   position: relative;
 }
 .checkbox:checked {
-  background: var(--color-gold);
-  border-color: var(--color-gold);
+  background: #635bff;
+  border-color: #635bff;
 }
 .checkbox:checked::after {
   content: "";
@@ -328,7 +360,7 @@ select.input {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%230d0d0d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 10px;

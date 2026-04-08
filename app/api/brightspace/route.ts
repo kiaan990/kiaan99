@@ -130,6 +130,12 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
 
+  if (type === "course") {
+    const data = courseSchema.partial().parse(body);
+    const course = await prisma.brightspaceCourse.update({ where: { id }, data });
+    return NextResponse.json(course);
+  }
+
   if (type === "assignment") {
     const data = assignmentSchema.partial().parse(body);
     const assignment = await prisma.brightspaceAssignment.update({

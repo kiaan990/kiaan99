@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Option B4 — Midnight</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --accent: #6366f1;
+    --accent-dim: rgba(99,102,241,0.15);
+    --accent-border: rgba(99,102,241,0.25);
+    --surface: rgba(255,255,255,0.028);
+    --surface-2: rgba(255,255,255,0.045);
+    --border: rgba(255,255,255,0.07);
+    --text: #e2e4f0;
+    --text-muted: rgba(255,255,255,0.35);
+    --text-faint: rgba(255,255,255,0.16);
+  }
+
+  body {
+    background: #050608;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 90% 100%, rgba(56,189,248,0.06) 0%, transparent 70%);
+  }
+
+  .wrap { position: relative; z-index: 1; }
+
+  /* Sidebar + main layout */
+  .layout { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    background: rgba(255,255,255,0.02); border-right: 1px solid var(--border);
+    padding: 24px 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .sidebar-logo {
+    font-size: 14px; font-weight: 800; letter-spacing: -0.5px; color: #fff;
+    margin-bottom: 28px; padding: 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-icon {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+    border-radius: 9px; cursor: pointer; transition: all 0.15s;
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
+    position: relative;
+  }
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--text); }
+  .nav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 2px; border-radius: 2px; background: var(--accent);
+  }
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 999px;
+    background: var(--accent-dim); color: var(--accent); font-weight: 600;
+  }
+  .sidebar-user {
+    margin-top: auto; padding: 10px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 9px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sidebar-user:hover { background: var(--surface-2); }
+  .user-av {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #38bdf8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+
+  /* Main */
+  .main { padding: 28px; display: flex; flex-direction: column; gap: 16px; overflow: auto; }
+
+  .main-header { display: flex; align-items: flex-start; justify-content: space-between; }
+  .greeting { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.8px; }
+  .greeting span { color: var(--accent); }
+  .sub { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+
+  /* Quick stats */
+  .qs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .qs-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; transition: all 0.2s; cursor: pointer;
+  }
+  .qs-card:hover { background: var(--surface-2); border-color: var(--accent-border); transform: translateY(-1px); }
+  .qs-n { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: #fff; }
+  .qs-l { font-size: 10px; color: var(--text-faint); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* Main grid */
+  .grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr 0.9fr; gap: 10px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    transition: all 0.2s;
+  }
+  .card:hover { background: var(--surface-2); border-color: rgba(255,255,255,0.1); }
+
+  .sec-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-faint);
+  }
+  .divider { height: 1px; background: var(--border); }
+
+  /* Todo */
+  .todo {
+    display: flex; align-items: flex-start; gap: 9px; padding: 7px 6px;
+    border-radius: 8px; cursor: pointer; transition: background 0.12s;
+  }
+  .todo:hover { background: var(--surface-2); }
+  .cb {
+    width: 15px; height: 15px; border-radius: 4px;
+    border: 1.5px solid rgba(99,102,241,0.3); flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .cb:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .cb.done { background: var(--accent-dim); border-color: var(--accent-border); }
+  .pri { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+  /* Event */
+  .ev {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-radius: 9px; background: var(--surface); border: 1px solid var(--border);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .ev:hover { background: var(--surface-2); border-color: var(--accent-border); transform: translateX(2px); }
+  .ev-bar { width: 3px; align-self: stretch; border-radius: 2px; flex-shrink: 0; min-height: 28px; }
+
+  /* Assignment */
+  .asn {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-radius: 9px; background: var(--surface); border: 1px solid var(--border);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .asn:hover { background: var(--surface-2); border-color: var(--accent-border); transform: translateX(2px); }
+
+  /* Course */
+  .cr { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; cursor: pointer; transition: background 0.12s; }
+  .cr:hover { background: var(--surface-2); }
+  .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Badge */
+  .b { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; flex-shrink: 0; }
+  .b-acc { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); }
+  .b-g { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2); color: #34d399; }
+  .b-r { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); color: #f87171; }
+  .b-y { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2); color: #fbbf24; }
+  .b-d { background: var(--surface); border: 1px solid var(--border); color: var(--text-faint); }
+
+  /* GPA bars */
+  .gb { height: 2px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .gf { height: 100%; border-radius: 2px; }
+
+  /* AI */
+  .ai-m { background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 3px 10px 10px 10px; padding: 9px 12px; font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+  .ai-in {
+    display: flex; gap: 6px; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 7px 10px; transition: border-color 0.2s;
+  }
+  .ai-in:focus-within, .ai-in:hover { border-color: var(--accent-border); }
+  .ai-in input { flex: 1; background: none; border: none; outline: none; font-family: inherit; font-size: 12px; color: var(--text-muted); }
+  .snd { width: 24px; height: 24px; border-radius: 7px; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s; }
+  .snd:hover { opacity: 0.8; }
+  .add-b { background: none; border: 1px dashed rgba(255,255,255,0.06); border-radius: 8px; padding: 7px; color: var(--text-faint); font-size: 12px; font-family: inherit; cursor: pointer; width: 100%; margin-top: auto; transition: all 0.2s; }
+  .add-b:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">⌘</div>
+        Command
+      </div>
+
+      <div class="nav-item active"><span class="nav-icon">🏠</span> Dashboard <span class="nav-badge">3</span></div>
+      <div class="nav-item"><span class="nav-icon">✓</span> To-Do</div>
+      <div class="nav-item"><span class="nav-icon">📅</span> Calendar</div>
+      <div class="nav-item"><span class="nav-icon">📚</span> Brightspace</div>
+      <div class="nav-item"><span class="nav-icon">🎓</span> GPA</div>
+      <div class="nav-item"><span class="nav-icon">✉️</span> Email</div>
+      <div class="nav-item"><span class="nav-icon">📓</span> GoodNotes</div>
+      <div class="nav-item"><span class="nav-icon">✨</span> JoeGPT</div>
+
+      <div class="sidebar-user">
+        <div class="user-av">K</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Kiaan</div>
+          <div style="font-size:10px;color:var(--text-faint)">Bentley '27</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main">
+      <div class="main-header">
+        <div>
+          <div class="greeting">Good morning, <span>Kiaan</span></div>
+          <div class="sub">Tuesday, April 8 · You have 3 things due soon</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px rgba(52,211,153,0.6);animation:pulse 2s infinite"></div>
+          <span style="font-size:11px;color:var(--text-faint)">Live</span>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="qs">
+        <div class="qs-card">
+          <div class="qs-n" style="color:#6366f1">4</div>
+          <div class="qs-l">Tasks</div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-n" style="color:#38bdf8">5</div>
+          <div class="qs-l">Events</div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-n" style="color:#f87171">11</div>
+          <div class="qs-l">Due Soon</div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-n" style="color:#fbbf24">3.72</div>
+          <div class="qs-l">GPA</div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="grid">
+
+        <!-- TO-DO -->
+        <div class="card">
+          <div class="sec-label">To-Do</div>
+          <div class="divider"></div>
+          <div class="todo">
+            <div class="pri" style="background:#f87171"></div>
+            <div class="cb"></div>
+            <div><div style="color:var(--text)">Review MA105 problem set</div><div style="font-size:10px;color:#f87171;margin-top:2px">Due today</div></div>
+          </div>
+          <div class="todo">
+            <div class="pri" style="background:#6366f1"></div>
+            <div class="cb"></div>
+            <div><div style="color:var(--text)">Email Professor Brown</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">No deadline</div></div>
+          </div>
+          <div class="todo" style="opacity:0.35">
+            <div class="pri" style="background:#2a2a2a"></div>
+            <div class="cb done"><svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" fill="none" stroke="#6366f1" stroke-width="1.5"/></svg></div>
+            <div style="text-decoration:line-through;color:var(--text-faint)">Submit EMS104 essay</div>
+          </div>
+          <div class="todo">
+            <div class="pri" style="background:#fbbf24"></div>
+            <div class="cb"></div>
+            <div><div style="color:var(--text)">Read LA100 Chapter 9</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">Apr 10</div></div>
+          </div>
+          <div class="todo">
+            <div class="pri" style="background:#6366f1"></div>
+            <div class="cb"></div>
+            <div><div style="color:var(--text)">CDI101 reflection paper</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">Apr 12</div></div>
+          </div>
+          <button class="add-b">+ Add task</button>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="card">
+          <div class="sec-label">Calendar</div>
+          <div class="divider"></div>
+          <div class="ev">
+            <div class="ev-bar" style="background:#6366f1"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:var(--text)">MA105 Lecture</div>
+              <div style="font-size:11px;color:var(--text-faint)">Apr 9 · 9:00 AM</div>
+            </div>
+            <span class="b b-acc">Wed</span>
+          </div>
+          <div class="ev">
+            <div class="ev-bar" style="background:#34d399"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:var(--text)">Business Law</div>
+              <div style="font-size:11px;color:var(--text-faint)">Apr 10 · 2:00 PM</div>
+            </div>
+            <span class="b b-g">Thu</span>
+          </div>
+          <div class="ev">
+            <div class="ev-bar" style="background:#38bdf8"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:var(--text)">EMS220 Discussion</div>
+              <div style="font-size:11px;color:var(--text-faint)">Apr 10 · 4:00 PM</div>
+            </div>
+            <span class="b b-d">Thu</span>
+          </div>
+          <button class="add-b">+ Add event</button>
+        </div>
+
+        <!-- BRIGHTSPACE -->
+        <div class="card">
+          <div class="sec-label">Brightspace</div>
+          <div class="divider"></div>
+          <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.1em">Next Up</div>
+          <div class="asn">
+            <div class="ev-bar" style="background:linear-gradient(#6366f1,#38bdf8)"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:var(--text)">MA105 7.1 Experiments</div>
+              <div style="font-size:11px;color:var(--text-faint)">Math Foundations</div>
+            </div>
+            <span class="b b-y">Apr 9</span>
+          </div>
+          <div class="asn">
+            <div class="ev-bar" style="background:linear-gradient(#34d399,#6ee7b7)"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:var(--text)">LA100 Quiz 4</div>
+              <div style="font-size:11px;color:var(--text-faint)">Business Law</div>
+            </div>
+            <span class="b b-d">Apr 11</span>
+          </div>
+          <div class="divider"></div>
+          <div class="cr"><div class="cdot" style="background:#6366f1"></div><span style="flex:1;font-size:12px;color:var(--text-muted)">MA105</span><span class="b b-acc">8</span></div>
+          <div class="cr"><div class="cdot" style="background:#34d399"></div><span style="flex:1;font-size:12px;color:var(--text-muted)">LA100</span><span class="b b-g">3</span></div>
+          <div class="cr"><div class="cdot" style="background:#a855f7"></div><span style="flex:1;font-size:12px;color:var(--text-muted)">EMS220</span><span class="b b-d">0</span></div>
+        </div>
+
+        <!-- GPA + AI -->
+        <div class="card">
+          <div class="sec-label">GPA</div>
+          <div style="font-size:46px;font-weight:800;color:#fbbf24;letter-spacing:-2px;text-shadow:0 0 30px rgba(251,191,36,0.2)">3.72</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:-8px">Spring 2026</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div><div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-faint)">MA105</span><span style="color:#fbbf24;font-weight:600">A−</span></div><div class="gb"><div class="gf" style="width:90%;background:linear-gradient(90deg,#fbbf24,#fde68a)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-faint)">EMS104</span><span style="color:#34d399;font-weight:600">A</span></div><div class="gb"><div class="gf" style="width:96%;background:linear-gradient(90deg,#34d399,#6ee7b7)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-faint)">LA100</span><span style="color:var(--text-muted);font-weight:600">B+</span></div><div class="gb"><div class="gf" style="width:77%;background:linear-gradient(90deg,#4b5563,#9ca3af)"></div></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="sec-label">JoeGPT</div>
+          <div class="ai-m">Hey — MA105 7.1 is due tomorrow. Should I move it to the top of your to-do list?</div>
+          <div class="ai-in">
+            <input placeholder="Ask JoeGPT anything…" />
+            <button class="snd"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5h8M5.5 1.5L9 5l-3.5 3.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+@keyframes pulse { 0%,100%{box-shadow:0 0 6px rgba(52,211,153,0.5)} 50%{box-shadow:0 0 14px rgba(52,211,153,0.9)} }
+</style>
+</body>
+</html>

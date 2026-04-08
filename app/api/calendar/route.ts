@@ -1,36 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  // Check if Apple credentials are configured
+  // Fetch ICS-imported events from DB (always available)
+  const importedCals = await prisma.importedCalendar.findMany({
+    include: { events: true },
+  });
+
+  const importedEvents = importedCals.flatMap((cal) =>
+    cal.events.map((e) => ({
+      id: `ics-${e.id}`,
+      title: e.title,
+      start: e.start.toISOString(),
+      end: e.end.toISOString(),
+      allDay: e.allDay,
+      location: e.location ?? undefined,
+      calendarName: cal.name,
+      calendarColor: cal.color,
+    }))
+  );
+
+  // If Apple credentials not configured, return only ICS events
   if (!process.env.APPLE_ID || !process.env.APPLE_APP_PASS) {
-    return NextResponse.json(
-      {
-        error: "unconfigured",
-        message: "Set APPLE_ID and APPLE_APP_PASS in .env.local",
-        events: [],
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ events: importedEvents });
   }
 
   try {
     const { fetchCalendarEvents } = await import("@/lib/caldav");
-    const events = await fetchCalendarEvents(14); // 2 weeks ahead
+    const caldavEvents = await fetchCalendarEvents(14); // 2 weeks ahead
 
-    // Serialize dates for JSON
-    const serialized = events.map((e) => ({
+    const serialized = caldavEvents.map((e) => ({
       ...e,
       start: e.start.toISOString(),
       end: e.end.toISOString(),
     }));
 
-    return NextResponse.json({ events: serialized });
+    return NextResponse.json({ events: [...serialized, ...importedEvents] });
   } catch (error) {
     console.error("[Calendar] Error:", error);
-    return NextResponse.json(
-      { error: "fetch_failed", message: String(error), events: [] },
-      { status: 200 }
-    );
+    // Still return ICS events even if CalDAV fails
+    return NextResponse.json({ events: importedEvents });
   }
 }
 

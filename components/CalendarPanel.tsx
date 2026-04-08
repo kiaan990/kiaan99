@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   format,
   isToday,
@@ -10,7 +10,155 @@ import {
   isSameDay,
   parseISO,
 } from "date-fns";
-import { Plus, RefreshCw, ChevronRight } from "lucide-react";
+import { Plus, RefreshCw, ChevronRight, ChevronDown, Upload, Trash2 } from "lucide-react";
+
+interface ImportedCalendar {
+  id: string;
+  name: string;
+  color: string;
+  fileName: string;
+}
+
+function ICSDropZone({ onImported }: { onImported: () => void }) {
+  const [dragging, setDragging] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [calendars, setCalendars] = useState<ImportedCalendar[]>([]);
+  const [expanded, setExpanded] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const loadCalendars = useCallback(async () => {
+    const res = await fetch("/api/calendar/import");
+    const data = await res.json();
+    setCalendars(data.calendars ?? []);
+  }, []);
+
+  useEffect(() => { loadCalendars(); }, [loadCalendars]);
+
+  const uploadFiles = async (files: FileList | File[]) => {
+    const icsFiles = Array.from(files).filter((f) => f.name.endsWith(".ics"));
+    if (!icsFiles.length) {
+      setMessage("No .ics files found");
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+    setImporting(true);
+    const fd = new FormData();
+    icsFiles.forEach((f) => fd.append("files", f));
+    const res = await fetch("/api/calendar/import", { method: "POST", body: fd });
+    const data = await res.json();
+    setImporting(false);
+    if (data.imported) {
+      const total = data.imported.reduce((s: number, c: { count: number }) => s + c.count, 0);
+      setMessage(`Imported ${total} events from ${data.imported.length} calendar(s)`);
+      setTimeout(() => setMessage(null), 4000);
+      loadCalendars();
+      onImported();
+    }
+  };
+
+  const deleteCalendar = async (id: string) => {
+    await fetch(`/api/calendar/import?id=${id}`, { method: "DELETE" });
+    loadCalendars();
+    onImported();
+  };
+
+  return (
+    <div style={{ marginBottom: "0.75rem" }}>
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          uploadFiles(e.dataTransfer.files);
+        }}
+        onClick={() => inputRef.current?.click()}
+        style={{
+          border: `1.5px dashed ${dragging ? "var(--color-gold)" : "var(--color-border)"}`,
+          borderRadius: "8px",
+          padding: "0.6rem 0.75rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          cursor: "pointer",
+          background: dragging ? "var(--color-gold-glow)" : "transparent",
+          transition: "all 0.15s ease",
+        }}
+      >
+        <Upload size={13} style={{ color: "var(--color-text-faint)", flexShrink: 0 }} />
+        <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+          {importing ? "Importing…" : message ?? "Drop .ics files here or click to browse"}
+        </span>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".ics"
+          multiple
+          style={{ display: "none" }}
+          onChange={(e) => e.target.files && uploadFiles(e.target.files)}
+        />
+      </div>
+
+      {/* Imported calendars list — collapsible */}
+      {calendars.length > 0 && (
+        <div style={{ marginTop: "0.4rem" }}>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.3rem",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "0.1rem 0",
+              color: "var(--color-text-faint)",
+            }}
+          >
+            {expanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+            <span style={{ fontSize: "0.68rem" }}>
+              {calendars.length} calendar{calendars.length !== 1 ? "s" : ""}
+            </span>
+            {/* color dots preview when collapsed */}
+            {!expanded && (
+              <span style={{ display: "flex", gap: "0.2rem", marginLeft: "0.2rem" }}>
+                {calendars.slice(0, 6).map((cal) => (
+                  <span key={cal.id} style={{ width: 6, height: 6, borderRadius: "50%", background: cal.color }} />
+                ))}
+                {calendars.length > 6 && (
+                  <span style={{ fontSize: "0.6rem", color: "var(--color-text-faint)" }}>+{calendars.length - 6}</span>
+                )}
+              </span>
+            )}
+          </button>
+
+          {expanded && (
+            <div style={{ marginTop: "0.25rem", display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+              {calendars.map((cal) => (
+                <div key={cal.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.15rem 0.25rem" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: cal.color, flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: "0.72rem", color: "var(--color-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {cal.name}
+                  </span>
+                  <button
+                    className="btn-icon"
+                    onClick={() => deleteCalendar(cal.id)}
+                    title="Remove calendar"
+                    style={{ padding: "0.15rem" }}
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface CalEvent {
   id: string;
@@ -263,10 +411,9 @@ function EventCard({ event }: { event: CalEvent }) {
 export default function CalendarPanel() {
   const [events, setEvents] = useState<CalEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [unconfigured, setUnconfigured] = useState(false);
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [showAdd, setShowAdd] = useState(false);
+  const [upcomingExpanded, setUpcomingExpanded] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
@@ -275,15 +422,6 @@ export default function CalendarPanel() {
     const data = await res.json();
     setRefreshing(false);
     setLoading(false);
-
-    if (data.error === "unconfigured") {
-      setUnconfigured(true);
-      return;
-    }
-    if (data.error) {
-      setError(data.message ?? "Failed to load calendar");
-      return;
-    }
     setEvents(data.events ?? []);
   };
 
@@ -339,116 +477,106 @@ export default function CalendarPanel() {
           </div>
         </div>
 
-        {unconfigured ? (
+        <ICSDropZone onImported={load} />
+
+        <WeekStrip events={events} selected={selectedDay} onSelect={setSelectedDay} />
+
+        <div>
           <div
-            className="card-elevated"
-            style={{ padding: "1rem", fontSize: "0.78rem", color: "var(--color-text-muted)", lineHeight: 1.6 }}
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: isToday(selectedDay) ? "var(--color-gold-light)" : "var(--color-text-muted)",
+              marginBottom: "0.5rem",
+            }}
           >
-            <strong style={{ color: "var(--color-gold-light)", display: "block", marginBottom: "0.4rem" }}>
-              Calendar not connected
-            </strong>
-            Add to <code style={{ fontFamily: "var(--font-geist-mono)", color: "var(--color-text-muted)" }}>.env.local</code>:
-            <br />
-            <code style={{ fontFamily: "var(--font-geist-mono)", fontSize: "0.72rem" }}>
-              APPLE_ID=your@icloud.com<br />
-              APPLE_APP_PASS=xxxx-xxxx-xxxx-xxxx
-            </code>
-            <br />
-            <span style={{ fontSize: "0.7rem", color: "var(--color-text-faint)" }}>
-              Generate app password at appleid.apple.com → Sign-In & Security
-            </span>
+            {todayLabel}
           </div>
-        ) : error ? (
-          <div style={{ padding: "1rem", fontSize: "0.78rem", color: "var(--color-error)" }}>
-            {error}
-          </div>
-        ) : (
-          <>
-            <WeekStrip events={events} selected={selectedDay} onSelect={setSelectedDay} />
 
-            <div>
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  color: isToday(selectedDay) ? "var(--color-gold-light)" : "var(--color-text-muted)",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {todayLabel}
-              </div>
-
-              {loading ? (
-                <div style={{ fontSize: "0.8rem", color: "var(--color-text-faint)" }}>Loading…</div>
-              ) : dayEvents.length === 0 ? (
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--color-text-faint)",
-                    padding: "0.75rem",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    border: "1px dashed var(--color-border)",
-                  }}
-                >
-                  No events
-                </div>
-              ) : (
-                <div className="stagger">
-                  {dayEvents.map((e) => (
-                    <EventCard key={e.id} event={e} />
-                  ))}
-                </div>
-              )}
+          {loading ? (
+            <div style={{ fontSize: "0.8rem", color: "var(--color-text-faint)" }}>Loading…</div>
+          ) : dayEvents.length === 0 ? (
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-text-faint)",
+                padding: "0.75rem",
+                textAlign: "center",
+                borderRadius: "8px",
+                border: "1px dashed var(--color-border)",
+              }}
+            >
+              No events
             </div>
+          ) : (
+            <div className="stagger">
+              {dayEvents.map((e) => (
+                <EventCard key={e.id} event={e} />
+              ))}
+            </div>
+          )}
+        </div>
 
-            {upcoming.length > 0 && (
-              <div>
-                <div className="divider" />
-                <div className="section-label" style={{ marginBottom: "0.5rem" }}>
-                  Upcoming
+        {upcoming.length > 0 && (
+          <div>
+            <div className="divider" />
+            <button
+              onClick={() => setUpcomingExpanded((v) => !v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.3rem",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "0 0 0.5rem 0",
+                width: "100%",
+              }}
+            >
+              <span className="section-label" style={{ flex: 1, textAlign: "left" }}>Upcoming</span>
+              {upcomingExpanded
+                ? <ChevronDown size={11} style={{ color: "var(--color-text-faint)" }} />
+                : <ChevronRight size={11} style={{ color: "var(--color-text-faint)" }} />}
+            </button>
+            {upcomingExpanded && <div className="stagger">
+              {upcoming.map((e) => (
+                <div
+                  key={e.id}
+                  className="animate-fade-in"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    padding: "0.4rem 0",
+                    borderBottom: "1px solid var(--color-border-subtle)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setSelectedDay(parseISO(e.start))}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: e.calendarColor || "var(--color-gold)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ flex: 1, fontSize: "0.8rem", color: "var(--color-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {e.title}
+                  </span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", flexShrink: 0 }}>
+                    {isToday(parseISO(e.start))
+                      ? "Today"
+                      : isTomorrow(parseISO(e.start))
+                      ? "Tmrw"
+                      : format(parseISO(e.start), "MMM d")}
+                  </span>
+                  <ChevronRight size={11} style={{ color: "var(--color-text-faint)", flexShrink: 0 }} />
                 </div>
-                <div className="stagger">
-                  {upcoming.map((e) => (
-                    <div
-                      key={e.id}
-                      className="animate-fade-in"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        padding: "0.4rem 0",
-                        borderBottom: "1px solid var(--color-border-subtle)",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setSelectedDay(parseISO(e.start))}
-                    >
-                      <span
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          background: e.calendarColor || "var(--color-gold)",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span style={{ flex: 1, fontSize: "0.8rem", color: "var(--color-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {e.title}
-                      </span>
-                      <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", flexShrink: 0 }}>
-                        {isToday(parseISO(e.start))
-                          ? "Today"
-                          : isTomorrow(parseISO(e.start))
-                          ? "Tmrw"
-                          : format(parseISO(e.start), "MMM d")}
-                      </span>
-                      <ChevronRight size={11} style={{ color: "var(--color-text-faint)", flexShrink: 0 }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+              ))}
+            </div>}
+          </div>
         )}
       </div>
     </>
