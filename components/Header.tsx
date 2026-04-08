@@ -65,7 +65,7 @@ export default function Header() {
           fontWeight: 400,
         }}
       >
-        {greeting()}, Kiaan
+        {greeting()}, {process.env.NEXT_PUBLIC_DASHBOARD_NAME ?? "there"}
       </div>
 
       {/* Right — date + time */}

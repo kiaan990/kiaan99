@@ -3,7 +3,7 @@
  * Uses D2L's internal JSON API endpoints after authenticating via Microsoft SSO.
  */
 
-const BASE_URL = "https://brightspace.bentley.edu";
+const BASE_URL = process.env.BRIGHTSPACE_BASE_URL ?? "https://brightspace.bentley.edu";
 const API_LP = `${BASE_URL}/d2l/api/lp/1.9`;
 const API_LE = `${BASE_URL}/d2l/api/le/1.53`;
 
@@ -100,10 +100,12 @@ export async function scrapeBrightspace(): Promise<ScrapeResult> {
     const courses: ScrapedCourse[] = enrollData.Items
       .filter((item) => {
         if (!item.Access.CanAccess) return false;
-        // Only include Spring 2026 courses
+        // Filter by semester if BRIGHTSPACE_SEMESTER is set (e.g. "spring 2026"), otherwise include all accessible courses
+        const semFilter = process.env.BRIGHTSPACE_SEMESTER?.toLowerCase();
+        if (!semFilter) return true;
         const name = item.OrgUnit.Name.toLowerCase();
         const code = item.OrgUnit.Code.toLowerCase();
-        return name.includes("spring 2026") || code.includes("202601") || code.includes("202602");
+        return name.includes(semFilter) || code.includes(semFilter.replace(/\s+/g, ""));
       })
       .map((item) => {
         const name = item.OrgUnit.Name;
