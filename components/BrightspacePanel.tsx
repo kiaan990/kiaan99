@@ -1,8 +1,98 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format, isPast, isToday, parseISO } from "date-fns";
-import { Plus, RefreshCw, BookOpen, AlertCircle, CheckCircle, Clock, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, AlertCircle, CheckCircle, Clock, Trash2 } from "lucide-react";
+
+// Calendar-matched color palette — matches Apple Calendar sidebar colors
+const CALENDAR_COLORS = [
+  { label: "Red (Work)",     hex: "#e74c3c" },
+  { label: "Purple (MG116)", hex: "#8e44ad" },
+  { label: "Amber (MA105)",  hex: "#e67e22" },
+  { label: "Green (LA100)",  hex: "#27ae60" },
+  { label: "Blue (EMS220)",  hex: "#2980b9" },
+  { label: "Yellow (EMS104)",hex: "#f1c40f" },
+  { label: "Gold",           hex: "#c8922a" },
+  { label: "Teal",           hex: "#16a085" },
+];
+
+function ColorDot({
+  courseId,
+  color,
+  onColorChange,
+}: {
+  courseId: string;
+  color: string;
+  onColorChange: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const pick = async (e: React.MouseEvent, hex: string) => {
+    e.stopPropagation();
+    await fetch(`/api/brightspace?type=course&id=${courseId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ color: hex }),
+    });
+    setOpen(false);
+    onColorChange();
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        title="Change color"
+        style={{
+          width: 12, height: 12, borderRadius: "50%", background: color,
+          border: "none", cursor: "pointer", padding: 0, flexShrink: 0,
+          boxShadow: open ? `0 0 0 2px var(--color-surface), 0 0 0 3px ${color}` : "none",
+          transition: "box-shadow 0.15s ease",
+        }}
+      />
+      {open && (
+        <div
+          className="animate-fade-in"
+          style={{
+            position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 20,
+            background: "var(--color-surface-2)", border: "1px solid var(--color-border)",
+            borderRadius: "10px", padding: "0.6rem", display: "flex",
+            flexWrap: "wrap", gap: "0.4rem", width: "160px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ width: "100%", fontSize: "0.6rem", color: "var(--color-text-faint)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.2rem" }}>
+            Match calendar
+          </div>
+          {CALENDAR_COLORS.map((c) => (
+            <button
+              key={c.hex}
+              title={c.label}
+              onClick={(e) => pick(e, c.hex)}
+              style={{
+                width: 20, height: 20, borderRadius: "50%", background: c.hex,
+                border: `2px solid ${color === c.hex ? "white" : "transparent"}`,
+                cursor: "pointer", padding: 0, transition: "transform 0.1s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Assignment {
   id: string;
@@ -387,15 +477,7 @@ export default function BrightspacePanel() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-surface-2)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
               >
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: course.color,
-                    flexShrink: 0,
-                  }}
-                />
+                <ColorDot courseId={course.id} color={course.color} onColorChange={load} />
                 <span style={{ flex: 1, fontSize: "0.82rem", fontWeight: 500, color: "var(--color-text)" }}>
                   {course.courseCode ? `${course.courseCode} — ` : ""}{course.name}
                 </span>
