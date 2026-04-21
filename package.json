@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
     "@azure/msal-node": "^5.1.2",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@prisma/adapter-better-sqlite3": "^7.7.0",
