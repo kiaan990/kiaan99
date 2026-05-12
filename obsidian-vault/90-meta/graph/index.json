@@ -1,0 +1,260 @@
+{
+  "built_at": "2026-05-12T14:21:56+00:00",
+  "vault_root": "/home/user/Obsidian/SecondBrain",
+  "notes": [
+    {
+      "slug": "2026-05-11",
+      "path": "/home/user/Obsidian/SecondBrain/50-daily/2026-05-11.md",
+      "rel_path": "50-daily/2026-05-11.md",
+      "dir": "50-daily",
+      "title": "2026-05-11",
+      "type": "daily",
+      "tags": [
+        "daily",
+        "vault-setup"
+      ],
+      "status": "",
+      "stack": [],
+      "created": "2026-05-11",
+      "updated": "2026-05-11",
+      "outlinks": [
+        "2026-05-11-vault-setup",
+        "CLAUDE",
+        "welcome",
+        "pattern-vault-search-first"
+      ],
+      "inlinks": []
+    },
+    {
+      "slug": "2026-05-11-vault-setup",
+      "path": "/home/user/Obsidian/SecondBrain/60-retros/2026-05-11-vault-setup.md",
+      "rel_path": "60-retros/2026-05-11-vault-setup.md",
+      "dir": "60-retros",
+      "title": "Retro: Vault setup",
+      "type": "retro",
+      "tags": [
+        "retro",
+        "meta",
+        "vault-setup",
+        "tooling"
+      ],
+      "status": "",
+      "stack": [],
+      "created": "2026-05-11",
+      "updated": "2026-05-11",
+      "outlinks": [
+        "pattern-vault-search-first"
+      ],
+      "inlinks": [
+        "2026-05-11",
+        "pattern-vault-search-first"
+      ]
+    },
+    {
+      "slug": "CLAUDE",
+      "path": "/home/user/Obsidian/SecondBrain/CLAUDE.md",
+      "rel_path": "CLAUDE.md",
+      "dir": "CLAUDE.md",
+      "title": "CLAUDE.md — Operating Instructions for the Second Brain Vault",
+      "type": "unknown",
+      "tags": [],
+      "status": "",
+      "stack": [],
+      "created": "",
+      "updated": "",
+      "outlinks": [
+        "wikilinks",
+        "pattern-idempotent-webhooks"
+      ],
+      "inlinks": [
+        "2026-05-11",
+        "welcome"
+      ]
+    },
+    {
+      "slug": "README",
+      "path": "/home/user/Obsidian/SecondBrain/10-projects/_template/README.md",
+      "rel_path": "10-projects/_template/README.md",
+      "dir": "10-projects",
+      "title": "{{PROJECT_NAME}}",
+      "type": "project",
+      "tags": [
+        "project",
+        "{{STACK}}"
+      ],
+      "status": "active",
+      "stack": [
+        "{{STACK}}"
+      ],
+      "created": "{{DATE}}",
+      "updated": "{{DATE}}",
+      "outlinks": [
+        "YYYY-MM-DD-{{SLUG}}"
+      ],
+      "inlinks": [
+        "welcome"
+      ]
+    },
+    {
+      "slug": "SETUP",
+      "path": "/home/user/Obsidian/SecondBrain/90-meta/mcp/SETUP.md",
+      "rel_path": "90-meta/mcp/SETUP.md",
+      "dir": "90-meta",
+      "title": "MCP setup — Obsidian ↔ Claude Code",
+      "type": "resource",
+      "tags": [
+        "meta",
+        "mcp",
+        "setup"
+      ],
+      "status": "",
+      "stack": [],
+      "created": "2026-05-11",
+      "updated": "2026-05-11",
+      "outlinks": [],
+      "inlinks": []
+    },
+    {
+      "slug": "SKILL",
+      "path": "/home/user/Obsidian/SecondBrain/90-meta/skills/daily-rollup/SKILL.md",
+      "rel_path": "90-meta/skills/daily-rollup/SKILL.md",
+      "dir": "90-meta",
+      "title": "daily-rollup",
+      "type": "meta",
+      "tags": [],
+      "status": "",
+      "stack": [],
+      "created": "",
+      "updated": "",
+      "outlinks": [
+        "<slug>",
+        "<inbox-slug>"
+      ],
+      "inlinks": []
+    },
+    {
+      "slug": "pattern-vault-search-first",
+      "path": "/home/user/Obsidian/SecondBrain/70-patterns/pattern-vault-search-first.md",
+      "rel_path": "70-patterns/pattern-vault-search-first.md",
+      "dir": "70-patterns",
+      "title": "Pattern: Vault search first",
+      "type": "pattern",
+      "tags": [
+        "pattern",
+        "meta",
+        "workflow"
+      ],
+      "status": "",
+      "stack": [],
+      "created": "2026-05-11",
+      "updated": "2026-05-11",
+      "outlinks": [
+        "2026-05-11-vault-setup"
+      ],
+      "inlinks": [
+        "2026-05-11",
+        "2026-05-11-vault-setup"
+      ]
+    },
+    {
+      "slug": "welcome",
+      "path": "/home/user/Obsidian/SecondBrain/00-inbox/welcome.md",
+      "rel_path": "00-inbox/welcome.md",
+      "dir": "00-inbox",
+      "title": "Welcome to your second brain",
+      "type": "inbox",
+      "tags": [
+        "meta",
+        "welcome"
+      ],
+      "status": "",
+      "stack": [],
+      "created": "2026-05-11",
+      "updated": "2026-05-11",
+      "outlinks": [
+        "CLAUDE",
+        "README"
+      ],
+      "inlinks": [
+        "2026-05-11"
+      ]
+    }
+  ],
+  "by_tag": {
+    "daily": [
+      "2026-05-11"
+    ],
+    "mcp": [
+      "SETUP"
+    ],
+    "meta": [
+      "2026-05-11-vault-setup",
+      "SETUP",
+      "pattern-vault-search-first",
+      "welcome"
+    ],
+    "pattern": [
+      "pattern-vault-search-first"
+    ],
+    "project": [
+      "README"
+    ],
+    "retro": [
+      "2026-05-11-vault-setup"
+    ],
+    "setup": [
+      "SETUP"
+    ],
+    "tooling": [
+      "2026-05-11-vault-setup"
+    ],
+    "vault-setup": [
+      "2026-05-11",
+      "2026-05-11-vault-setup"
+    ],
+    "welcome": [
+      "welcome"
+    ],
+    "workflow": [
+      "pattern-vault-search-first"
+    ],
+    "{{STACK}}": [
+      "README"
+    ]
+  },
+  "by_type": {
+    "daily": [
+      "2026-05-11"
+    ],
+    "inbox": [
+      "welcome"
+    ],
+    "meta": [
+      "SKILL"
+    ],
+    "pattern": [
+      "pattern-vault-search-first"
+    ],
+    "project": [
+      "README"
+    ],
+    "resource": [
+      "SETUP"
+    ],
+    "retro": [
+      "2026-05-11-vault-setup"
+    ],
+    "unknown": [
+      "CLAUDE"
+    ]
+  },
+  "orphans": [],
+  "stale_active": [],
+  "stats": {
+    "total_notes": 8,
+    "total_tags": 12,
+    "total_outlinks": 13,
+    "orphan_count": 0,
+    "stale_count": 0
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "obsidian": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "obsidian-mcp-server@3.1.7"],
+      "env": {
+        "MCP_TRANSPORT_TYPE": "stdio",
+        "MCP_LOG_LEVEL": "info",
+        "OBSIDIAN_API_KEY": "REPLACE_ME_WITH_LOCAL_REST_API_KEY",
+        "OBSIDIAN_BASE_URL": "https://127.0.0.1:27124"
+      }
+    }
+  }
+}

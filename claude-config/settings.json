@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/user/Obsidian/SecondBrain/90-meta/hooks/post-write.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

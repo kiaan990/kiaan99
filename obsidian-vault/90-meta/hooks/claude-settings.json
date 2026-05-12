@@ -1,0 +1,16 @@
+{
+  "_comment_": "Merge this into ~/.claude/settings.json. If that file already exists with other settings, merge the 'hooks' key (and its sub-keys) into the existing JSON rather than replacing the file. The 'matcher' uses Claude Code's PostToolUse event for any Write or Edit tool call; the command is the vault hook script that rebuilds the graph index and auto-links the changed note. The script itself does its own filtering — it bails out cleanly if the edited file isn't a markdown file inside the vault, so wiring it user-globally is safe.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/user/Obsidian/SecondBrain/90-meta/hooks/post-write.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,16 +1,14 @@
-@AGENTS.md
+# CLAUDE.md — Project bridge to the Second Brain
 
----
-
-# Second Brain bridge
+## Second brain
 
 The user maintains a second-brain vault at:
 
 **`/home/user/Obsidian/SecondBrain`**
 
-Read `/home/user/Obsidian/SecondBrain/CLAUDE.md` before doing any
-non-trivial work in this repo. That file is the authoritative operating
-manual for the vault.
+Read `/home/user/Obsidian/SecondBrain/CLAUDE.md` before doing any non-trivial
+work in this repo. That file is the authoritative operating manual for the
+vault.
 
 ## Required workflow
 
@@ -48,6 +46,8 @@ manual for the vault.
 
 ## Project metadata
 
-- **Vault project note:** _(create on first task — see start-project skill)_
-- **Slug:** `kiaan99`
-- **Stack:** `[typescript, nextjs, prisma]`
+_Fill these in when this template is dropped into a repo._
+
+- **Vault project note:** `/home/user/Obsidian/SecondBrain/10-projects/<slug>/<slug>.md`
+- **Slug:** `<slug>`
+- **Stack:** `<stack>`
