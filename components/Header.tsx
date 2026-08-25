@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import SemesterSettings from "./SemesterSettings";
 
 export default function Header() {
   const [now, setNow] = useState(new Date());
@@ -33,7 +34,7 @@ export default function Header() {
         zIndex: 40,
       }}
     >
-      {/* Left — brand */}
+      {/* Left — brand + semester */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
         <div
           style={{
@@ -55,6 +56,7 @@ export default function Header() {
         >
           Command Center
         </span>
+        <SemesterSettings />
       </div>
 
       {/* Center — greeting */}

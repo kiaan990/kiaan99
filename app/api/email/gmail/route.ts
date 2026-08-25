@@ -6,12 +6,14 @@
  *   GOOGLE_CLIENT_SECRET - from Google Cloud Console
  *   NEXTAUTH_URL         - your app base URL (e.g. http://localhost:3000)
  *
- * OAuth2 tokens are cached in memory for the server process lifetime.
+ * OAuth2 tokens are persisted in SQLite so they survive server restarts.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { loadToken, persistToken } from "@/lib/token-store";
 
 const GMAIL_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
+const PROVIDER = "gmail";
 
 interface TokenStore {
   accessToken: string;
@@ -19,15 +21,29 @@ interface TokenStore {
   expiresAt: number;
 }
 
-let tokenCache: TokenStore | null = null;
+// In-memory cache to avoid DB hit on every request
+let memCache: TokenStore | null = null;
+
+async function getTokenFromStore(): Promise<TokenStore | null> {
+  if (memCache) return memCache;
+  const stored = await loadToken(PROVIDER);
+  if (stored) memCache = stored;
+  return memCache;
+}
+
+async function writeToken(token: TokenStore) {
+  memCache = token;
+  await persistToken(PROVIDER, token);
+}
 
 async function refreshAccessToken(): Promise<string | null> {
-  if (!tokenCache?.refreshToken) return null;
+  const current = await getTokenFromStore();
+  if (!current?.refreshToken) return null;
 
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
     client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-    refresh_token: tokenCache.refreshToken,
+    refresh_token: current.refreshToken,
     grant_type: "refresh_token",
   });
 
@@ -40,18 +56,19 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!res.ok) return null;
   const data = await res.json();
 
-  tokenCache = {
+  const updated: TokenStore = {
     accessToken: data.access_token,
-    refreshToken: tokenCache.refreshToken, // Gmail refresh tokens don't rotate
+    refreshToken: current.refreshToken, // Gmail refresh tokens don't rotate
     expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
   };
-
-  return tokenCache.accessToken;
+  await writeToken(updated);
+  return updated.accessToken;
 }
 
 async function getAccessToken(): Promise<string | null> {
-  if (!tokenCache) return null;
-  if (Date.now() < tokenCache.expiresAt - 60000) return tokenCache.accessToken;
+  const token = await getTokenFromStore();
+  if (!token) return null;
+  if (Date.now() < token.expiresAt - 60000) return token.accessToken;
   return refreshAccessToken();
 }
 
@@ -59,7 +76,6 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const action = url.searchParams.get("action");
 
-  // OAuth callback
   if (action === "callback") {
     const code = url.searchParams.get("code");
     if (!code) return NextResponse.json({ error: "No code" }, { status: 400 });
@@ -83,16 +99,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: tokenData.error_description }, { status: 400 });
     }
 
-    tokenCache = {
+    await writeToken({
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
       expiresAt: Date.now() + (tokenData.expires_in ?? 3600) * 1000,
-    };
+    });
 
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // Connect — redirect to Google OAuth
   if (action === "connect") {
     if (!process.env.GOOGLE_CLIENT_ID) {
       return NextResponse.json({ error: "unconfigured" }, { status: 400 });
@@ -104,13 +119,9 @@ export async function GET(req: NextRequest) {
       `${process.env.NEXTAUTH_URL}/api/email/gmail?action=callback`
     );
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set(
-      "scope",
-      "https://www.googleapis.com/auth/gmail.readonly"
-    );
+    authUrl.searchParams.set("scope", "https://www.googleapis.com/auth/gmail.readonly");
     authUrl.searchParams.set("access_type", "offline");
     authUrl.searchParams.set("prompt", "consent");
-
     return NextResponse.redirect(authUrl.toString());
   }
 
@@ -124,13 +135,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Fetch unread count
     const profileRes = await fetch(`${GMAIL_BASE}/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const profile = await profileRes.json();
 
-    // Fetch unread messages list
     const listRes = await fetch(
       `${GMAIL_BASE}/messages?q=is:unread in:inbox&maxResults=10`,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -138,7 +147,6 @@ export async function GET(req: NextRequest) {
     const listData = await listRes.json();
     const messageList: { id: string }[] = listData.messages ?? [];
 
-    // Fetch message details (parallel)
     const messages = await Promise.all(
       messageList.slice(0, 8).map(async (m) => {
         const res = await fetch(
@@ -146,15 +154,9 @@ export async function GET(req: NextRequest) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const data = await res.json();
-        const headers: { name: string; value: string }[] =
-          data.payload?.headers ?? [];
-        const get = (name: string) =>
-          headers.find((h) => h.name === name)?.value ?? "";
-
-        const isImportant =
-          data.labelIds?.includes("IMPORTANT") ||
-          data.labelIds?.includes("STARRED");
-
+        const headers: { name: string; value: string }[] = data.payload?.headers ?? [];
+        const get = (name: string) => headers.find((h) => h.name === name)?.value ?? "";
+        const isImportant = data.labelIds?.includes("IMPORTANT") || data.labelIds?.includes("STARRED");
         return {
           id: m.id,
           subject: get("Subject") || "(no subject)",
@@ -169,8 +171,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       status: "connected",
-      unreadCount: profile.messagesTotal ?? 0,
-      threadUnread: profile.threadsTotal ?? 0,
+      unreadCount: profile.messagesUnread ?? 0,
+      threadUnread: profile.threadsUnread ?? 0,
       messages,
     });
   } catch (error) {

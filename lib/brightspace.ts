@@ -15,7 +15,7 @@
  * Review Bentley University's Acceptable Use Policy before running.
  */
 
-const BASE_URL = "https://brightspace.bentley.edu";
+const BASE_URL = process.env.BRIGHTSPACE_BASE_URL ?? "https://brightspace.bentley.edu";
 
 export interface ScrapedCourse {
   id: string;
@@ -89,7 +89,7 @@ export async function scrapeBrightspace(): Promise<ScrapeResult> {
 
     await page.fill(
       'input[type="email"], input[name="loginfmt"]',
-      `${process.env.BRIGHTSPACE_USER}@bentley.edu`
+      `${process.env.BRIGHTSPACE_USER}${process.env.BRIGHTSPACE_EMAIL_DOMAIN ?? "@bentley.edu"}`
     );
     await page.click('input[type="submit"], button[type="submit"]');
 

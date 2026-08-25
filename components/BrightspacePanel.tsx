@@ -4,16 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { format, isPast, isToday, parseISO } from "date-fns";
 import { Plus, RefreshCw, AlertCircle, CheckCircle, Clock, Trash2 } from "lucide-react";
 
-// Calendar-matched color palette — matches Apple Calendar sidebar colors
 const CALENDAR_COLORS = [
-  { label: "Red (Work)",     hex: "#e74c3c" },
-  { label: "Purple (MG116)", hex: "#8e44ad" },
-  { label: "Amber (MA105)",  hex: "#e67e22" },
-  { label: "Green (LA100)",  hex: "#27ae60" },
-  { label: "Blue (EMS220)",  hex: "#2980b9" },
-  { label: "Yellow (EMS104)",hex: "#f1c40f" },
-  { label: "Gold",           hex: "#c8922a" },
-  { label: "Teal",           hex: "#16a085" },
+  { label: "Red",    hex: "#e74c3c" },
+  { label: "Purple", hex: "#8e44ad" },
+  { label: "Amber",  hex: "#e67e22" },
+  { label: "Green",  hex: "#27ae60" },
+  { label: "Blue",   hex: "#2980b9" },
+  { label: "Yellow", hex: "#f1c40f" },
+  { label: "Gold",   hex: "#c8922a" },
+  { label: "Teal",   hex: "#16a085" },
 ];
 
 function ColorDot({
@@ -374,7 +373,7 @@ export default function BrightspacePanel() {
         <div>
           <span className="section-label">Brightspace</span>
           <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: "0.15rem" }}>
-            bentley.brightspace.edu
+            brightspace.bentley.edu
           </div>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
