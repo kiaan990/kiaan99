@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import DailyBriefPanel from "@/components/DailyBriefPanel";
 import CalendarPanel from "@/components/CalendarPanel";
 import TodoPanel from "@/components/TodoPanel";
 import GPAPanel from "@/components/GPAPanel";
@@ -18,6 +19,12 @@ export default function DashboardPage() {
     >
       <Header />
 
+      {/* ─── Daily Brief — full width strip ─── */}
+      <div style={{ padding: "1rem 0 0" }}>
+        <DailyBriefPanel />
+      </div>
+
+      {/* ─── Main grid ─── */}
       <main
         style={{
           flex: 1,
@@ -41,10 +48,7 @@ export default function DashboardPage() {
             minWidth: 0,
           }}
         >
-          {/* Outlook + Gmail */}
           <EmailPanel />
-
-          {/* GoodNotes Quick Launch */}
           <GoodNotesPanel />
         </aside>
 
@@ -57,12 +61,9 @@ export default function DashboardPage() {
             minWidth: 0,
           }}
         >
-          {/* Calendar */}
           <div style={{ flex: "0 0 auto" }}>
             <CalendarPanel />
           </div>
-
-          {/* Brightspace */}
           <div style={{ flex: 1 }}>
             <BrightspacePanel />
           </div>
@@ -77,12 +78,9 @@ export default function DashboardPage() {
             minWidth: 0,
           }}
         >
-          {/* To-Do */}
           <div style={{ flex: "0 1 auto", minHeight: 0 }}>
             <TodoPanel />
           </div>
-
-          {/* GPA Tracker */}
           <div style={{ flex: "0 0 auto" }}>
             <GPAPanel />
           </div>
