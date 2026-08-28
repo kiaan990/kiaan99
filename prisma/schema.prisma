@@ -13,9 +13,10 @@ model Semester {
   startDate DateTime
   endDate   DateTime
   isActive  Boolean             @default(false)
-  breaks    SemesterBreak[]
-  courses   BrightspaceCourse[]
-  createdAt DateTime            @default(now())
+  breaks            SemesterBreak[]
+  courses           BrightspaceCourse[]
+  syllabusCourses   Course[]
+  createdAt         DateTime            @default(now())
 }
 
 model SemesterBreak {
@@ -96,6 +97,80 @@ model BrightspaceAssignment {
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
+
+// ─── Syllabus Ingestion (Phase 1) ────────────────────────────────────────────
+
+model SyllabusUpload {
+  id         String   @id @default(cuid())
+  filename   String
+  status     String   @default("pending") // pending | committed | rejected
+  parsedJson String?  // Claude extraction result, stored as JSON string
+  rawText    String   // extracted text (may be truncated)
+  semesterId String?
+  courseId   String?  // set after commit
+  createdAt  DateTime @default(now())
+}
+
+model Course {
+  id                  String              @id @default(cuid())
+  name                String
+  courseCode          String?
+  professor           String?
+  professorEmail      String?
+  officeHours         String?
+  semesterId          String?
+  semester            Semester?           @relation(fields: [semesterId], references: [id], onDelete: SetNull)
+  meetingTimes        CourseMeetingTime[]
+  gradingComponents   GradingComponent[]
+  policies            CoursePolicy[]
+  syllabusItems       SyllabusItem[]
+  brightspaceCourseId String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+model CourseMeetingTime {
+  id        String @id @default(cuid())
+  courseId  String
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  dayOfWeek String // "Monday" | "Tuesday" etc.
+  startTime String // "09:30" (24h)
+  endTime   String // "10:45" (24h)
+  location  String?
+}
+
+model GradingComponent {
+  id          String @id @default(cuid())
+  courseId    String
+  course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name        String
+  weight      Float  // fraction: 0.25 = 25%
+  description String?
+}
+
+model CoursePolicy {
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category String // "late_penalty" | "attendance" | "submission" | "other"
+  content  String
+}
+
+model SyllabusItem {
+  id          String    @id @default(cuid())
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  type        String    @default("assignment") // assignment | reading | quiz | exam | project | other
+  dueDate     DateTime?
+  dueDateRaw  String?   // original text before date resolution (e.g. "Week 4 Wednesday")
+  weight      Float?    // fraction of course grade if specified
+  description String?
+  calEventUid String?   // CalDAV event UID if pushed to calendar
+  createdAt   DateTime  @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 model BrightspaceGrade {
   id        String            @id @default(cuid())

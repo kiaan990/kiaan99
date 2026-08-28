@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { format, isPast, isToday, parseISO } from "date-fns";
-import { Plus, RefreshCw, AlertCircle, CheckCircle, Clock, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, AlertCircle, CheckCircle, Clock, Trash2, FileText } from "lucide-react";
+import SyllabusModal from "./SyllabusModal";
 
 const CALENDAR_COLORS = [
   { label: "Red",    hex: "#e74c3c" },
@@ -328,6 +329,7 @@ export default function BrightspacePanel() {
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [syllabusOpen, setSyllabusOpen] = useState(false);
 
   const load = async () => {
     const res = await fetch("/api/brightspace");
@@ -377,6 +379,15 @@ export default function BrightspacePanel() {
           </div>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <button
+            className="btn-ghost"
+            onClick={() => setSyllabusOpen(true)}
+            style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem" }}
+            title="Import syllabus PDF"
+          >
+            <FileText size={12} />
+            Import
+          </button>
           <button
             className="btn-ghost"
             onClick={triggerScrape}
@@ -519,6 +530,13 @@ export default function BrightspacePanel() {
       </div>
 
       <AddCourseForm onAdded={load} />
+
+      {syllabusOpen && (
+        <SyllabusModal
+          onClose={() => setSyllabusOpen(false)}
+          onImported={() => { setSyllabusOpen(false); load(); }}
+        />
+      )}
     </div>
   );
 }
