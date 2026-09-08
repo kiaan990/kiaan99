@@ -6,6 +6,7 @@ import GPAPanel from "@/components/GPAPanel";
 import EmailPanel from "@/components/EmailPanel";
 import BrightspacePanel from "@/components/BrightspacePanel";
 import GoodNotesPanel from "@/components/GoodNotesPanel";
+import GradeIntelligencePanel from "@/components/GradeIntelligencePanel";
 
 export default function DashboardPage() {
   return (
@@ -64,8 +65,11 @@ export default function DashboardPage() {
           <div style={{ flex: "0 0 auto" }}>
             <CalendarPanel />
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: "0 1 auto" }}>
             <BrightspacePanel />
+          </div>
+          <div style={{ flex: "0 1 auto" }}>
+            <GradeIntelligencePanel />
           </div>
         </section>
 

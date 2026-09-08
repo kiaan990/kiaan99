@@ -157,17 +157,19 @@ model CoursePolicy {
 }
 
 model SyllabusItem {
-  id          String    @id @default(cuid())
-  courseId    String
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  title       String
-  type        String    @default("assignment") // assignment | reading | quiz | exam | project | other
-  dueDate     DateTime?
-  dueDateRaw  String?   // original text before date resolution (e.g. "Week 4 Wednesday")
-  weight      Float?    // fraction of course grade if specified
-  description String?
-  calEventUid String?   // CalDAV event UID if pushed to calendar
-  createdAt   DateTime  @default(now())
+  id           String    @id @default(cuid())
+  courseId     String
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title        String
+  type         String    @default("assignment") // assignment | reading | quiz | exam | project | other
+  dueDate      DateTime?
+  dueDateRaw   String?   // original text before date resolution (e.g. "Week 4 Wednesday")
+  weight       Float?    // fraction of course grade if specified
+  earnedPoints Float?    // actual score received (e.g. 85.0)
+  maxPoints    Float?    // maximum possible score (e.g. 100.0)
+  description  String?
+  calEventUid  String?   // CalDAV event UID if pushed to calendar
+  createdAt    DateTime  @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
