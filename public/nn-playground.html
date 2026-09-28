@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Neural Network Playground</title>
+<style>
+  /* ============================================================
+     THEME TOKENS
+     Two "signal" colours are used consistently everywhere:
+       blue  = positive number  (pushes prediction toward Class B / 1)
+       amber = negative number  (pushes prediction toward Class A / 0)
+     So a blue synapse, a blue neuron and a blue region of the map
+     all mean the same thing. That consistency is the whole point.
+     ============================================================ */
+  :root {
+    --bg:        #0b0f17;
+    --panel:     #141a26;
+    --panel-2:   #1b2230;
+    --line:      #2a3444;
+    --text:      #e6edf7;
+    --muted:     #8f9db4;
+    --pos:       #4ea8ff;   /* positive weight / Class B (target 1) */
+    --neg:       #f5843c;   /* negative weight / Class A (target 0) */
+    --accent:    #7ee787;
+    --radius:    12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 19px;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .spacer { flex: 1 1 auto; }
+
+  /* ---------- Buttons & controls ---------- */
+  button {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  button:hover { background: #232c3d; border-color: #3a4657; }
+  button:active { transform: translateY(1px); }
+  button.primary {
+    background: var(--pos);
+    border-color: var(--pos);
+    color: #05121f;
+    font-weight: 600;
+    min-width: 96px;
+  }
+  button.primary:hover { background: #6fb9ff; border-color: #6fb9ff; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 22px;
+    align-items: flex-end;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #101623, #0d121c);
+  }
+  .ctrl { display: flex; flex-direction: column; gap: 6px; min-width: 132px; }
+  .ctrl > label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .ctrl > label b { color: var(--text); font-family: var(--mono); font-weight: 600; }
+  .btn-row { display: flex; gap: 8px; align-items: center; }
+
+  select {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 3px;
+    background: #2c3648;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--pos);
+    border: 2px solid #0b0f17;
+    cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--pos);
+    border: 2px solid #0b0f17;
+    cursor: pointer;
+  }
+
+  /* ---------- Layout ---------- */
+  main {
+    display: grid;
+    grid-template-columns: minmax(340px, 1fr) minmax(360px, 1.15fr);
+    gap: 16px;
+    padding: 16px 20px 28px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .card h2 {
+    margin: 0 0 4px;
+    font-size: 13px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .card .hint {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ---------- Canvases ---------- */
+  #boundary {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: block;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    cursor: crosshair;
+  }
+  #lossChart {
+    width: 100%;
+    height: 150px;
+    display: block;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #0e131d;
+  }
+  #netSvg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #0e131d;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .bar { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  /* ---------- Metrics ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .metric {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 10px;
+  }
+  .metric span {
+    display: block;
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .metric b {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Explainer drawer ---------- */
+  #drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(430px, 92vw);
+    background: #101622;
+    border-left: 1px solid var(--line);
+    padding: 20px 20px 40px;
+    overflow-y: auto;
+    transform: translateX(102%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    z-index: 40;
+    box-shadow: -18px 0 40px rgba(0,0,0,.45);
+  }
+  #drawer.open { transform: translateX(0); }
+  #drawer h2 { margin: 0 0 14px; font-size: 16px; }
+  details {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: var(--panel);
+    overflow: hidden;
+  }
+  details > summary {
+    cursor: pointer;
+    padding: 11px 13px;
+    font-size: 13.5px;
+    font-weight: 600;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "▸ "; color: var(--pos); }
+  details[open] > summary::before { content: "▾ "; }
+  details .body {
+    padding: 0 13px 13px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #cbd6e6;
+  }
+  details .body p { margin: 0 0 10px; }
+  details .body p:last-child { margin-bottom: 0; }
+  details .body code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: #0d121c;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .kbd {
+    font-family: var(--mono);
+    font-size: 11px;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 1px 5px;
+    background: var(--panel-2);
+  }
+  .close-x {
+    position: absolute;
+    top: 14px; right: 16px;
+    padding: 4px 10px;
+  }
+  footer {
+    padding: 0 20px 30px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Neural Network Playground</h1>
+  <p>A 2&nbsp;→&nbsp;N&nbsp;→&nbsp;1 perceptron, trained from scratch in your browser.</p>
+  <div class="spacer"></div>
+  <button id="drawerBtn">📖 Concepts</button>
+</header>
+
+<!-- ============ CONTROL BAR ============ -->
+<div class="controls">
+  <div class="ctrl" style="min-width:auto">
+    <label>Training</label>
+    <div class="btn-row">
+      <button id="playBtn" class="primary">▶ Play</button>
+      <button id="stepBtn">Step 1 epoch</button>
+      <button id="resetBtn">⟳ Reset weights</button>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Learning rate <b id="lrVal">0.300</b></label>
+    <!-- slider is linear in log-space so the low end stays usable -->
+    <input type="range" id="lr" min="0" max="1" step="0.001" value="0.918">
+  </div>
+
+  <div class="ctrl">
+    <label>Hidden neurons <b id="hiddenVal">4</b></label>
+    <input type="range" id="hidden" min="1" max="8" step="1" value="4">
+  </div>
+
+  <div class="ctrl">
+    <label>Activation</label>
+    <select id="activation">
+      <option value="tanh" selected>Tanh</option>
+      <option value="relu">ReLU</option>
+      <option value="sigmoid">Sigmoid</option>
+    </select>
+  </div>
+
+  <div class="ctrl">
+    <label>Dataset</label>
+    <select id="dataset">
+      <option value="linear">Linear separation</option>
+      <option value="xor" selected>XOR (4 quadrants)</option>
+      <option value="circles">Concentric circles</option>
+      <option value="spiral">Two spirals</option>
+    </select>
+  </div>
+
+  <div class="ctrl">
+    <label>Speed <b id="speedVal">6&times;</b></label>
+    <input type="range" id="speed" min="1" max="20" step="1" value="6">
+  </div>
+</div>
+
+<!-- ============ MAIN PANELS ============ -->
+<main>
+  <!-- LEFT: decision boundary -->
+  <div class="card">
+    <h2>Decision boundary</h2>
+    <p class="hint">
+      The background is the network's guess for <em>every</em> point on the plane.
+      Move your mouse over it to feed that coordinate into the network and watch the
+      diagram on the right light up.
+    </p>
+    <canvas id="boundary"></canvas>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--neg)"></i> Class A &nbsp;(target 0)</span>
+      <span><i class="dot" style="background:var(--pos)"></i> Class B &nbsp;(target 1)</span>
+      <span><i class="dot" style="background:#fff;width:8px;height:8px"></i> your probe point</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: network diagram + metrics/chart -->
+  <div class="stack">
+    <div class="card">
+      <h2>Network anatomy</h2>
+      <p class="hint">
+        Lines are <strong>weights</strong> (synapses): thickness&nbsp;=&nbsp;strength,
+        <span style="color:var(--pos)">blue&nbsp;=&nbsp;excitatory&nbsp;(+)</span>,
+        <span style="color:var(--neg)">amber&nbsp;=&nbsp;inhibitory&nbsp;(−)</span>.
+        Node fill is that neuron's current <strong>activation</strong> for the probe point.
+      </p>
+      <svg id="netSvg" viewBox="0 0 440 330" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+
+    <div class="card">
+      <h2>Learning progress</h2>
+      <div class="metrics">
+        <div class="metric"><span>Epoch</span><b id="mEpoch">0</b></div>
+        <div class="metric"><span>Loss (BCE)</span><b id="mLoss">—</b></div>
+        <div class="metric"><span>Accuracy</span><b id="mAcc">—</b></div>
+        <div class="metric"><span>Probe p</span><b id="mProbe">—</b></div>
+      </div>
+      <canvas id="lossChart"></canvas>
+      <div class="legend">
+        <span><i class="bar" style="background:var(--pos)"></i> loss per epoch (lower = better)</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Tip: press <span class="kbd">Space</span> to play/pause, <span class="kbd">S</span> to step one epoch,
+  <span class="kbd">R</span> to reinitialise the weights. Try XOR with <em>1 hidden neuron</em> — it can
+  never solve it. Then bump it to 4 and watch the boundary fold.
+</footer>
+
+<!-- ============ EXPLAINER DRAWER ============ -->
+<aside id="drawer">
+  <button class="close-x" id="closeDrawer">✕</button>
+  <h2>How this thing thinks</h2>
+
+  <details open>
+    <summary>What are weights?</summary>
+    <div class="body">
+      <p>A neuron receives numbers and has to decide how much each one matters. A
+      <strong>weight</strong> is exactly that opinion: one number per incoming connection.</p>
+      <p>Biologically, a weight is a <em>synapse</em>. A strong positive weight is an excitatory
+      synapse — "when this input fires, I fire harder." A negative weight is inhibitory —
+      "when this input fires, shut up."</p>
+      <p>The neuron sums everything it hears, weighted:
+      <code>z = w₁x₁ + w₂x₂ + b</code>. The extra <strong>bias</strong> <code>b</code> is the
+      neuron's excitability — how eager it is to fire before any input arrives at all. It
+      shifts the threshold.</p>
+      <p>Learning <em>is</em> nothing but nudging these numbers. The network's entire
+      "knowledge" is the list of weights you see drawn as lines in the diagram.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>What does an activation function do?</summary>
+    <div class="body">
+      <p>After the weighted sum <code>z</code>, the neuron passes it through an
+      <strong>activation function</strong> — the firing rule.</p>
+      <p><strong>Why it must be non-linear:</strong> stack two linear layers and you get…
+      another linear layer. A straight line. Without a squash step, a 50-layer network could
+      still only draw one straight boundary. The activation is what lets the boundary
+      <em>bend</em>. Try XOR — no straight line separates it, so the curvature is essential.</p>
+      <p><strong>ReLU</strong> <code>max(0, z)</code> — fires proportionally when excited,
+      silent when not. Closest to a real neuron's "threshold then rate". Fast, but a neuron
+      stuck below zero gets zero gradient and can die.</p>
+      <p><strong>Sigmoid</strong> squashes to (0, 1) — a soft "probability of firing".
+      Gradients go nearly flat at the extremes, so learning crawls.</p>
+      <p><strong>Tanh</strong> squashes to (−1, 1) — like sigmoid but centred on zero, so
+      neurons can vote both for and against. Usually the best default here.</p>
+      <p>The <em>output</em> neuron always uses sigmoid in this playground, because we want a
+      probability between 0 and 1.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>What is backpropagation?</summary>
+    <div class="body">
+      <p>Three steps, repeated forever:</p>
+      <p><strong>1. Forward pass.</strong> Push a point (x, y) through the layers and get a
+      prediction <code>p</code>. That's the network "thinking".</p>
+      <p><strong>2. Measure the error.</strong> Compare <code>p</code> to the true label with
+      a loss function. Here: binary cross-entropy, which punishes confident wrong answers
+      brutally and shrugs at confident right ones.</p>
+      <p><strong>3. Backward pass.</strong> Assign blame. Work backwards through the network
+      asking, for every single weight: "if I had nudged you up a hair, would the error have
+      gone down?" That answer is the <strong>gradient</strong>. The chain rule from calculus
+      is what lets blame flow back through layer after layer.</p>
+      <p>Then <code>updateWeights</code> steps every weight a little way <em>against</em> its
+      gradient — downhill on the error surface. That step size is the
+      <strong>learning rate</strong>. Too small and you crawl; too big and you bounce over the
+      valley and the loss explodes. Crank it to 0.5 on the spiral to see the chaos.</p>
+      <p>There's no biological equivalent of backprop, honestly — real brains don't ship error
+      signals backwards down the same wires. It's an engineering trick that happens to work
+      extraordinarily well.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Why does the picture look like that?</summary>
+    <div class="body">
+      <p>Each hidden neuron carves the plane with <em>one</em> straight cut (its weights set
+      the cut's angle, its bias sets the offset). The activation function softens that cut
+      into a ramp.</p>
+      <p>The output neuron then takes a weighted vote among those cuts. Combine 4 soft cuts
+      with the right votes and you can box in a quadrant, ring a circle, or trace a spiral.
+      That's the whole trick — and it's why one hidden neuron can only ever give you a single
+      straight boundary.</p>
+      <p>Watch the diagram while you hover the map: the lit-up hidden neurons are the ones
+      "responsible" for the region your mouse is in.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Things worth trying</summary>
+    <div class="body">
+      <p>• <strong>XOR with 1 hidden neuron.</strong> Loss stalls near 0.55 and accuracy
+      plateaus around 65–70%, then never improves. One hidden neuron can only draw one
+      straight line, and the best a straight line can do is shave a corner off a single
+      quadrant. A hard capacity limit you can see.</p>
+      <p>• <strong>Reset weights repeatedly</strong> on the spiral. Same architecture, same
+      data, wildly different outcomes — random initialisation decides which valley you roll
+      into.</p>
+      <p>• <strong>ReLU with learning rate 0.5.</strong> Watch neurons die (their lines go
+      limp and never recover).</p>
+      <p>• <strong>Sigmoid on the spiral.</strong> Painfully slow — you're feeling the
+      vanishing gradient problem that stalled neural networks for a decade.</p>
+    </div>
+  </details>
+</aside>
+
+<script>
+"use strict";
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 1 — TINY MATH TOOLBOX
+   Everything below is plain arrays and for-loops. No libraries, no
+   clever one-liners: the goal is that you can read the arithmetic.
+   ════════════════════════════════════════════════════════════════════ */
+
+// The classic squashing function: turns any number into a 0..1 "probability".
+// Very negative -> ~0, zero -> 0.5, very positive -> ~1.
+function sigmoid(z) {
+  return 1 / (1 + Math.exp(-z));
+}
+
+/* The three firing rules you can pick between.
+   For each one we need:
+     f(z)  -> the activation itself
+     df(z) -> its slope at z, which backprop needs to pass blame through it
+     gain  -> how wide to spread the random starting weights (see initWeights) */
+const ACTIVATIONS = {
+  tanh: {
+    label: "Tanh",
+    f: (z) => Math.tanh(z),
+    df: (z) => { const t = Math.tanh(z); return 1 - t * t; },  // slope of tanh
+    gain: 1                                                    // Xavier-style init
+  },
+  relu: {
+    label: "ReLU",
+    f: (z) => (z > 0 ? z : 0),
+    df: (z) => (z > 0 ? 1 : 0),   // flat below zero -> "dead" neurons get no blame
+    gain: 2                       // He-style init: ReLU throws away half the signal
+  },
+  sigmoid: {
+    label: "Sigmoid",
+    f: (z) => sigmoid(z),
+    df: (z) => { const s = sigmoid(z); return s * (1 - s); },  // peaks at 0.25
+    gain: 1
+  }
+};
+
+// Box–Muller transform: one sample from a standard bell curve (mean 0, sd 1).
+function randomNormal() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 2 — THE DATASETS
+   Every point is { x, y, label } with x, y in [-1, 1] and label 0 or 1.
+   ════════════════════════════════════════════════════════════════════ */
+
+const N_POINTS = 240;
+
+function makeDataset(kind) {
+  const pts = [];
+  const noise = 0.08;
+  const jitter = () => randomNormal() * noise;
+
+  if (kind === "linear") {
+    // Two blobs on opposite sides of a diagonal. A single straight cut solves it.
+    for (let i = 0; i < N_POINTS; i++) {
+      const label = i % 2;
+      const cx = label ? 0.45 : -0.45;
+      const cy = label ? 0.35 : -0.35;
+      pts.push({ x: clamp(cx + randomNormal() * 0.28, -1, 1),
+                 y: clamp(cy + randomNormal() * 0.28, -1, 1),
+                 label });
+    }
+
+  } else if (kind === "xor") {
+    // Diagonal quadrants share a label. Famously impossible for a single neuron.
+    for (let i = 0; i < N_POINTS; i++) {
+      const x = Math.random() * 1.8 - 0.9;
+      const y = Math.random() * 1.8 - 0.9;
+      const label = (x > 0) === (y > 0) ? 1 : 0;
+      pts.push({ x: clamp(x + jitter(), -1, 1), y: clamp(y + jitter(), -1, 1), label });
+    }
+
+  } else if (kind === "circles") {
+    // An inner disc surrounded by a ring. Needs a closed, curved boundary.
+    for (let i = 0; i < N_POINTS; i++) {
+      const label = i % 2;
+      const radius = label ? 0.25 + Math.random() * 0.2 : 0.68 + Math.random() * 0.22;
+      const angle = Math.random() * Math.PI * 2;
+      pts.push({ x: clamp(Math.cos(angle) * radius + jitter(), -1, 1),
+                 y: clamp(Math.sin(angle) * radius + jitter(), -1, 1),
+                 label });
+    }
+
+  } else { // "spiral" — two interleaved arms; the hardest one here.
+    for (let i = 0; i < N_POINTS; i++) {
+      const label = i % 2;
+      const t = (i / N_POINTS) * 3.4 + 0.35;           // distance along the arm
+      const angle = t * 2.1 + label * Math.PI;          // second arm is half a turn behind
+      const radius = t * 0.27;
+      pts.push({ x: clamp(Math.cos(angle) * radius + randomNormal() * 0.045, -1, 1),
+                 y: clamp(Math.sin(angle) * radius + randomNormal() * 0.045, -1, 1),
+                 label });
+    }
+  }
+  return pts;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 3 — THE NETWORK ITSELF
+   Shape: 2 inputs -> H hidden neurons -> 1 output neuron.
+
+   Storage:
+     W1[h][i]  weight from input i (0=x, 1=y) into hidden neuron h
+     b1[h]     bias of hidden neuron h
+     W2[h]     weight from hidden neuron h into the output neuron
+     b2        bias of the output neuron
+   ════════════════════════════════════════════════════════════════════ */
+
+function createNetwork(hiddenSize, activationName) {
+  const net = {
+    hiddenSize,
+    activationName,
+    act: ACTIVATIONS[activationName],
+    W1: [], b1: [],
+    W2: [], b2: 0
+  };
+  initWeights(net);
+  return net;
+}
+
+/* Random starting weights — the network's "personality" before it learns anything.
+   Why not just use zeros? Because then every hidden neuron would compute exactly
+   the same thing, receive exactly the same blame, and update identically forever.
+   They must start different to become different. This is called symmetry breaking.
+
+   The scale matters too. We use sd = sqrt(gain / fanIn) so the signal entering each
+   neuron has roughly unit size: too big and activations saturate (no gradient),
+   too small and the signal fades to nothing. */
+function initWeights(net) {
+  const H = net.hiddenSize;
+  const sd1 = Math.sqrt(net.act.gain / 2);   // hidden layer sees 2 inputs
+  const sd2 = Math.sqrt(1 / H);              // output neuron sees H inputs
+
+  net.W1 = [];
+  net.b1 = [];
+  for (let h = 0; h < H; h++) {
+    net.W1.push([randomNormal() * sd1, randomNormal() * sd1]);
+    net.b1.push(0);                          // biases start neutral
+  }
+
+  net.W2 = [];
+  for (let h = 0; h < H; h++) net.W2.push(randomNormal() * sd2);
+  net.b2 = 0;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   FORWARD PASS — the network "thinking"
+
+   A signal travels left to right. At every neuron the same two things
+   happen, exactly as in the cartoon version of a biological neuron:
+
+     1. INTEGRATE. Add up everything arriving, each scaled by the strength
+        of its synapse, plus the neuron's own baseline excitability (bias):
+              z = w1*x1 + w2*x2 + ... + b
+        This single number is the neuron's "membrane potential".
+
+     2. FIRE. Pass z through the activation function — the firing rule that
+        decides how strongly this neuron actually speaks up:
+              a = f(z)
+
+   We keep both z and a around, because the backward pass needs z to work
+   out the slope of the firing rule, and a to work out how much each
+   synapse contributed.
+   ───────────────────────────────────────────────────────────────────── */
+function forward(net, x, y) {
+  const H = net.hiddenSize;
+  const z1 = new Array(H);   // pre-activations ("membrane potentials") of hidden layer
+  const a1 = new Array(H);   // activations ("firing rates") of hidden layer
+
+  // --- Layer 1: the two coordinates fan out to every hidden neuron ---
+  for (let h = 0; h < H; h++) {
+    // 1. INTEGRATE: this neuron's weighted opinion of the input point.
+    let sum = net.b1[h];
+    sum += net.W1[h][0] * x;
+    sum += net.W1[h][1] * y;
+    z1[h] = sum;
+
+    // 2. FIRE: squash/rectify it into an activation.
+    a1[h] = net.act.f(sum);
+  }
+
+  // --- Layer 2: the single output neuron takes a weighted vote of the hidden layer ---
+  let z2 = net.b2;
+  for (let h = 0; h < H; h++) {
+    z2 += net.W2[h] * a1[h];
+  }
+
+  // The output always uses sigmoid, so the answer reads as a probability:
+  // "how confident am I that this point is Class B?"
+  const output = sigmoid(z2);
+
+  return { z1, a1, z2, output };
+}
+
+
+/* Binary cross-entropy for one point.
+   Being confidently wrong costs a fortune (the log blows up); being
+   confidently right costs almost nothing. Compare to mean squared error,
+   which is far more forgiving of confident mistakes — and therefore
+   learns slower on classification problems. */
+function crossEntropy(prediction, target) {
+  const p = clamp(prediction, 1e-7, 1 - 1e-7);   // avoid log(0) = -Infinity
+  return -(target * Math.log(p) + (1 - target) * Math.log(1 - p));
+}
+
+
+// A fresh, all-zero container shaped exactly like the network's weights.
+// We pour the blame for every training point into this, then use the total.
+function zeroGradients(net) {
+  const H = net.hiddenSize;
+  const g = { dW1: [], db1: new Array(H).fill(0), dW2: new Array(H).fill(0), db2: 0 };
+  for (let h = 0; h < H; h++) g.dW1.push([0, 0]);
+  return g;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   BACKWARD PASS — assigning blame
+
+   The forward pass produced a prediction. It was probably wrong. The
+   question backpropagation answers is:
+
+       "For each individual weight in this network, if I nudged it up
+        a tiny bit, would the error get better or worse, and by how much?"
+
+   That answer — one number per weight — is the GRADIENT. Getting it means
+   walking the error backwards through the network, layer by layer, using
+   the chain rule: the blame arriving at a neuron gets multiplied by the
+   slope of its firing rule, then split among its incoming synapses in
+   proportion to how loudly each input was speaking.
+
+   Nothing changes here. We only accumulate blame into `grads`.
+   ───────────────────────────────────────────────────────────────────── */
+function backward(net, x, y, target, cache, grads) {
+  const H = net.hiddenSize;
+
+  // === STEP 1: blame at the output neuron ===
+  // Sigmoid + cross-entropy combine into this beautifully simple result:
+  // the error signal is just (prediction - truth).
+  // Predicted 0.9 but the answer was 0? Blame = +0.9 — a big shove downward.
+  // Predicted 0.9 and the answer was 1? Blame = -0.1 — barely a nudge.
+  const dz2 = cache.output - target;
+
+  // === STEP 2: how much is each output synapse responsible for that blame? ===
+  // A synapse only matters in proportion to how loudly its neuron fired.
+  // A silent hidden neuron (a1 ~ 0) gets no blame, and learns nothing this round.
+  for (let h = 0; h < H; h++) {
+    grads.dW2[h] += dz2 * cache.a1[h];
+  }
+  grads.db2 += dz2;  // the bias always "fires" at 1, so it just absorbs the raw blame
+
+  // === STEP 3: push the blame backwards, through the hidden layer ===
+  for (let h = 0; h < H; h++) {
+    // 3a. How much of the output's error reached this hidden neuron? That depends
+    //     on how strongly it is wired to the output (and in which direction).
+    const da1 = net.W2[h] * dz2;
+
+    // 3b. Convert "blame on my output" into "blame on my membrane potential" by
+    //     multiplying by the slope of the firing rule at the value we saw.
+    //     THIS is why activation derivatives matter: if the slope here is ~0 the
+    //     blame dies and the neuron freezes. (ReLU below zero: slope exactly 0 —
+    //     a dead neuron. Sigmoid at the extremes: slope ~0 — vanishing gradients.)
+    const dz1 = da1 * net.act.df(cache.z1[h]);
+
+    // 3c. Split that blame among this neuron's own incoming synapses, again in
+    //     proportion to how strong each incoming signal was.
+    grads.dW1[h][0] += dz1 * x;
+    grads.dW1[h][1] += dz1 * y;
+    grads.db1[h] += dz1;
+  }
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   UPDATE WEIGHTS — actually learning
+
+   The gradient points in the direction that makes the error WORSE, so we
+   step the opposite way. `scale` folds together the learning rate and the
+   1/N averaging over the training batch.
+
+   Learning rate is the size of that step:
+     • too small -> technically correct, takes forever
+     • too large -> you leap clean over the valley floor and the loss explodes
+
+   This is the only place in the entire program where the network's
+   knowledge is modified. Everything else just looks and measures.
+   ───────────────────────────────────────────────────────────────────── */
+function updateWeights(net, grads, scale) {
+  const H = net.hiddenSize;
+
+  for (let h = 0; h < H; h++) {
+    // Move each synapse a little way DOWNHILL on the error surface.
+    net.W1[h][0] -= scale * grads.dW1[h][0];
+    net.W1[h][1] -= scale * grads.dW1[h][1];
+    net.b1[h]    -= scale * grads.db1[h];
+    net.W2[h]    -= scale * grads.dW2[h];
+  }
+  net.b2 -= scale * grads.db2;
+}
+
+
+/* One epoch = look at every training point once, total up the blame,
+   then take a single step. (Full-batch gradient descent: the smoothest,
+   easiest-to-watch flavour of training.) */
+function trainOneEpoch(net, data, learningRate) {
+  const grads = zeroGradients(net);
+  let totalLoss = 0;
+  let correct = 0;
+
+  for (let i = 0; i < data.length; i++) {
+    const pt = data[i];
+
+    const cache = forward(net, pt.x, pt.y);          // 1. think
+    totalLoss += crossEntropy(cache.output, pt.label); // 2. measure the error
+    if ((cache.output > 0.5 ? 1 : 0) === pt.label) correct++;
+    backward(net, pt.x, pt.y, pt.label, cache, grads); // 3. assign blame
+  }
+
+  // 4. take one step, using the AVERAGE blame across the whole dataset
+  updateWeights(net, grads, learningRate / data.length);
+
+  return { loss: totalLoss / data.length, accuracy: correct / data.length };
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 4 — APPLICATION STATE
+   ════════════════════════════════════════════════════════════════════ */
+
+const state = {
+  net: null,
+  data: [],
+  epoch: 0,
+  loss: NaN,
+  accuracy: NaN,
+  history: [],           // loss per epoch, for the chart
+  playing: false,
+  learningRate: 0.1,
+  epochsPerFrame: 6,
+  probe: { x: 0.55, y: 0.55 }   // the point currently shown in the diagram
+};
+
+/* ---------- DOM handles ---------- */
+const $ = (id) => document.getElementById(id);
+
+const boundaryCanvas = $("boundary");
+const bctx = boundaryCanvas.getContext("2d");
+const lossCanvas = $("lossChart");
+const lctx = lossCanvas.getContext("2d");
+const netSvg = $("netSvg");
+
+// Small offscreen canvas we render the heat-map into at low resolution,
+// then stretch. 64x64 forward passes per frame is nothing; 400x400 would hurt.
+const HEAT_RES = 64;
+const heatCanvas = document.createElement("canvas");
+heatCanvas.width = HEAT_RES;
+heatCanvas.height = HEAT_RES;
+const hctx = heatCanvas.getContext("2d");
+const heatImage = hctx.createImageData(HEAT_RES, HEAT_RES);
+
+const COLOR_POS = [78, 168, 255];    // blue  — Class B / positive
+const COLOR_NEG = [245, 132, 60];    // amber — Class A / negative
+const COLOR_BASE = [16, 22, 34];     // canvas background
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 5 — DRAWING: THE DECISION BOUNDARY
+   ════════════════════════════════════════════════════════════════════ */
+
+function fitCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width * dpr));
+  const h = Math.max(1, Math.round(rect.height * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  return { w, h, dpr };
+}
+
+// data coords (-1..1) -> pixel coords. y flips because canvas y grows downward.
+function toPixelX(x, w) { return (x + 1) / 2 * w; }
+function toPixelY(y, h) { return (1 - y) / 2 * h; }
+
+function drawBoundary() {
+  const { w, h } = fitCanvas(boundaryCanvas);
+  const net = state.net;
+
+  // --- 1. The heat-map: run the network over a grid covering the whole plane ---
+  const px = heatImage.data;
+  for (let row = 0; row < HEAT_RES; row++) {
+    const y = 1 - (2 * row) / (HEAT_RES - 1);        // +1 at top, -1 at bottom
+    for (let col = 0; col < HEAT_RES; col++) {
+      const x = -1 + (2 * col) / (HEAT_RES - 1);
+
+      const p = forward(net, x, y).output;           // the network's opinion here
+      const signed = p * 2 - 1;                      // -1 (sure A) .. +1 (sure B)
+      const strength = Math.min(1, Math.abs(signed)) * 0.78;
+      const target = signed >= 0 ? COLOR_POS : COLOR_NEG;
+
+      const idx = (row * HEAT_RES + col) * 4;
+      px[idx]     = lerp(COLOR_BASE[0], target[0], strength);
+      px[idx + 1] = lerp(COLOR_BASE[1], target[1], strength);
+      px[idx + 2] = lerp(COLOR_BASE[2], target[2], strength);
+      px[idx + 3] = 255;
+    }
+  }
+  hctx.putImageData(heatImage, 0, 0);
+
+  bctx.save();
+  bctx.imageSmoothingEnabled = true;                 // smooth gradient instead of blocks
+  bctx.clearRect(0, 0, w, h);
+  bctx.drawImage(heatCanvas, 0, 0, w, h);
+
+  // --- 2. Axes through the origin, for orientation ---
+  bctx.strokeStyle = "rgba(255,255,255,0.09)";
+  bctx.lineWidth = Math.max(1, w / 400);
+  bctx.beginPath();
+  bctx.moveTo(w / 2, 0); bctx.lineTo(w / 2, h);
+  bctx.moveTo(0, h / 2); bctx.lineTo(w, h / 2);
+  bctx.stroke();
+
+  // --- 3. The training points ---
+  const r = Math.max(2.5, w / 115);
+  bctx.lineWidth = Math.max(1, w / 320);
+  for (const pt of state.data) {
+    const cx = toPixelX(pt.x, w);
+    const cy = toPixelY(pt.y, h);
+    bctx.beginPath();
+    bctx.arc(cx, cy, r, 0, Math.PI * 2);
+    bctx.fillStyle = pt.label === 1 ? "#8ec8ff" : "#ffb37a";
+    bctx.fill();
+    bctx.strokeStyle = "rgba(6,10,18,0.85)";
+    bctx.stroke();
+  }
+
+  // --- 4. The probe marker (the point being fed into the diagram) ---
+  const pxp = toPixelX(state.probe.x, w);
+  const pyp = toPixelY(state.probe.y, h);
+  bctx.beginPath();
+  bctx.arc(pxp, pyp, r * 1.9, 0, Math.PI * 2);
+  bctx.strokeStyle = "#ffffff";
+  bctx.lineWidth = Math.max(1.5, w / 250);
+  bctx.stroke();
+  bctx.beginPath();
+  bctx.arc(pxp, pyp, r * 0.5, 0, Math.PI * 2);
+  bctx.fillStyle = "#ffffff";
+  bctx.fill();
+
+  bctx.restore();
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 6 — DRAWING: THE NETWORK DIAGRAM (SVG)
+   Built once per architecture change, then only its colours/widths are
+   updated each frame (much cheaper than rebuilding the DOM).
+   ════════════════════════════════════════════════════════════════════ */
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const diagram = { inputNodes: [], hiddenNodes: [], outputNode: null,
+                  linesIH: [], linesHO: [], labels: [] };
+
+function svgEl(name, attrs) {
+  const el = document.createElementNS(SVG_NS, name);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// Map a signed value (-1..+1) to the amber → dark → blue scale.
+function signalColor(t) {
+  const clamped = clamp(t, -1, 1);
+  const target = clamped >= 0 ? COLOR_POS : COLOR_NEG;
+  const s = Math.abs(clamped);
+  return "rgb(" + Math.round(lerp(28, target[0], s)) + "," +
+                  Math.round(lerp(35, target[1], s)) + "," +
+                  Math.round(lerp(48, target[2], s)) + ")";
+}
+
+function buildDiagram() {
+  while (netSvg.firstChild) netSvg.removeChild(netSvg.firstChild);
+  diagram.inputNodes = []; diagram.hiddenNodes = [];
+  diagram.linesIH = []; diagram.linesHO = []; diagram.labels = [];
+
+  const H = state.net.hiddenSize;
+  const colX = [78, 220, 362];
+  // Shrink the nodes as the layer grows so eight of them still fit without touching.
+  const R = H >= 7 ? 13 : (H >= 5 ? 15 : 17);
+
+  // Size the drawing to its contents, so a 1-neuron net isn't mostly empty space.
+  const spacing = 2 * R + 21;
+  const spanHidden = Math.min(262, spacing * (H - 1));
+  const maxSpan = Math.max(spanHidden, spacing);   // the input column always has 2 nodes
+  const TOP_PAD = 40, BOTTOM_PAD = 34;
+  const HT = TOP_PAD + maxSpan + 2 * R + BOTTOM_PAD;
+  const CENTER = TOP_PAD + R + maxSpan / 2;
+  netSvg.setAttribute("viewBox", "0 0 440 " + HT.toFixed(0));
+
+  const yFor = (i, count) => {
+    if (count === 1) return CENTER;
+    const span = Math.min(262, spacing * (count - 1));
+    return CENTER - span / 2 + (span * i) / (count - 1);
+  };
+
+  const inputY = [yFor(0, 2), yFor(1, 2)];
+  const hiddenY = [];
+  for (let h = 0; h < H; h++) hiddenY.push(yFor(h, H));
+  const outputY = CENTER;
+
+  // --- Column captions ---
+  const caps = [["INPUT", colX[0]], ["HIDDEN", colX[1]], ["OUTPUT", colX[2]]];
+  for (const [text, x] of caps) {
+    netSvg.appendChild(svgEl("text", {
+      x, y: 18, "text-anchor": "middle", fill: "#8f9db4",
+      "font-size": "10", "font-family": "system-ui, sans-serif",
+      "letter-spacing": "1.5"
+    })).textContent = text;
+  }
+
+  // --- Synapses, drawn first so nodes sit on top ---
+  for (let h = 0; h < H; h++) {
+    for (let i = 0; i < 2; i++) {
+      const line = svgEl("line", {
+        x1: colX[0] + R, y1: inputY[i], x2: colX[1] - R, y2: hiddenY[h],
+        "stroke-linecap": "round"
+      });
+      netSvg.appendChild(line);
+      diagram.linesIH.push({ el: line, h, i });
+    }
+  }
+  for (let h = 0; h < H; h++) {
+    const line = svgEl("line", {
+      x1: colX[1] + R, y1: hiddenY[h], x2: colX[2] - R, y2: outputY,
+      "stroke-linecap": "round"
+    });
+    netSvg.appendChild(line);
+    diagram.linesHO.push({ el: line, h });
+  }
+
+  // --- Neuron helper ---
+  function makeNode(x, y, labelText, sublabel) {
+    const g = svgEl("g", {});
+    const circle = svgEl("circle", {
+      cx: x, cy: y, r: R, fill: "#1b2230", stroke: "#3a4657", "stroke-width": "2"
+    });
+    g.appendChild(circle);
+
+    const label = svgEl("text", {
+      x, y: y + 4, "text-anchor": "middle", fill: "#e6edf7",
+      "font-size": "11", "font-family": "ui-monospace, monospace"
+    });
+    label.textContent = labelText;
+    g.appendChild(label);
+
+    if (sublabel) {
+      const sub = svgEl("text", {
+        x, y: y + R + 14, "text-anchor": "middle", fill: "#8f9db4",
+        "font-size": "9.5", "font-family": "system-ui, sans-serif"
+      });
+      sub.textContent = sublabel;
+      g.appendChild(sub);
+    }
+    netSvg.appendChild(g);
+    return { circle, label };
+  }
+
+  diagram.inputNodes.push(makeNode(colX[0], inputY[0], "X", "x coord"));
+  diagram.inputNodes.push(makeNode(colX[0], inputY[1], "Y", "y coord"));
+  for (let h = 0; h < H; h++) diagram.hiddenNodes.push(makeNode(colX[1], hiddenY[h], "", null));
+  diagram.outputNode = makeNode(colX[2], outputY, "", "P(Class B)");
+}
+
+function drawDiagram() {
+  const net = state.net;
+  const cache = forward(net, state.probe.x, state.probe.y);
+
+  // --- Synapse appearance: colour = sign, thickness = magnitude ---
+  for (const item of diagram.linesIH) {
+    const w = net.W1[item.h][item.i];
+    styleSynapse(item.el, w);
+  }
+  for (const item of diagram.linesHO) {
+    styleSynapse(item.el, net.W2[item.h]);
+  }
+
+  // --- Input neurons: show the probe coordinates ---
+  diagram.inputNodes[0].circle.setAttribute("fill", signalColor(state.probe.x));
+  diagram.inputNodes[1].circle.setAttribute("fill", signalColor(state.probe.y));
+  diagram.inputNodes[0].label.textContent = state.probe.x.toFixed(2);
+  diagram.inputNodes[1].label.textContent = state.probe.y.toFixed(2);
+
+  // --- Hidden neurons: fill by activation, normalised against the loudest one ---
+  let maxAbs = 0.6;
+  for (let h = 0; h < net.hiddenSize; h++) maxAbs = Math.max(maxAbs, Math.abs(cache.a1[h]));
+  for (let h = 0; h < net.hiddenSize; h++) {
+    const a = cache.a1[h];
+    const node = diagram.hiddenNodes[h];
+    node.circle.setAttribute("fill", signalColor(a / maxAbs));
+    // Bias shows as the ring: an eager neuron gets a bright outline.
+    node.circle.setAttribute("stroke", signalColor(clamp(net.b1[h] / 2, -1, 1)));
+    node.label.textContent = a.toFixed(2);
+    node.label.setAttribute("fill", Math.abs(a / maxAbs) > 0.55 ? "#08111d" : "#e6edf7");
+  }
+
+  // --- Output neuron: the final probability ---
+  const p = cache.output;
+  diagram.outputNode.circle.setAttribute("fill", signalColor(p * 2 - 1));
+  diagram.outputNode.circle.setAttribute("stroke", signalColor(clamp(net.b2 / 2, -1, 1)));
+  diagram.outputNode.label.textContent = p.toFixed(2);
+  diagram.outputNode.label.setAttribute("fill", Math.abs(p * 2 - 1) > 0.55 ? "#08111d" : "#e6edf7");
+
+  $("mProbe").textContent = p.toFixed(3);
+}
+
+function styleSynapse(el, weight) {
+  const magnitude = Math.abs(weight);
+  el.setAttribute("stroke", weight >= 0 ? "#4ea8ff" : "#f5843c");
+  el.setAttribute("stroke-width", (0.6 + Math.min(6.5, magnitude * 1.9)).toFixed(2));
+  el.setAttribute("stroke-opacity", (0.2 + Math.min(0.75, magnitude * 0.55)).toFixed(2));
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 7 — DRAWING: THE LOSS CHART
+   ════════════════════════════════════════════════════════════════════ */
+
+function drawLossChart() {
+  const { w, h } = fitCanvas(lossCanvas);
+  lctx.clearRect(0, 0, w, h);
+
+  const pad = { l: 40, r: 10, t: 12, b: 20 };
+  const plotW = w - pad.l - pad.r;
+  const plotH = h - pad.t - pad.b;
+  const hist = state.history;
+
+  const maxLoss = Math.max(0.2, ...(hist.length ? [hist[0], ...hist.slice(0, 5)] : [0.8]));
+  const top = Math.min(1.4, Math.max(0.35, maxLoss * 1.1));
+
+  // Gridlines + y labels
+  lctx.font = (10 * (window.devicePixelRatio || 1)) + "px ui-monospace, monospace";
+  lctx.textBaseline = "middle";
+  lctx.textAlign = "right";
+  for (let i = 0; i <= 3; i++) {
+    const value = (top * i) / 3;
+    const y = pad.t + plotH - (value / top) * plotH;
+    lctx.strokeStyle = "rgba(255,255,255,0.06)";
+    lctx.lineWidth = 1;
+    lctx.beginPath();
+    lctx.moveTo(pad.l, y);
+    lctx.lineTo(w - pad.r, y);
+    lctx.stroke();
+    lctx.fillStyle = "#6f7d93";
+    lctx.fillText(value.toFixed(2), pad.l - 6, y);
+  }
+
+  if (hist.length < 2) {
+    lctx.textAlign = "center";
+    lctx.fillStyle = "#6f7d93";
+    lctx.fillText("press Play to start training", pad.l + plotW / 2, pad.t + plotH / 2);
+    return;
+  }
+
+  // Decimate so we never draw more segments than we have pixels.
+  const step = Math.max(1, Math.ceil(hist.length / plotW));
+  lctx.beginPath();
+  for (let i = 0; i < hist.length; i += step) {
+    const x = pad.l + (i / (hist.length - 1)) * plotW;
+    const y = pad.t + plotH - (clamp(hist[i], 0, top) / top) * plotH;
+    if (i === 0) lctx.moveTo(x, y); else lctx.lineTo(x, y);
+  }
+  // Always finish exactly on the latest value.
+  const lastX = pad.l + plotW;
+  const lastY = pad.t + plotH - (clamp(hist[hist.length - 1], 0, top) / top) * plotH;
+  lctx.lineTo(lastX, lastY);
+  lctx.strokeStyle = "#4ea8ff";
+  lctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+  lctx.lineJoin = "round";
+  lctx.stroke();
+
+  // Head marker
+  lctx.beginPath();
+  lctx.arc(lastX, lastY, 3 * (window.devicePixelRatio || 1), 0, Math.PI * 2);
+  lctx.fillStyle = "#7ee787";
+  lctx.fill();
+
+  // x-axis caption
+  lctx.textAlign = "center";
+  lctx.fillStyle = "#6f7d93";
+  lctx.fillText("epoch 0 → " + state.epoch, pad.l + plotW / 2, h - 8);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PART 8 — ORCHESTRATION
+   ════════════════════════════════════════════════════════════════════ */
+
+function updateMetrics() {
+  $("mEpoch").textContent = state.epoch;
+  $("mLoss").textContent = Number.isFinite(state.loss) ? state.loss.toFixed(4) : "—";
+  $("mAcc").textContent = Number.isFinite(state.accuracy)
+    ? (state.accuracy * 100).toFixed(1) + "%" : "—";
+}
+
+function renderAll() {
+  drawBoundary();
+  drawDiagram();
+  drawLossChart();
+  updateMetrics();
+}
+
+function stepEpochs(count) {
+  for (let i = 0; i < count; i++) {
+    const result = trainOneEpoch(state.net, state.data, state.learningRate);
+    state.epoch++;
+    state.loss = result.loss;
+    state.accuracy = result.accuracy;
+    state.history.push(result.loss);
+    if (state.history.length > 4000) state.history.shift();   // keep memory bounded
+  }
+}
+
+function animationFrame() {
+  if (state.playing) {
+    stepEpochs(state.epochsPerFrame);
+    renderAll();
+  }
+  requestAnimationFrame(animationFrame);
+}
+
+function rebuildNetwork() {
+  state.net = createNetwork(
+    parseInt($("hidden").value, 10),
+    $("activation").value
+  );
+  state.epoch = 0;
+  state.loss = NaN;
+  state.accuracy = NaN;
+  state.history = [];
+  buildDiagram();
+  renderAll();
+}
+
+function rebuildDataset() {
+  state.data = makeDataset($("dataset").value);
+  rebuildNetwork();     // a new problem deserves a fresh brain
+}
+
+function setPlaying(on) {
+  state.playing = on;
+  $("playBtn").textContent = on ? "❚❚ Pause" : "▶ Play";
+}
+
+/* ---------- Control wiring ---------- */
+
+// The learning-rate slider is linear from 0..1 but maps exponentially onto
+// 0.001..0.5, so the interesting small values aren't crammed into one pixel.
+function sliderToLearningRate(v) {
+  const lo = Math.log(0.001), hi = Math.log(0.5);
+  return Math.exp(lo + (hi - lo) * v);
+}
+
+$("lr").addEventListener("input", (e) => {
+  state.learningRate = sliderToLearningRate(parseFloat(e.target.value));
+  $("lrVal").textContent = state.learningRate.toFixed(3);
+});
+
+$("hidden").addEventListener("input", (e) => {
+  $("hiddenVal").textContent = e.target.value;
+  rebuildNetwork();     // changing the architecture means starting over
+});
+
+$("speed").addEventListener("input", (e) => {
+  state.epochsPerFrame = parseInt(e.target.value, 10);
+  $("speedVal").textContent = e.target.value + "×";
+});
+
+$("activation").addEventListener("change", rebuildNetwork);
+$("dataset").addEventListener("change", rebuildDataset);
+
+$("playBtn").addEventListener("click", () => setPlaying(!state.playing));
+$("stepBtn").addEventListener("click", () => { setPlaying(false); stepEpochs(1); renderAll(); });
+$("resetBtn").addEventListener("click", () => { setPlaying(false); rebuildNetwork(); });
+
+// Hovering the map feeds that coordinate into the network diagram.
+function updateProbeFromEvent(ev) {
+  const rect = boundaryCanvas.getBoundingClientRect();
+  const point = ev.touches ? ev.touches[0] : ev;
+  state.probe.x = clamp(((point.clientX - rect.left) / rect.width) * 2 - 1, -1, 1);
+  state.probe.y = clamp(1 - ((point.clientY - rect.top) / rect.height) * 2, -1, 1);
+  if (!state.playing) renderAll();
+}
+boundaryCanvas.addEventListener("mousemove", updateProbeFromEvent);
+boundaryCanvas.addEventListener("touchmove", (e) => { e.preventDefault(); updateProbeFromEvent(e); }, { passive: false });
+
+// Drawer
+$("drawerBtn").addEventListener("click", () => $("drawer").classList.toggle("open"));
+$("closeDrawer").addEventListener("click", () => $("drawer").classList.remove("open"));
+
+// Keyboard shortcuts
+window.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.code === "Space") { e.preventDefault(); setPlaying(!state.playing); }
+  else if (e.key === "s" || e.key === "S") { setPlaying(false); stepEpochs(1); renderAll(); }
+  else if (e.key === "r" || e.key === "R") { setPlaying(false); rebuildNetwork(); }
+  else if (e.key === "Escape") $("drawer").classList.remove("open");
+});
+
+window.addEventListener("resize", () => { if (!state.playing) renderAll(); });
+
+/* ---------- Boot ---------- */
+state.learningRate = sliderToLearningRate(parseFloat($("lr").value));
+$("lrVal").textContent = state.learningRate.toFixed(3);
+state.epochsPerFrame = parseInt($("speed").value, 10);
+rebuildDataset();
+requestAnimationFrame(animationFrame);
+</script>
+</body>
+</html>
