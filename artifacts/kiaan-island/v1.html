@@ -1,0 +1,766 @@
+<title>Kiaan Cloud Island</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: a night-harbour game screen. HUD meters on top, the island world in the middle, a field journal of panels below. Single committed dark look. */
+:root {
+  color-scheme: dark;
+  --bg: #0a1024;
+  --panel: #121a36;
+  --panel-2: #18224a;
+  --line: #27325f;
+  --ink: #e9ecff;
+  --muted: #9aa3cf;
+  --accent: #ffc95c;
+  --good: #6ee7a8;
+  --warn: #ffb347;
+  --bad: #ff5d73;
+  --sea: #13305e;
+  --f-display: "Pixelify Sans", "Courier New", monospace;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.app { max-width: 1180px; margin: 0 auto; padding-block: 18px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; }
+
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 20px; }
+.eyebrow { font-family: var(--f-data); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 4.6vw, 40px); line-height: 1; margin: 4px 0 0; color: var(--accent); text-wrap: balance; text-shadow: 0 2px 0 #6b4a12; }
+.hdr-right { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-data); font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.good { background: var(--good); box-shadow: 0 0 8px var(--good); }
+.dot.warn { background: var(--warn); }
+.dot.bad { background: var(--bad); box-shadow: 0 0 8px var(--bad); }
+.pill.live .dot { animation: pulse 2s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+.banner { border: 1px solid var(--warn); background: #2a2140; color: var(--ink); padding: 10px 14px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.banner.bad { border-color: var(--bad); }
+.btn { font: 600 13px var(--f-body); color: #1b1404; background: var(--accent); border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.btn:focus-visible, .tool:focus-visible, .pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.hud { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.meter { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.meter .top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.meter .name { font-family: var(--f-display); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter .val { font-family: var(--f-data); font-size: 13px; font-variant-numeric: tabular-nums; }
+.meter .real { font-family: var(--f-data); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.bar { height: 8px; margin-top: 6px; background: #0b1130; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--good); transition: width .8s ease; background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(0,0,0,.25) 6px 7px); }
+.bar.warn > i { background-color: var(--warn); }
+.bar.bad > i { background-color: var(--bad); }
+
+.stage { position: relative; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; background: #050816; box-shadow: 0 0 0 4px #0d1430, 0 18px 40px rgba(0,0,0,.45); }
+canvas#world { display: block; width: 100%; height: auto; aspect-ratio: 400 / 250; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; max-width: 100%; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.pin { position: absolute; transform: translate(-50%, -100%); pointer-events: auto; display: inline-flex; align-items: center; gap: 5px; font: 500 11px var(--f-display); color: var(--ink); background: rgba(10,16,36,.82); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px 1px 5px; cursor: pointer; white-space: nowrap; }
+.pin .dot { width: 6px; height: 6px; }
+.pin[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.bubble { position: absolute; transform: translate(-50%, calc(-100% - 6px)); max-width: 220px; font: 12px/1.3 var(--f-body); background: #f6f1df; color: #1d1a12; border: 2px solid #1d1a12; border-radius: 4px; padding: 4px 7px; pointer-events: none; box-shadow: 2px 2px 0 rgba(0,0,0,.4); }
+.bubble b { font-family: var(--f-data); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; display: block; color: #7a4b00; }
+.toolbar { position: absolute; left: max(8px, env(safe-area-inset-left, 0px)); bottom: 8px; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: auto; }
+.tool { font: 500 12px var(--f-display); color: var(--ink); background: rgba(10,16,36,.86); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+.tool[aria-pressed="true"] { background: var(--accent); color: #1b1404; border-color: var(--accent); }
+.clock { position: absolute; right: max(8px, env(safe-area-inset-right, 0px)); top: 8px; font: 12px var(--f-data); background: rgba(10,16,36,.8); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.demo-tag { position: absolute; left: 8px; top: 8px; font: 600 11px var(--f-data); color: #1b1404; background: var(--warn); padding: 3px 8px; border-radius: 4px; letter-spacing: .05em; text-transform: uppercase; }
+
+.journal { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { font-family: var(--f-display); font-weight: 500; font-size: 18px; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card h2 small { font-family: var(--f-data); font-size: 11px; color: var(--muted); font-weight: 400; }
+.span-5 { grid-column: span 5; } .span-7 { grid-column: span 7; } .span-4 { grid-column: span 4; } .span-6 { grid-column: span 6; }
+.inspector .kicker { font-family: var(--f-data); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.inspector h3 { font-family: var(--f-display); font-size: 24px; margin: 0; color: var(--accent); }
+.inspector p { margin: 0; color: var(--ink); max-width: 62ch; }
+dl.kv { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-family: var(--f-data); font-size: 12.5px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.state { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--f-data); padding: 2px 8px; border-radius: 4px; background: var(--panel-2); width: fit-content; }
+ul.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 300px; overflow-y: auto; }
+ul.log li { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; padding: 6px 4px; border-bottom: 1px dashed var(--line); font-size: 13px; }
+ul.log li.fresh { background: rgba(255, 201, 92, .08); }
+ul.log .src { font: 600 10.5px var(--f-data); text-transform: uppercase; letter-spacing: .05em; color: var(--accent); overflow: hidden; text-overflow: ellipsis; }
+ul.log .when { display: block; font: 11px var(--f-data); color: var(--muted); }
+ul.log .msg { overflow-wrap: anywhere; }
+.empty { color: var(--muted); font-size: 13px; }
+.coins { display: flex; align-items: baseline; gap: 8px; font-family: var(--f-display); font-size: 30px; color: var(--accent); }
+.coins small { font: 12px var(--f-data); color: var(--muted); }
+ul.badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+ul.badges li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel-2); }
+ul.badges li.locked { opacity: .45; filter: grayscale(1); }
+ul.badges b { font-family: var(--f-display); font-weight: 500; font-size: 14px; display: block; }
+ul.badges span { font-size: 12px; color: var(--muted); }
+.foot { font-size: 12.5px; color: var(--muted); max-width: 80ch; }
+
+@media (max-width: 900px) {
+  .hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .span-5, .span-7, .span-4, .span-6 { grid-column: span 12; }
+}
+@media (max-width: 600px) {
+  .hud { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pin .lbl { display: none; }
+  .pin { padding: 3px; }
+  .bubble { max-width: 160px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .pill.live .dot { animation: none; } .bar > i { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div>
+      <div class="eyebrow" id="where">DigitalOcean droplet · connecting…</div>
+      <h1>Kiaan Cloud Island</h1>
+    </div>
+    <div class="hdr-right">
+      <span class="pill" id="livePill"><span class="dot"></span><span id="liveText">Connecting</span></span>
+      <span class="pill" id="dayPill">Day –</span>
+      <span class="pill" id="updPill">Updated –</span>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="hud" aria-label="Server resources">
+    <div class="meter"><div class="top"><span class="name">Forge heat</span><span class="val" id="v-cpu">–</span></div><div class="real">CPU</div><div class="bar" id="b-cpu"><i></i></div></div>
+    <div class="meter"><div class="top"><span class="name">Water tower</span><span class="val" id="v-mem">–</span></div><div class="real" id="r-mem">Memory</div><div class="bar" id="b-mem"><i></i></div></div>
+    <div class="meter"><div class="top"><span class="name">Overflow barrel</span><span class="val" id="v-swap">–</span></div><div class="real" id="r-swap">Swap</div><div class="bar" id="b-swap"><i></i></div></div>
+    <div class="meter"><div class="top"><span class="name">Warehouse</span><span class="val" id="v-disk">–</span></div><div class="real" id="r-disk">Disk</div><div class="bar" id="b-disk"><i></i></div></div>
+    <div class="meter"><div class="top"><span class="name">Winds</span><span class="val" id="v-load">–</span></div><div class="real">Load average (1 min)</div><div class="bar" id="b-load"><i></i></div></div>
+  </section>
+
+  <div class="stage">
+    <canvas id="world" width="400" height="250" role="img" aria-label="Pixel island: each building is one part of your server. Details for every building are listed below."></canvas>
+    <div class="overlay" id="overlay">
+      <div class="clock" id="clock">NYC –</div>
+      <div class="demo-tag" id="demoTag" hidden>Sample data</div>
+      <div class="toolbar" role="toolbar" aria-label="Sandbox tools">
+        <button class="tool" data-tool="inspect" aria-pressed="true">Inspect</button>
+        <button class="tool" data-tool="tree" aria-pressed="false">Plant tree</button>
+        <button class="tool" data-tool="villager" aria-pressed="false">Add villager</button>
+        <button class="tool" data-tool="lantern" aria-pressed="false">Lantern</button>
+        <button class="tool" data-tool="clear" aria-pressed="false">Clear my stuff</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="journal">
+    <article class="card inspector span-5" id="inspector" aria-live="polite"></article>
+    <article class="card span-7">
+      <h2>Quest log <small id="actMeta">server activity</small></h2>
+      <ul class="log" id="actList"><li class="empty">Waiting for the activity feed…</li></ul>
+    </article>
+    <article class="card span-4">
+      <h2>Today in town <small>calendar</small></h2>
+      <ul class="log" id="calList"><li class="empty">Loading today's events…</li></ul>
+    </article>
+    <article class="card span-4">
+      <h2>Quest board <small>open tasks</small></h2>
+      <ul class="log" id="taskList"><li class="empty">Loading tasks…</li></ul>
+    </article>
+    <article class="card span-4">
+      <h2>Visitors <small>SSH logins</small></h2>
+      <ul class="log" id="loginList"><li class="empty">Loading logins…</li></ul>
+    </article>
+    <article class="card span-6">
+      <h2>Treasury <small>DigitalOcean billing</small></h2>
+      <div class="coins" id="coins">–</div>
+      <div class="bar" id="b-bill"><i></i></div>
+      <dl class="kv" id="billKv"></dl>
+    </article>
+    <article class="card span-6">
+      <h2>Achievements <small id="achMeta"></small></h2>
+      <ul class="badges" id="badges"></ul>
+    </article>
+  </section>
+
+  <p class="foot">Every building is a real part of kiaan-cloud. Lit windows mean a service is running. Smoke and a red marker mean it stopped. The forge fire follows CPU, the water tower fills with memory, the barrel with swap, and the warehouse crates with disk space. Clouds move faster under load, and a storm rolls in when CPU or memory runs hot. Sky and clock follow New York time. Trees, lanterns and villagers you add are just for fun and stay in this browser only.</p>
+</div>
+
+<script>
+(() => {
+const SERVER = "kiaan-cloud";
+const W = 400, H = 250;
+const cv = document.getElementById("world");
+const ctx = cv.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+const overlay = document.getElementById("overlay");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ---------- state ---------- */
+const state = { status: null, activity: null, tasks: null, events: null };
+const meta = { status: {}, activity: {}, tasks: {}, events: {} };
+let demo = false, selected = "island", tool = "inspect";
+
+/* ---------- buildings ---------- */
+const B = [
+  { id: "tower",    svc: "fail2ban",        name: "Watchtower",   real: "fail2ban",        x: 52,  y: 120, w: 26, h: 66 },
+  { id: "obs",      svc: "kiaan-dashboard", name: "Observatory",  real: "kiaan-dashboard", x: 112, y: 118, w: 34, h: 40 },
+  { id: "clock",    svc: "cron",            name: "Clock tower",  real: "cron",            x: 200, y: 116, w: 26, h: 68 },
+  { id: "aviary",   svc: "hermes-gateway",  name: "Aviary",       real: "hermes-gateway",  x: 292, y: 116, w: 30, h: 30 },
+  { id: "workshop", svc: "kiaan-mcp",       name: "Workshop",     real: "kiaan-mcp",       x: 345, y: 120, w: 34, h: 50 },
+  { id: "gate",     svc: "caddy",           name: "Gatehouse",    real: "caddy",           x: 46,  y: 168, w: 34, h: 38 },
+  { id: "forge",    svc: null,              name: "Forge",        real: "CPU",             x: 122, y: 168, w: 34, h: 36 },
+  { id: "hall",     svc: null,              name: "Town hall",    real: "Calendar + tasks",x: 200, y: 170, w: 50, h: 40 },
+  { id: "water",    svc: null,              name: "Water tower",  real: "Memory + swap",   x: 262, y: 180, w: 40, h: 56 },
+  { id: "ware",     svc: null,              name: "Warehouse",    real: "Disk",            x: 342, y: 172, w: 44, h: 40 },
+  { id: "dock",     svc: "ssh",             name: "Dock",         real: "ssh",             x: 300, y: 214, w: 60, h: 18 },
+];
+const byId = Object.fromEntries(B.map(b => [b.id, b]));
+
+/* ---------- helpers ---------- */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t) { const A = hex2rgb(a), Bc = hex2rgb(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, Bc[i], t))).join(",")})`; }
+function R(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function disc(cx, cy, r, c, topOnly) { for (let dy = -r; dy <= (topOnly ? 0 : r); dy++) { const dx = Math.floor(Math.sqrt(r * r - dy * dy)); R(cx - dx, cy + dy, dx * 2 + 1, 1, c); } }
+function roof(x, y, w, h, c) { for (let i = 0; i < h; i++) { const inset = (h - i - 1) * (w / 2) / h; R(x + inset, y + i, w - 2 * inset, 1, c); } }
+function ellipseFill(cx, cy, rx, ry, c) { for (let dy = -ry; dy <= ry; dy++) { const dx = Math.floor(rx * Math.sqrt(1 - (dy * dy) / (ry * ry))); R(cx - dx, cy + dy, dx * 2, 1, c); } }
+const onIsland = (x, y) => ((x - 200) / 168) ** 2 + ((y - 150) / 62) ** 2 < 1;
+const svcState = name => { const s = state.status?.services?.find(v => v.name === name); return s ? s.status : null; };
+const isUp = b => !b.svc || !state.status || svcState(b.svc) === "up";
+function nyParts(d = new Date()) {
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" }).formatToParts(d);
+  const g = t => +p.find(x => x.type === t).value; return { h: g("hour"), m: g("minute"), s: g("second") };
+}
+const fmtNY = (iso, opts) => { const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleString("en-US", { timeZone: "America/New_York", ...opts }); };
+function ago(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return s + "s ago"; const m = Math.round(s / 60); if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 48) return h + " h ago"; return Math.round(h / 24) + " days ago";
+}
+const pctClass = (p, warn = 60, bad = 85) => p >= bad ? "bad" : p >= warn ? "warn" : "good";
+
+/* ---------- sandbox (this browser only) ---------- */
+let sandbox = { trees: [], lanterns: [], villagers: [] };
+try { const s = JSON.parse(localStorage.getItem("kci-sandbox") || "null"); if (s) sandbox = { trees: s.trees || [], lanterns: s.lanterns || [], villagers: s.villagers || [] }; } catch {}
+const saveSandbox = () => { try { localStorage.setItem("kci-sandbox", JSON.stringify(sandbox)); } catch {} };
+const DEFAULT_TREES = [[22, 150], [84, 140], [160, 135], [238, 136], [318, 140], [376, 152], [92, 196], [158, 204], [240, 206], [372, 192], [30, 186]];
+
+/* ---------- actors ---------- */
+const COLORS = ["#ff8f6b", "#7fd3ff", "#ffd36b", "#c59bff", "#8ff0b5", "#ff9fd0"];
+const villagers = [];
+function randIsland() { for (let i = 0; i < 40; i++) { const x = 40 + Math.random() * 320, y = 100 + Math.random() * 105; if (onIsland(x, y)) return [x, y]; } return [200, 190]; }
+function makeVillager(x, y, mine) { const [tx, ty] = randIsland(); return { x, y, tx, ty, c: COLORS[Math.floor(Math.random() * COLORS.length)], sp: 0.12 + Math.random() * 0.12, wait: 0, mine }; }
+function syncVillagers() {
+  const ups = state.status ? state.status.services.filter(s => s.status === "up").length : 4;
+  const want = 3 + ups;
+  let base = villagers.filter(v => !v.mine);
+  while (base.length < want) { const [x, y] = randIsland(); const v = makeVillager(x, y, false); villagers.push(v); base.push(v); }
+  while (base.length > want) { const v = base.pop(); villagers.splice(villagers.indexOf(v), 1); }
+}
+sandbox.villagers.forEach(([x, y]) => villagers.push(makeVillager(x, y, true)));
+
+const particles = [];
+const couriers = [];
+let lights = [];
+const clouds = Array.from({ length: 6 }, (_, i) => ({ x: i * 75 + Math.random() * 40, y: 10 + Math.random() * 45, w: 22 + Math.random() * 26 }));
+const stars = Array.from({ length: 70 }, () => [Math.random() * W, Math.random() * 120, Math.random()]);
+const rain = Array.from({ length: 90 }, () => [Math.random() * W, Math.random() * H]);
+
+/* ---------- drawing: buildings ---------- */
+function light(x, y, w, h, c = "#ffd36b") { lights.push([x, y, w, h, c]); }
+function win(x, y, w, h, on) { if (on) light(x, y, w, h); else R(x, y, w, h, "#2a3050"); }
+function downFx(b, t) {
+  if (isUp(b)) return;
+  if (Math.random() < 0.25) particles.push({ x: b.x + (Math.random() - .5) * 8, y: b.y - b.h + 4, vx: (Math.random() - .5) * .1, vy: -.18, life: 90, c: "#5b6077", s: 3 });
+  const blink = Math.floor(t / 400) % 2;
+  R(b.x - 2, b.y - b.h - 12, 5, 8, blink ? "#ff5d73" : "#b8314a"); R(b.x, b.y - b.h - 10, 1, 3, "#fff"); R(b.x, b.y - b.h - 6, 1, 1, "#fff");
+}
+const wall = (b, c) => isUp(b) ? c : "#555a6e";
+
+const DRAW = {
+  tower(b, t) {
+    const { x, y } = b, up = isUp(b);
+    R(x - 9, y - 32, 3, 32, "#6b4a2b"); R(x + 6, y - 32, 3, 32, "#6b4a2b");
+    for (let i = 0; i < 3; i++) R(x - 8, y - 8 - i * 10, 16, 2, "#5a3d22");
+    R(x - 11, y - 46, 22, 14, wall(b, "#8c6a46")); R(x - 12, y - 33, 24, 2, "#5a3d22");
+    win(x - 6, y - 42, 12, 6, up);
+    if (up) { R(x - 1, y - 41, 2, 2, "#2d3b6b"); R(x - 1, y - 39, 2, 2, "#3e4f8f"); }
+    roof(x - 13, y - 56, 26, 10, "#7a2e3a");
+    R(x, y - 66, 1, 10, "#cfd3e6");
+    for (let i = 0; i < 4; i++) { const off = up && !reduced ? Math.round(Math.sin(t / 250 + i) * 1) : 0; R(x + 1, y - 66 + i + off * 0, 7 + off, 1, up ? "#ff5d73" : "#666"); }
+  },
+  obs(b, t) {
+    const { x, y } = b, up = isUp(b);
+    R(x - 15, y - 20, 30, 20, wall(b, "#c9cfe6"));
+    disc(x, y - 20, 13, up ? "#8aa0d8" : "#666", true);
+    R(x - 1, y - 33, 3, 13, "#1b2140");
+    const a = up ? Math.sin(t / 3000) * .5 - .9 : -.6;
+    for (let i = 0; i < 10; i++) R(x + 1 + Math.cos(a) * i, y - 30 + Math.sin(a) * i, 2, 2, "#9aa3c7");
+    R(x - 3, y - 9, 6, 9, "#4a3a2a"); win(x - 12, y - 16, 4, 4, up); win(x + 8, y - 16, 4, 4, up);
+  },
+  clock(b, t) {
+    const { x, y } = b, up = isUp(b);
+    R(x - 10, y - 52, 20, 52, wall(b, "#a7a2b8")); for (let i = 0; i < 6; i++) R(x - 10, y - 50 + i * 9, 20, 1, "#8c879e");
+    roof(x - 12, y - 68, 24, 16, "#3c4d86"); R(x, y - 72, 1, 4, "#ffc95c");
+    disc(x, y - 40, 7, "#f3ead2"); disc(x, y - 40, 1, "#222");
+    const { h, m } = nyParts();
+    const ha = ((h % 12) + m / 60) / 12 * Math.PI * 2 - Math.PI / 2, ma = m / 60 * Math.PI * 2 - Math.PI / 2;
+    for (let i = 1; i <= 4; i++) R(x + Math.cos(ha) * i, y - 40 + Math.sin(ha) * i, 1, 1, "#222");
+    for (let i = 1; i <= 6; i++) R(x + Math.cos(ma) * i, y - 40 + Math.sin(ma) * i, 1, 1, "#7a2e3a");
+    R(x - 3, y - 10, 6, 10, "#4a3a2a"); win(x - 3, y - 26, 6, 6, up);
+  },
+  aviary(b, t) {
+    const { x, y } = b, up = isUp(b);
+    R(x - 14, y - 10, 28, 10, wall(b, "#7a5a3a"));
+    for (let dx = -12; dx <= 12; dx += 4) { const hh = Math.floor(Math.sqrt(169 - dx * dx)); R(x + dx, y - 10 - hh, 1, hh, "#d8c9a0"); }
+    disc(x, y - 10, 13, "rgba(216,201,160,0)", true);
+    for (let dy = 0; dy < 13; dy += 1) { const dx = Math.floor(Math.sqrt(169 - dy * dy)); R(x - dx, y - 10 - dy, 1, 1, "#d8c9a0"); R(x + dx, y - 10 - dy, 1, 1, "#d8c9a0"); }
+    R(x - 1, y - 25, 3, 2, "#d8c9a0");
+    const n = up ? 4 : 0;
+    for (let i = 0; i < n; i++) {
+      const a = t / (900 + i * 170) + i * 1.7, rx = 26 + i * 6, ry = 10 + i * 3;
+      const bx = x + Math.cos(a) * rx, by = y - 40 - i * 4 + Math.sin(a) * ry, f = Math.floor(t / 150 + i) % 2;
+      R(bx, by, 2, 1, "#f6f1df"); R(bx - 1, by - f, 1, 1, "#f6f1df"); R(bx + 2, by - f, 1, 1, "#f6f1df");
+    }
+    if (!up) { R(x - 4, y - 14, 3, 2, "#999"); R(x + 2, y - 13, 3, 2, "#999"); }
+  },
+  workshop(b, t) {
+    const { x, y } = b, up = isUp(b);
+    R(x - 16, y - 22, 32, 22, wall(b, "#4d6b8f")); roof(x - 18, y - 34, 36, 12, "#2f3f63");
+    R(x + 8, y - 50, 2, 20, "#c0c6de"); R(x + 6, y - 52, 6, 2, "#c0c6de");
+    if (up) { light(x + 8, y - 54, 2, 2, "#ff5d73"); for (let k = 0; k < 3; k++) { const r = ((t / 40 + k * 14) % 42); ctx.strokeStyle = `rgba(255,201,92,${(1 - r / 42) * .8})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + 9, y - 53, r, -2.6, -0.5); ctx.stroke(); } }
+    R(x - 12, y - 10, 8, 10, "#2a1d14"); win(x + 2, y - 16, 10, 6, up);
+    if (up && Math.random() < .08) particles.push({ x: x - 8 + Math.random() * 3, y: y - 8, vx: (Math.random() - .5) * .6, vy: -.5, life: 18, c: "#ffe9a8", s: 1 });
+  },
+  gate(b, t) {
+    const { x, y } = b, up = isUp(b), c = wall(b, "#9b9fb3");
+    R(x - 17, y - 34, 11, 34, c); R(x + 6, y - 34, 11, 34, c); R(x - 6, y - 30, 12, 10, c);
+    for (let i = 0; i < 3; i++) { R(x - 17 + i * 4, y - 37, 3, 3, c); R(x + 6 + i * 4, y - 37, 3, 3, c); }
+    R(x - 6, y - 20, 12, 20, "#0d1226"); disc(x, y - 20, 6, "#0d1226", true);
+    win(x - 14, y - 26, 4, 5, up); win(x + 10, y - 26, 4, 5, up);
+    if (up) for (let k = 0; k < 4; k++) { const px = ((t / 20 + k * 22) % 88) - 44; light(x + px, y - 6, 2, 2, "#7fd3ff"); }
+    else R(x - 6, y - 20, 12, 20, "#5b2230");
+  },
+  forge(b, t) {
+    const { x, y } = b, cpu = state.status?.cpu?.pct ?? 0;
+    R(x - 16, y - 18, 32, 18, "#8a4a3a"); for (let i = 0; i < 4; i++) R(x - 16, y - 16 + i * 4, 32, 1, "#6e382c");
+    R(x - 17, y - 21, 34, 3, "#4a2a22"); R(x + 6, y - 36, 7, 16, "#6e382c");
+    const fl = .6 + Math.sin(t / 90) * .2 + Math.random() * .2;
+    light(x - 5, y - 11, 10, 11, mix("#ff7a2e", "#ffe28a", clamp(cpu / 100 + fl * .3, 0, 1)));
+    const rate = 0.08 + cpu / 100 * 0.9;
+    if (!reduced && Math.random() < rate) particles.push({ x: x + 9 + Math.random() * 2, y: y - 37, vx: (Math.random() - .5) * .2, vy: -.35 - cpu / 200, life: 40 + cpu / 2, c: cpu > 70 ? "#ff5d2e" : "#ffb347", s: 2, fire: true });
+    if (!reduced && Math.random() < .12) particles.push({ x: x + 9, y: y - 40, vx: .05, vy: -.2, life: 80, c: "#4a4f63", s: 3 });
+  },
+  hall(b, t) {
+    const { x, y } = b;
+    R(x - 22, y - 24, 44, 24, "#e9dcc0"); for (let i = -18; i <= 18; i += 9) R(x + i - 1, y - 22, 3, 22, "#d4c4a2");
+    roof(x - 25, y - 38, 50, 14, "#b0453f"); R(x - 4, y - 34, 8, 6, "#f3ead2");
+    const n = (state.events || []).length; R(x - 3, y - 33, 6, 4, n ? "#ffc95c" : "#bbb");
+    R(x - 4, y - 12, 8, 12, "#4a3a2a");
+    const night = dayFactor < .4; win(x - 15, y - 16, 5, 6, night); win(x + 10, y - 16, 5, 6, night);
+    R(x + 26, y - 16, 12, 10, "#7a5a3a"); R(x + 27, y - 6, 1, 6, "#5a3d22"); R(x + 36, y - 6, 1, 6, "#5a3d22");
+    const tasks = (state.tasks || []).length; for (let i = 0; i < Math.min(tasks, 6); i++) R(x + 27 + (i % 3) * 3, y - 15 + Math.floor(i / 3) * 4, 2, 3, "#f6f1df");
+  },
+  water(b, t) {
+    const { x, y } = b, mem = state.status?.mem?.pct ?? 0, swap = state.status?.swap?.pct ?? 0;
+    R(x - 11, y - 28, 2, 28, "#6a6f88"); R(x + 7, y - 28, 2, 28, "#6a6f88");
+    for (let i = 0; i < 3; i++) { R(x - 10, y - 8 - i * 8, 18, 1, "#5a5f78"); }
+    R(x - 13, y - 48, 24, 20, "#3d4668"); const fh = Math.round(18 * mem / 100);
+    const wob = reduced ? 0 : Math.round(Math.sin(t / 300));
+    R(x - 12, y - 29 - fh, 22, fh, mem >= 85 ? "#ff5d73" : mem >= 60 ? "#4f9de0" : "#4fc3e0"); R(x - 12, y - 29 - fh + wob, 22, 1, "#bdefff");
+    roof(x - 14, y - 56, 26, 8, "#2f3653");
+    R(x + 13, y - 12, 10, 12, "#6b4a2b"); R(x + 13, y - 9, 10, 1, "#4a3220"); R(x + 13, y - 4, 10, 1, "#4a3220");
+    const sh = Math.round(10 * swap / 100); R(x + 14, y - 1 - sh, 8, sh, swap > 25 ? "#ffb347" : "#9ecf6a");
+  },
+  ware(b, t) {
+    const { x, y } = b, disk = state.status?.disk?.pct ?? 0;
+    R(x - 20, y - 26, 40, 26, "#8a6a4a"); roof(x - 22, y - 38, 44, 12, "#5b3d2a");
+    R(x - 15, y - 21, 30, 21, "#24180f");
+    const filled = Math.round(disk / 100 * 12);
+    for (let i = 0; i < 12; i++) { const cx = x - 14 + (i % 4) * 7, cy = y - 6 - Math.floor(i / 4) * 6; if (i < filled) { R(cx, cy, 6, 5, i >= 10 ? "#ff8a5c" : "#d9a45b"); R(cx, cy + 2, 6, 1, "#a87a3a"); } }
+  },
+  dock(b, t) {
+    const { x, y } = b, up = isUp(b);
+    R(x - 30, y - 3, 56, 4, up ? "#7a5a3a" : "#555"); for (let i = -28; i < 26; i += 9) R(x + i, y + 1, 2, 7, "#4a3220");
+    const wk = Date.now() - 7 * 864e5;
+    const visits = (state.status?.logins || []).filter(l => new Date(l.when).getTime() > wk).length;
+    for (let i = 0; i < Math.min(visits, 3); i++) {
+      const bx = x + 34 + i * 18, by = y + 6 + (reduced ? 0 : Math.round(Math.sin(t / 500 + i)));
+      R(bx - 6, by, 12, 3, "#c0563f"); R(bx - 5, by + 3, 10, 1, "#8c3a2a"); R(bx, by - 9, 1, 9, "#e9dcc0"); roof(bx + 1, by - 9, 6, 8, "#f6f1df");
+    }
+    if (up) light(x + 25, y - 8, 2, 3, "#ffd36b");
+  },
+};
+
+/* ---------- world ---------- */
+let dayFactor = 1;
+function drawSky(t) {
+  const { h, m } = nyParts(); const hr = h + m / 60;
+  dayFactor = clamp(Math.sin((hr - 6) / 12 * Math.PI) * 1.4 + .15, 0, 1);
+  const dusk = clamp(1 - Math.abs(dayFactor - .35) * 3, 0, 1);
+  const top = mix("#070b22", "#3f86c8", dayFactor), bot = mix(mix("#1a1f4a", "#9fd3f0", dayFactor), "#f08a5d", dusk * .6);
+  const g = ctx.createLinearGradient(0, 0, 0, 135); g.addColorStop(0, top); g.addColorStop(1, bot); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 135);
+  for (const [sx, sy, tw] of stars) { const a = (1 - dayFactor) * (.5 + .5 * Math.sin(t / 700 + tw * 9)); if (a > .05) { ctx.globalAlpha = a; R(sx, sy, 1, 1, "#ffffff"); } }
+  ctx.globalAlpha = 1;
+  const sunA = (hr - 6) / 12 * Math.PI; const sx = 200 - Math.cos(sunA) * 170, sy = 120 - Math.sin(sunA) * 100;
+  if (hr > 5.5 && hr < 18.5) { disc(sx, sy, 7, "#ffe28a"); }
+  else { const ma = ((hr + 6) % 24) / 12 * Math.PI; disc(200 - Math.cos(ma) * 170, 120 - Math.sin(ma) * 95, 5, "#e8ecff"); }
+  const load = state.status?.load?.[0] ?? 0.1;
+  const storm = (state.status?.cpu?.pct ?? 0) > 80 || (state.status?.mem?.pct ?? 0) > 90;
+  const speed = reduced ? 0 : 0.03 + load * 0.5;
+  for (const c of clouds) {
+    c.x += speed; if (c.x > W + 30) { c.x = -c.w - 10; c.y = 10 + Math.random() * 45; }
+    const col = storm ? "#4a4f63" : mix("#3a4370", "#f6f8ff", dayFactor);
+    R(c.x, c.y, c.w, 5, col); R(c.x + 4, c.y - 3, c.w * .5, 3, col); R(c.x + c.w * .35, c.y - 5, c.w * .35, 3, col);
+  }
+  return storm;
+}
+function drawSea(t) {
+  R(0, 128, W, H - 128, mix("#0b1b3d", "#2b6ea8", dayFactor));
+  for (let i = 0; i < 40; i++) { const wx = (i * 53 + (reduced ? 0 : t / 60)) % (W + 20) - 10, wy = 132 + (i * 37 % 110); R(wx, wy, 5, 1, mix("#1d3a6e", "#7cc0ea", dayFactor)); }
+}
+function drawIsland() {
+  ellipseFill(200, 156, 180, 72, "#d9c48f");
+  ellipseFill(200, 150, 170, 64, mix("#2e5a37", "#5fae5a", dayFactor * .8 + .2));
+  ctx.globalAlpha = .35; ellipseFill(200, 160, 118, 34, "#c9b07a"); ctx.globalAlpha = 1;
+  ellipseFill(200, 160, 110, 28, mix("#2e5a37", "#5fae5a", dayFactor * .8 + .2));
+}
+function drawTree(x, y, mine) { R(x - 1, y - 6, 2, 6, "#6b4a2b"); disc(x, y - 9, 5, mine ? "#3fa66b" : "#2f7d4a"); R(x - 2, y - 12, 2, 2, "#5cc58a"); }
+function drawLantern(x, y) { R(x, y - 8, 1, 8, "#2a2a2a"); R(x - 1, y - 11, 3, 3, "#3a3020"); light(x - 1, y - 11, 3, 3, "#ffd36b"); }
+function drawVillager(v, t) {
+  const step = Math.floor(t / 180 + v.x) % 2;
+  R(v.x - 1, v.y - 6, 3, 3, "#f1c7a1"); R(v.x - 1, v.y - 3, 3, 3, v.c); R(v.x - 1 + step, v.y, 1, 1, "#222"); R(v.x + 1 - step, v.y, 1, 1, "#222");
+}
+function stepVillager(v) {
+  if (reduced) return;
+  if (v.wait > 0) { v.wait--; return; }
+  const dx = v.tx - v.x, dy = v.ty - v.y, d = Math.hypot(dx, dy);
+  if (d < 1) { [v.tx, v.ty] = randIsland(); v.wait = 60 + Math.random() * 200; return; }
+  v.x += dx / d * v.sp; v.y += dy / d * v.sp;
+}
+
+const SRC2B = { dashboard: "obs", calendar: "workshop", tasks: "workshop", mcp: "workshop", hermes: "aviary", cron: "clock", caddy: "gate", ssh: "dock", fail2ban: "tower", brief: "workshop" };
+function spawnCourier(entry) {
+  const from = byId[SRC2B[(entry.source || "").toLowerCase()] || "workshop"], to = byId.hall;
+  const el = document.createElement("div"); el.className = "bubble";
+  el.innerHTML = `<b>${esc(entry.source || "server")}</b>${esc((entry.msg || "").slice(0, 70))}`;
+  overlay.appendChild(el);
+  couriers.push({ x: from.x, y: from.y + 2, sx: from.x, sy: from.y + 2, tx: to.x, ty: to.y + 2, t: 0, el });
+}
+function stepCouriers(t) {
+  for (let i = couriers.length - 1; i >= 0; i--) {
+    const c = couriers[i]; c.t += reduced ? 0.02 : 0.004;
+    const k = clamp(c.t, 0, 1); c.x = lerp(c.sx, c.tx, k); c.y = lerp(c.sy, c.ty, k) - Math.sin(k * Math.PI) * 6;
+    const step = Math.floor(t / 120) % 2;
+    R(c.x - 1, c.y - 6, 3, 3, "#f1c7a1"); R(c.x - 1, c.y - 3, 3, 3, "#ffc95c"); R(c.x + 2, c.y - 4, 3, 2, "#f6f1df"); R(c.x - 1 + step, c.y, 1, 1, "#222");
+    c.el.style.left = (c.x / W * 100) + "%"; c.el.style.top = ((c.y - 8) / H * 100) + "%";
+    if (c.t > 1.35) { c.el.remove(); couriers.splice(i, 1); }
+  }
+}
+
+function frame(t) {
+  lights = [];
+  const storm = drawSky(t);
+  drawSea(t); drawIsland();
+  const things = [];
+  DEFAULT_TREES.forEach(([x, y]) => things.push({ y, d: () => drawTree(x, y, false) }));
+  sandbox.trees.forEach(([x, y]) => things.push({ y, d: () => drawTree(x, y, true) }));
+  sandbox.lanterns.forEach(([x, y]) => things.push({ y, d: () => drawLantern(x, y) }));
+  B.forEach(b => things.push({ y: b.y, d: () => { DRAW[b.id](b, t); downFx(b, t); } }));
+  villagers.forEach(v => { stepVillager(v); things.push({ y: v.y, d: () => drawVillager(v, t) }); });
+  things.sort((a, b) => a.y - b.y).forEach(o => o.d());
+  // particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    ctx.globalAlpha = clamp(p.life / 40, 0, 1); if (p.fire) light(p.x, p.y, p.s, p.s, p.c); else R(p.x, p.y, p.s, p.s, p.c);
+  }
+  ctx.globalAlpha = 1;
+  stepCouriers(t);
+  // selection marker
+  const sb = byId[selected]; if (sb) { const bob = reduced ? 0 : Math.round(Math.sin(t / 200) * 2); roof(sb.x - 3, sb.y - sb.h - 22 + bob, 7, 4, "#ffc95c"); }
+  // night + weather
+  const dark = (1 - dayFactor) * .5 + (storm ? .15 : 0);
+  if (dark > 0) { ctx.fillStyle = `rgba(6,10,32,${dark})`; ctx.fillRect(0, 0, W, H); }
+  if (storm) { ctx.fillStyle = "rgba(170,190,255,.5)"; for (const r of rain) { if (!reduced) { r[0] -= .6; r[1] += 4; if (r[1] > H) { r[1] = -5; r[0] = Math.random() * (W + 40); } } ctx.fillRect(r[0], r[1], 1, 3); } if (!reduced && Math.random() < .004) { ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(0, 0, W, H); } }
+  for (const [x, y, w, h, c] of lights) {
+    if (dayFactor < .6) { ctx.fillStyle = "rgba(255,201,92,.12)"; ctx.fillRect(Math.round(x - 3), Math.round(y - 3), Math.round(w + 6), Math.round(h + 6)); }
+    R(x, y, w, h, c);
+  }
+}
+
+let last = 0;
+function loop(t) { if (!reduced || t - last > 250) { frame(t); last = t; } requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+/* ---------- interaction ---------- */
+function toWorld(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+function hit(x, y) { return [...B].sort((a, b) => b.y - a.y).find(b => x >= b.x - b.w / 2 && x <= b.x + b.w / 2 && y >= b.y - b.h && y <= b.y + 4); }
+cv.addEventListener("click", e => {
+  const [x, y] = toWorld(e);
+  if (tool === "inspect") { const b = hit(x, y); select(b ? b.id : "island"); return; }
+  if (!onIsland(x, y)) return;
+  const pt = [Math.round(x), Math.round(y)];
+  if (tool === "tree" && sandbox.trees.length < 80) sandbox.trees.push(pt);
+  if (tool === "lantern" && sandbox.lanterns.length < 60) sandbox.lanterns.push(pt);
+  if (tool === "villager" && sandbox.villagers.length < 40) { sandbox.villagers.push(pt); villagers.push(makeVillager(pt[0], pt[1], true)); }
+  saveSandbox();
+});
+cv.addEventListener("mousemove", e => { if (tool !== "inspect") { cv.style.cursor = "crosshair"; return; } const [x, y] = toWorld(e); cv.style.cursor = hit(x, y) ? "pointer" : "default"; });
+document.querySelectorAll(".tool").forEach(btn => btn.addEventListener("click", () => {
+  if (btn.dataset.tool === "clear") {
+    sandbox = { trees: [], lanterns: [], villagers: [] }; saveSandbox();
+    for (let i = villagers.length - 1; i >= 0; i--) if (villagers[i].mine) villagers.splice(i, 1);
+    return;
+  }
+  tool = btn.dataset.tool;
+  document.querySelectorAll(".tool").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+}));
+
+/* pins */
+const pins = {};
+B.forEach(b => {
+  const el = document.createElement("button"); el.className = "pin"; el.type = "button";
+  el.style.left = (b.x / W * 100) + "%"; el.style.top = ((b.y - b.h - 4) / H * 100) + "%";
+  if (b.id === "dock") { el.style.left = ((b.x + 20) / W * 100) + "%"; el.style.top = ((b.y + 26) / H * 100) + "%"; }
+  el.innerHTML = `<span class="dot"></span><span class="lbl">${b.name}</span>`;
+  el.setAttribute("aria-label", `${b.name} (${b.real})`);
+  el.addEventListener("click", () => select(b.id));
+  overlay.appendChild(el); pins[b.id] = el;
+});
+function select(id) { selected = id; Object.entries(pins).forEach(([k, el]) => el.setAttribute("aria-pressed", String(k === id))); renderInspector(); }
+
+/* ---------- panels ---------- */
+function setMeter(key, pct, text, warn, bad) {
+  $("v-" + key).textContent = text;
+  const bar = $("b-" + key); bar.className = "bar " + (pct == null ? "" : pctClass(pct, warn, bad));
+  bar.firstElementChild.style.width = (pct == null ? 0 : clamp(pct, 0, 100)) + "%";
+}
+function svcLevel(name) { const s = svcState(name); return s == null ? "" : s === "up" ? "good" : "bad"; }
+function itemLevel(b) {
+  const s = state.status; if (!s) return "";
+  if (b.svc) return svcLevel(b.svc);
+  if (b.id === "forge") return pctClass(s.cpu.pct);
+  if (b.id === "water") return s.mem.pct >= 85 ? "bad" : (s.mem.pct >= 60 || s.swap.pct > 25) ? "warn" : "good";
+  if (b.id === "ware") return pctClass(s.disk.pct, 70, 90);
+  return "good";
+}
+
+const BLURB = {
+  island: "Your whole DigitalOcean server, drawn as an island. Tap any building to see what it stands for.",
+  tower: "fail2ban watches the login door and bans addresses that keep failing to log in. The flag flies while it is on duty.",
+  obs: "Your personal dashboard web app. Lit windows mean it is running.",
+  clock: "cron runs jobs on a schedule. The clock face shows New York time.",
+  aviary: "The Hermes gateway. Birds circle while it is running.",
+  workshop: "kiaan-mcp, the connector that lets Claude read your calendar, tasks and this status feed. The antenna broadcasts while it is up.",
+  gate: "Caddy, the web server. It lets visitors in from the internet and handles HTTPS. Blue dots are traffic passing through.",
+  forge: "The forge burns hotter as the CPU works harder. More sparks mean more CPU use.",
+  hall: "Where couriers deliver news from around the island. The banner lights up when you have events today, and notes on the board are open tasks.",
+  water: "The tank fills with memory in use. The barrel beside it is swap: memory that spilled onto the disk because RAM ran short.",
+  ware: "Crates fill the warehouse as disk space is used. Twelve slots in total.",
+  dock: "SSH is the door you log in through. Each boat is a login from the last 7 days.",
+};
+function svcRows(name) {
+  const s = state.status?.services?.find(v => v.name === name);
+  if (!s) return [["Service", name], ["Status", "unknown"]];
+  return [["Service", name], ["Running", s.active], ["Starts at boot", s.enabled === "enabled" ? "yes" : s.enabled]];
+}
+function renderInspector() {
+  const s = state.status, b = byId[selected], id = b ? b.id : "island";
+  let title = b ? b.name : "kiaan-cloud", kicker = b ? b.real : "the whole island", rows = [], level = b ? itemLevel(b) : (s ? (s.services.every(v => v.status === "up") ? "good" : "bad") : "");
+  if (!s) rows = [["Status", meta.status.err ? meta.status.err : "waiting for data"]];
+  else if (id === "island") {
+    const do_ = s.digitalocean || {};
+    rows = [["Host", s.host], ["Address", s.ip], ["Region", do_.region || "–"], ["Plan", do_.size ? `${do_.size} · ${do_.vcpus} vCPU · ${do_.memory_mb} MB · ${do_.disk_gb} GB` : "–"], ["System", do_.image ? "Ubuntu " + do_.image : "–"], ["Up for", fmtUptime(s.uptime_s)], ["Services up", `${s.services.filter(v => v.status === "up").length} of ${s.services.length}`]];
+  } else if (b.svc) {
+    rows = svcRows(b.svc);
+    if (id === "dock") { const l = s.logins?.[0]; if (l) rows.push(["Last login", `${l.user} from ${l.from}`], ["When", fmtNY(l.when, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })]); }
+    if (id === "clock") rows.push(["Scheduled jobs", s.cron?.length ? s.cron.length : "none listed"]);
+  } else if (id === "forge") rows = [["CPU", s.cpu.pct + "%"], ["Load (1 / 5 / 15 min)", s.load.map(v => v.toFixed(2)).join(" / ")], ["Cores", s.digitalocean?.vcpus ?? "–"]];
+  else if (id === "water") rows = [["Memory", `${s.mem.used_mb} of ${s.mem.total_mb} MB (${s.mem.pct}%)`], ["Swap", `${s.swap.used_mb} of ${s.swap.total_mb} MB (${s.swap.pct}%)`], ["Note", s.swap.pct > 25 ? "Swap is in use, so RAM is tight. More RAM would speed things up." : "Plenty of room."]];
+  else if (id === "ware") rows = [["Disk", `${s.disk.used_gb} of ${s.disk.total_gb} GB (${s.disk.pct}%)`], ["Free", (s.disk.total_gb - s.disk.used_gb).toFixed(1) + " GB"]];
+  else if (id === "hall") rows = [["Events today", state.events ? state.events.length : "–"], ["Open tasks", state.tasks ? state.tasks.length : "–"], ["Latest news", state.activity?.[0]?.msg || "–"]];
+  const lvlText = { good: "All good", warn: "Needs a look", bad: "Problem", "": "No data yet" }[level];
+  $("inspector").innerHTML = `<div class="kicker">${esc(kicker)}</div><h3>${esc(title)}</h3>
+    <span class="state"><span class="dot ${level}"></span>${lvlText}</span>
+    <p>${esc(BLURB[id])}</p><dl class="kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
+}
+function fmtUptime(sec) { const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600); return `${d} days ${h} h`; }
+
+function renderStatus() {
+  const s = state.status;
+  if (!s) {
+    ["cpu", "mem", "swap", "disk", "load"].forEach(k => setMeter(k, null, "–"));
+    Object.values(pins).forEach(p => p.querySelector(".dot").className = "dot");
+    renderInspector(); renderAchievements(); return;
+  }
+  const do_ = s.digitalocean || {};
+  $("where").textContent = `DigitalOcean droplet · ${do_.region || ""} · ${s.ip}`;
+  $("dayPill").textContent = `Day ${Math.floor(s.uptime_s / 86400)} online`;
+  setMeter("cpu", s.cpu.pct, s.cpu.pct.toFixed(1) + "%");
+  setMeter("mem", s.mem.pct, s.mem.pct.toFixed(0) + "%"); $("r-mem").textContent = `Memory · ${s.mem.used_mb}/${s.mem.total_mb} MB`;
+  setMeter("swap", s.swap.pct, s.swap.pct.toFixed(0) + "%", 25, 60); $("r-swap").textContent = `Swap · ${s.swap.used_mb}/${s.swap.total_mb} MB`;
+  setMeter("disk", s.disk.pct, s.disk.pct.toFixed(0) + "%", 70, 90); $("r-disk").textContent = `Disk · ${s.disk.used_gb}/${s.disk.total_gb} GB`;
+  const cores = do_.vcpus || 1, lp = s.load[0] / cores * 100;
+  setMeter("load", lp, s.load[0].toFixed(2));
+  B.forEach(b => pins[b.id].querySelector(".dot").className = "dot " + itemLevel(b));
+  // visitors
+  const wk = Date.now() - 7 * 864e5;
+  $("loginList").innerHTML = (s.logins || []).length ? s.logins.map(l => `<li class="${new Date(l.when).getTime() > wk ? "fresh" : ""}"><span class="src">${esc(l.user)}</span><span class="msg">from ${esc(l.from)}<span class="when">${esc(fmtNY(l.when, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))} · ${ago(new Date(l.when).getTime())}</span></span></li>`).join("") : `<li class="empty">No logins recorded.</li>`;
+  // treasury
+  const used = parseFloat(do_.month_to_date_usage || 0), price = do_.price_monthly || 0;
+  $("coins").innerHTML = `$${used.toFixed(2)} <small>spent this month of about $${price}/mo</small>`;
+  const bb = $("b-bill"); bb.className = "bar " + (price && used > price ? "warn" : "good"); bb.firstElementChild.style.width = (price ? clamp(used / price * 100, 0, 100) : 0) + "%";
+  $("billKv").innerHTML = [["Account balance", "$" + (do_.account_balance ?? "–")], ["Droplet status", do_.status || "–"], ["Billing checked", do_.generated_at ? fmtNY(do_.generated_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "–"], ["Created", do_.created_at ? fmtNY(do_.created_at, { month: "short", day: "numeric", year: "numeric" }) : "–"]].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  syncVillagers(); renderInspector(); renderAchievements();
+}
+
+let seen = null;
+function renderActivity() {
+  const a = state.activity;
+  if (!a) { $("actList").innerHTML = `<li class="empty">${esc(meta.activity.err || "Waiting for the activity feed…")}</li>`; return; }
+  const key = e => e.ts + "|" + e.msg;
+  const fresh = new Set();
+  if (seen === null) { seen = new Set(a.map(key)); a.slice(0, 2).reverse().forEach((e, i) => setTimeout(() => spawnCourier(e), 800 + i * 2500)); }
+  else a.forEach(e => { if (!seen.has(key(e))) { seen.add(key(e)); fresh.add(key(e)); spawnCourier(e); } });
+  $("actList").innerHTML = a.length ? a.map(e => `<li class="${fresh.has(key(e)) ? "fresh" : ""}"><span class="src">${esc(e.source)}</span><span class="msg">${esc(e.msg)}<span class="when">${esc(fmtNY(e.ts, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))} · ${ago(new Date(e.ts).getTime())}</span></span></li>`).join("") : `<li class="empty">No activity yet.</li>`;
+  $("actMeta").textContent = `${a.length} recent entries`;
+}
+function renderEvents() {
+  const ev = state.events;
+  if (!ev) { $("calList").innerHTML = `<li class="empty">${esc(meta.events.err || "Loading today's events…")}</li>`; return; }
+  const now = Date.now();
+  $("calList").innerHTML = ev.length ? ev.map(e => {
+    const when = e.all_day ? "All day" : fmtNY(e.start, { hour: "numeric", minute: "2-digit" }) + "–" + fmtNY(e.end, { hour: "numeric", minute: "2-digit" });
+    const nowOn = !e.all_day && new Date(e.start) <= now && new Date(e.end) > now;
+    return `<li class="${nowOn ? "fresh" : ""}"><span class="src">${esc((e.calendar || "").trim())}</span><span class="msg">${esc(e.title)}<span class="when">${esc(when)}${nowOn ? " · happening now" : ""}</span></span></li>`;
+  }).join("") : `<li class="empty">Nothing on the calendar today.</li>`;
+}
+function renderTasks() {
+  const tk = state.tasks;
+  if (!tk) { $("taskList").innerHTML = `<li class="empty">${esc(meta.tasks.err || "Loading tasks…")}</li>`; return; }
+  $("taskList").innerHTML = tk.length ? tk.map(x => `<li><span class="src">${esc(x.project || "task")}</span><span class="msg">${esc(x.title || x.text || x.name || JSON.stringify(x))}${x.due ? `<span class="when">due ${esc(x.due)}</span>` : ""}</span></li>`).join("") : `<li class="empty">Board is clear. No open tasks.</li>`;
+}
+function renderAchievements() {
+  const s = state.status;
+  const list = [
+    ["Month at sea", "Online 30 days without a restart", s && s.uptime_s >= 30 * 86400],
+    ["Lights on", "Every service running", s && s.services.every(v => v.status === "up")],
+    ["Under budget", "This month's spend is below the plan price", s && parseFloat(s.digitalocean?.month_to_date_usage || 0) < (s.digitalocean?.price_monthly || 0)],
+    ["Cool forge", "CPU under 20%", s && s.cpu.pct < 20],
+    ["Roomy warehouse", "Disk under half full", s && s.disk.pct < 50],
+    ["Dry barrel", "Swap under 10%", s && s.swap.pct < 10],
+    ["Busy town", "5+ events in the quest log today", state.activity && state.activity.filter(e => new Date(e.ts) > Date.now() - 864e5).length >= 5],
+    ["Clear board", "No open tasks", state.tasks && state.tasks.length === 0],
+  ];
+  const got = list.filter(x => x[2]).length;
+  $("achMeta").textContent = s ? `${got} of ${list.length} unlocked` : "";
+  $("badges").innerHTML = list.map(([n, d, ok]) => `<li class="${ok ? "" : "locked"}"><b>${ok ? "★ " : ""}${esc(n)}</b><span>${esc(d)}</span></li>`).join("");
+}
+
+/* ---------- freshness clock ---------- */
+setInterval(() => {
+  const { h, m, s } = nyParts();
+  $("clock").textContent = `NYC ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (meta.status.at) $("updPill").textContent = `Updated ${ago(meta.status.at)}`;
+}, 1000);
+
+/* ---------- live data ---------- */
+const DENY = new Set(["needs_reauth", "server_not_connected", "blocked_by_policy", "approval_required", "not_in_manifest", "selection_required", "server_not_found", "not_granted", "capability_disabled", "capability_removed"]);
+function errText(e) {
+  switch (e.code) {
+    case "needs_reauth": return "kiaan-cloud needs to be reconnected. Open claude.ai Settings → Connectors and reconnect it.";
+    case "server_not_connected": return "The kiaan-cloud connector isn't added for you. Add it in claude.ai Settings → Connectors.";
+    case "selection_required": return "You have more than one kiaan-cloud connector. Choose which one this page should use when claude.ai asks.";
+    case "approval_required": return "This page needs your OK to read from kiaan-cloud.";
+    case "not_in_manifest": return "Access to kiaan-cloud is turned off for this page. Turn it on from the page's Permissions menu.";
+    case "blocked_by_policy": return "Your organization's policy blocks this kiaan-cloud tool.";
+    case "server_unavailable": return "kiaan-cloud didn't answer. It will try again on the next refresh.";
+    case "tool_error": return "kiaan-cloud reported an error: " + (e.message || "unknown");
+    case "not_granted": case "capability_disabled": case "capability_removed": return "Live data isn't available in this view.";
+    default: return "Couldn't reach kiaan-cloud (" + (e.code || "error") + ").";
+  }
+}
+const RENDER = { status: renderStatus, activity: () => { renderActivity(); renderInspector(); renderAchievements(); }, tasks: () => { renderTasks(); renderAchievements(); }, events: () => { renderEvents(); } };
+const unwrap = p => { if (typeof p === "string") { try { p = JSON.parse(p); } catch { return null; } } return p && Array.isArray(p.result) ? p.result : p; };
+function updateBanner() {
+  const errs = Object.entries(meta).filter(([, m]) => m.code).map(([k, m]) => m);
+  const b = $("banner");
+  const pill = $("livePill"), lt = $("liveText");
+  if (demo) { pill.className = "pill"; pill.querySelector(".dot").className = "dot warn"; lt.textContent = "Sample data"; }
+  else if (state.status && !meta.status.code) { pill.className = "pill live"; pill.querySelector(".dot").className = "dot good"; lt.textContent = "Live"; }
+  else if (errs.length) { pill.className = "pill"; pill.querySelector(".dot").className = "dot bad"; lt.textContent = "Disconnected"; }
+  if (!errs.length) {
+    if (demo) { b.className = "banner"; b.innerHTML = "<span>Showing sample numbers. Open this page in Claude while signed in, with the kiaan-cloud connector added, to see your server live.</span>"; b.hidden = false; }
+    else b.hidden = true;
+    return;
+  }
+  const codes = new Set(errs.map(e => e.code));
+  const one = errs[0];
+  const needsBtn = codes.has("approval_required");
+  b.className = "banner" + ([...codes].some(c => DENY.has(c)) ? " bad" : "");
+  b.innerHTML = `<span>${esc(codes.size === 1 && errs.length === 4 ? errText(one) : errs.map(e => errText(e)).filter((v, i, a) => a.indexOf(v) === i).join(" "))}</span>${needsBtn ? `<button class="btn" id="allowBtn">Allow access</button>` : ""}`;
+  b.hidden = false;
+  const ab = $("allowBtn"); if (ab) ab.onclick = allowOnce;
+}
+let mcp = null;
+const WATCHES = [
+  ["status", "server_status", null, 30000],
+  ["activity", "activity_log", { limit: 25 }, 30000],
+  ["tasks", "tasks_list", { status: "open" }, 60000],
+  ["events", "calendar_events", { start: "today", end: "tomorrow" }, 300000],
+];
+function onData(key, result) {
+  state[key] = unwrap(result.payload ?? null);
+  meta[key] = { at: result.cache?.storedAt ?? Date.now() };
+  RENDER[key](); updateBanner();
+}
+function onErr(key, e) {
+  meta[key] = { ...meta[key], code: e.code, err: errText(e) };
+  if (DENY.has(e.code)) { state[key] = null; RENDER[key](); }
+  updateBanner();
+}
+async function allowOnce() {
+  const btn = $("allowBtn"); if (btn) btn.disabled = true;
+  for (const [key, tool, input] of WATCHES) {
+    try { const r = await mcp.callTool(SERVER, tool, input ?? undefined); onData(key, r); }
+    catch (e) { onErr(key, e); }
+  }
+}
+function startLive() {
+  for (const [key, tool, input, every] of WATCHES) {
+    mcp.watchTool(SERVER, tool, input, ev => ev.type === "data" ? onData(key, ev.result) : onErr(key, ev.error), { refetchInterval: every });
+  }
+}
+
+/* ---------- sample mode (outside Claude) ---------- */
+function startDemo() {
+  demo = true; $("demoTag").hidden = false;
+  const iso = ms => new Date(Date.now() - ms).toISOString();
+  const tick = () => {
+    const c = 8 + Math.random() * 14;
+    state.status = {
+      host: "sample-island", ip: "203.0.113.10", uptime_s: 12 * 86400 + 3600 * 5, load: [c / 60, .2, .15], cpu: { pct: +c.toFixed(1) },
+      mem: { pct: 55, used_mb: 528, total_mb: 961 }, swap: { pct: 8, used_mb: 160, total_mb: 2047 }, disk: { pct: 36, used_gb: 8.4, total_gb: 23.2 },
+      services: ["kiaan-dashboard", "caddy", "ssh", "fail2ban", "cron", "kiaan-mcp", "hermes-gateway"].map(n => ({ name: n, status: "up", active: "active", enabled: "enabled" })),
+      logins: [{ user: "sample", from: "198.51.100.4", when: iso(2 * 864e5) }], cron: [],
+      digitalocean: { region: "sample", size: "s-1vcpu-1gb", vcpus: 1, memory_mb: 1024, disk_gb: 25, image: "24.04 (LTS) x64", status: "active", price_monthly: 6, month_to_date_usage: "1.50", account_balance: "0.00", created_at: iso(40 * 864e5), generated_at: iso(3600e3) },
+    };
+    meta.status = { at: Date.now() }; renderStatus(); updateBanner();
+  };
+  state.activity = [{ ts: iso(60e3), source: "dashboard", msg: "Sample: dashboard started" }, { ts: iso(3600e3), source: "calendar", msg: "Sample: created event 'Study session'" }];
+  state.tasks = [{ title: "Sample task: water the plants", project: "sample" }];
+  state.events = [{ title: "Sample event", all_day: true, calendar: "Sample" }];
+  tick(); renderActivity(); renderTasks(); renderEvents(); renderAchievements();
+  setInterval(tick, 5000);
+  setInterval(() => { const e = { ts: new Date().toISOString(), source: ["dashboard", "calendar", "hermes", "cron"][Math.floor(Math.random() * 4)], msg: "Sample: something happened on the island" }; state.activity = [e, ...state.activity].slice(0, 20); renderActivity(); }, 20000);
+}
+
+/* ---------- boot ---------- */
+select("island"); renderAchievements();
+(async () => {
+  try { mcp = window.claude && typeof window.claude.use === "function" ? await window.claude.use("mcp") : null; } catch { mcp = null; }
+  if (!mcp) { startDemo(); $("banner").className = "banner"; $("banner").innerHTML = "<span>Showing sample numbers. Open this page in Claude while signed in, with the kiaan-cloud connector added, to see your server live.</span>"; $("banner").hidden = false; return; }
+  startLive();
+})();
+})();
+</script>
