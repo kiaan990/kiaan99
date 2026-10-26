@@ -1,0 +1,8 @@
+{
+  "_note": "ESTIMATES ONLY. US dollars per 1 million tokens. The app cannot know your real bill. Check https://openai.com/api/pricing and update these numbers if they change.",
+  "lastReviewed": "2026-10",
+  "models": {
+    "gpt-4o-mini": { "input": 0.15, "output": 0.6 },
+    "gpt-realtime": { "textInput": 4.0, "cachedInput": 0.4, "textOutput": 16.0, "audioInput": 32.0, "audioOutput": 64.0 }
+  }
+}

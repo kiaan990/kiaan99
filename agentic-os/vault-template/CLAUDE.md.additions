@@ -1,0 +1,27 @@
+
+<!-- agentic-os:filing-rules v1 (added by Agentic OS install.sh — everything above this line is yours and unchanged) -->
+## Filing rules (Agentic OS)
+
+These rules tell Claude where things go in this vault.
+
+### Folders
+- `raw/` — unprocessed inputs: notes, transcripts (`raw/transcripts/`), clippings, dumps. Drop anything here.
+- `wiki/` — organized, durable knowledge. One idea or topic per note, linked with `[[wikilinks]]`.
+- `outputs/` — finished deliverables:
+  - `outputs/briefs/` morning briefs and daily plans
+  - `outputs/research/` research briefs
+  - `outputs/reviews/` weekly reviews
+
+### When raw becomes wiki
+Promote material from `raw/` to `wiki/` when it is something you'll want again: a concept you've
+understood, a decision, a reference. Weekly reviews **suggest** promotions; nothing is moved
+automatically. The raw source stays in `raw/` and the wiki note links back to it.
+
+### Naming
+- Date-prefixed, lowercase-kebab-case: `YYYY-MM-DD-short-title.md` (e.g. `2026-10-26-cell-membranes.md`).
+- Evergreen wiki notes may drop the date: `spaced-repetition.md`.
+
+### Safety
+- Agents only ever **add** new files inside `raw/`, `wiki/` and `outputs/`.
+- Never delete, move, rename or overwrite existing notes. To change something, write a new note and link it.
+<!-- /agentic-os:filing-rules -->

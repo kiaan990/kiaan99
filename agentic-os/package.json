@@ -1,0 +1,26 @@
+{
+  "name": "agentic-os",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal, local-hosted Agentic OS: dashboard, skills, automations and voice.",
+  "type": "module",
+  "engines": {
+    "node": ">=20 <27"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "build": "npm --prefix web run build",
+    "dev:web": "npm --prefix web run dev",
+    "test": "node --test --test-concurrency=1 server/test/acceptance.test.js",
+    "verify": "node scripts/verify.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "better-sqlite3": "12.11.1",
+    "cron-parser": "5.10.2",
+    "dotenv": "16.6.1",
+    "express": "4.22.3",
+    "node-cron": "4.6.0",
+    "zod": "4.6.7"
+  }
+}

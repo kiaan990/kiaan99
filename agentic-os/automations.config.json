@@ -1,0 +1,16 @@
+{
+  "_help": "Edit this file to add or change automations. The app reloads it automatically. schedule uses cron format: minute hour day-of-month month day-of-week. runOnCatchUp: \"ask\" (show a prompt), true (run automatically), or false (skip).",
+  "timezone": "local",
+  "automations": [
+    {
+      "id": "morning-brief",
+      "name": "Morning brief",
+      "schedule": "0 8 * * *",
+      "skillId": "daily-plan",
+      "input": {},
+      "enabled": true,
+      "runOnCatchUp": "ask",
+      "catchUpWindowHours": 16
+    }
+  ]
+}

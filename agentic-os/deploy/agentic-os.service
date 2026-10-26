@@ -1,0 +1,45 @@
+# systemd service for Agentic OS on your server. Installed by deploy/setup-server.sh.
+# The app listens on 127.0.0.1 only; Tailscale Serve publishes it to your tailnet over HTTPS.
+[Unit]
+Description=Agentic OS (personal assistant)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+WorkingDirectory=@APP@
+Environment=NODE_ENV=production
+Environment=HOME=@HOME@
+Environment=PATH=@NODE_DIR@/bin:@HOME@/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@NODE_DIR@/bin/node server/index.js
+Restart=on-failure
+RestartSec=5
+
+# Resource limits (the app and its Claude Code runs share this budget).
+MemoryMax=1400M
+TasksMax=256
+
+# Hardening: the code is read-only to the running app; it can only write its data/logs and its own home
+# (where the vault clone and Claude Code's settings live). Root's files and other users' homes stay off-limits.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=@APP@/data @APP@/logs @HOME@
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

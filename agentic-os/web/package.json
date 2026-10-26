@@ -1,0 +1,24 @@
+{
+  "name": "agentic-os-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@fontsource-variable/oswald": "5.3.0",
+    "lucide-react": "1.61.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-markdown": "10.1.0",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@vitejs/plugin-react": "5.2.0",
+    "tailwindcss": "4.3.3",
+    "vite": "7.3.7"
+  }
+}

@@ -1,0 +1,23 @@
+---
+type: weekly-review
+week_ending: {{YYYY-MM-DD}}
+---
+
+# Weekly review — week ending {{YYYY-MM-DD}}
+
+## Wins
+- …
+
+## What I learned
+- …
+
+## Unfinished threads
+- …
+
+## Promote from raw/ to wiki/ (suggestions only)
+- [[…]] → wiki/…
+
+## Focus for next week
+1. …
+2. …
+3. …
