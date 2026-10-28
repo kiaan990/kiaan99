@@ -1,0 +1,22 @@
+[
+ {
+  "Id": 61,
+  "IsHidden": false,
+  "Attachments": [],
+  "Title": "Midterm room change",
+  "Body": {
+   "Text": "The midterm is in Smith 114.",
+   "Html": "<p>The midterm is in <b>Smith 114</b>.</p>"
+  },
+  "CreatedBy": 1,
+  "CreatedDate": "2026-10-25T14:00:00.000Z",
+  "LastModifiedBy": 1,
+  "LastModifiedDate": null,
+  "StartDate": "2026-10-25T14:00:00.000Z",
+  "EndDate": null,
+  "IsGlobal": false,
+  "IsPublished": true,
+  "ShowOnlyInCourseOfferings": false,
+  "IsAuthorInfoShown": true
+ }
+]

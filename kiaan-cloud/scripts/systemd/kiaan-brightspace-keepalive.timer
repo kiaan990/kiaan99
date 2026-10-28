@@ -1,0 +1,9 @@
+[Unit]
+Description=Keep the Brightspace web session warm between Mac refreshes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=40min
+
+[Install]
+WantedBy=timers.target

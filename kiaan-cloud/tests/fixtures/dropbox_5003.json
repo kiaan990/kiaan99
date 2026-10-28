@@ -1,0 +1,29 @@
+[
+ {
+  "Id": 901,
+  "CategoryId": null,
+  "Name": "Homework 7",
+  "CustomInstructions": {
+   "Text": "Regression exercises in Excel.",
+   "Html": "<p>Regression exercises in Excel.</p>"
+  },
+  "Attachments": [],
+  "TotalFiles": 0,
+  "UnreadFiles": 0,
+  "FlaggedFiles": 0,
+  "Availability": {
+   "StartDate": null,
+   "EndDate": null
+  },
+  "GroupTypeId": null,
+  "DueDate": "2026-11-02T04:59:00.000Z",
+  "DisplayInCalendar": true,
+  "Assessment": {
+   "ScoreDenominator": 20,
+   "Rubrics": []
+  },
+  "IsHidden": false,
+  "ActivityId": "a901",
+  "GradeItemId": null
+ }
+]

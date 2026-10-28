@@ -1,0 +1,25 @@
+{
+ "Objects": [
+  {
+   "QuizId": 51,
+   "Name": "Chapter 6 Quiz",
+   "IsActive": true,
+   "SortOrder": 1,
+   "Instructions": {
+    "Text": {
+     "Text": "20 minutes.",
+     "Html": ""
+    },
+    "IsDisplayed": true
+   },
+   "StartDate": "2026-11-01T12:00:00.000Z",
+   "EndDate": "2026-11-04T04:59:00.000Z",
+   "DueDate": "2026-11-04T04:59:00.000Z",
+   "AttemptsAllowed": {
+    "IsUnlimited": false,
+    "NumberOfAttemptsAllowed": 1
+   }
+  }
+ ],
+ "Next": null
+}

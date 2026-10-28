@@ -1,0 +1,83 @@
+[
+ {
+  "Id": 701,
+  "CategoryId": null,
+  "Name": "Lab 6: Network Diagram",
+  "CustomInstructions": {
+   "Text": "Submit a Visio diagram of the case network.",
+   "Html": "<p>Submit a Visio diagram of the case network.</p>"
+  },
+  "Attachments": [],
+  "TotalFiles": 0,
+  "UnreadFiles": 0,
+  "FlaggedFiles": 0,
+  "Availability": {
+   "StartDate": null,
+   "EndDate": null
+  },
+  "GroupTypeId": null,
+  "DueDate": "2026-11-03T04:59:00.000Z",
+  "DisplayInCalendar": true,
+  "Assessment": {
+   "ScoreDenominator": 100,
+   "Rubrics": []
+  },
+  "IsHidden": false,
+  "ActivityId": "a701",
+  "GradeItemId": null
+ },
+ {
+  "Id": 702,
+  "CategoryId": null,
+  "Name": "Chapter 5A Reflection",
+  "CustomInstructions": {
+   "Text": "One page reflection.",
+   "Html": "<p>One page reflection.</p>"
+  },
+  "Attachments": [],
+  "TotalFiles": 0,
+  "UnreadFiles": 0,
+  "FlaggedFiles": 0,
+  "Availability": {
+   "StartDate": null,
+   "EndDate": null
+  },
+  "GroupTypeId": null,
+  "DueDate": "2026-10-27T03:59:00.000Z",
+  "DisplayInCalendar": true,
+  "Assessment": {
+   "ScoreDenominator": 100,
+   "Rubrics": []
+  },
+  "IsHidden": false,
+  "ActivityId": "a702",
+  "GradeItemId": null
+ },
+ {
+  "Id": 703,
+  "CategoryId": null,
+  "Name": "Hidden draft",
+  "CustomInstructions": {
+   "Text": "",
+   "Html": "<p></p>"
+  },
+  "Attachments": [],
+  "TotalFiles": 0,
+  "UnreadFiles": 0,
+  "FlaggedFiles": 0,
+  "Availability": {
+   "StartDate": null,
+   "EndDate": null
+  },
+  "GroupTypeId": null,
+  "DueDate": "2026-11-10T04:59:00.000Z",
+  "DisplayInCalendar": true,
+  "Assessment": {
+   "ScoreDenominator": 100,
+   "Rubrics": []
+  },
+  "IsHidden": true,
+  "ActivityId": "a703",
+  "GradeItemId": null
+ }
+]
