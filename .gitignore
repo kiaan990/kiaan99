@@ -52,3 +52,7 @@ dev.db
 # Playwright browser cache
 /playwright-report/
 /test-results/
+
+# python
+__pycache__/
+.pytest_cache/

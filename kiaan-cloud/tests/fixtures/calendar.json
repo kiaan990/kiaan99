@@ -1,0 +1,57 @@
+{
+ "Objects": [
+  {
+   "CalendarEventId": 91,
+   "OrgUnitId": 5001,
+   "OrgUnitName": "x",
+   "OrgUnitCode": "x",
+   "Title": "Lab 6: Network Diagram - Due",
+   "Description": "",
+   "StartDateTime": "2026-11-03T04:59:00.000Z",
+   "EndDateTime": "2026-11-03T04:59:00.000Z",
+   "IsAllDayEvent": false,
+   "StartDay": null,
+   "EndDay": null,
+   "AssociatedEntity": {
+    "AssociatedEntityType": "D2L.LE.Dropbox.Dropbox",
+    "AssociatedEntityId": 701,
+    "Link": null
+   },
+   "CalendarEventViewUrl": "",
+   "HasVisibilityRestrictions": false
+  },
+  {
+   "CalendarEventId": 92,
+   "OrgUnitId": 5003,
+   "OrgUnitName": "x",
+   "OrgUnitCode": "x",
+   "Title": "Exam 2 (Ch 6-11)",
+   "Description": "",
+   "StartDateTime": "2026-11-06T14:00:00.000Z",
+   "EndDateTime": "2026-11-06T14:00:00.000Z",
+   "IsAllDayEvent": false,
+   "StartDay": null,
+   "EndDay": null,
+   "AssociatedEntity": null,
+   "CalendarEventViewUrl": "",
+   "HasVisibilityRestrictions": false
+  },
+  {
+   "CalendarEventId": 93,
+   "OrgUnitId": 4001,
+   "OrgUnitName": "x",
+   "OrgUnitCode": "x",
+   "Title": "Old course event",
+   "Description": "",
+   "StartDateTime": "2026-11-06T14:00:00.000Z",
+   "EndDateTime": "2026-11-06T14:00:00.000Z",
+   "IsAllDayEvent": false,
+   "StartDay": null,
+   "EndDay": null,
+   "AssociatedEntity": null,
+   "CalendarEventViewUrl": "",
+   "HasVisibilityRestrictions": false
+  }
+ ],
+ "Next": null
+}

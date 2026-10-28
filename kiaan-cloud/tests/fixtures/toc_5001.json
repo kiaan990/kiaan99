@@ -1,0 +1,115 @@
+{
+ "Modules": [
+  {
+   "ModuleId": 11,
+   "Title": "Lecture Slides",
+   "SortOrder": 1,
+   "StartDateTime": null,
+   "EndDateTime": null,
+   "IsHidden": false,
+   "IsLocked": false,
+   "LastModifiedDate": null,
+   "Description": {
+    "Text": "",
+    "Html": ""
+   },
+   "Topics": [
+    {
+     "TopicId": 1101,
+     "Identifier": "1101",
+     "TypeIdentifier": "File",
+     "Title": "Lecture 7 - Networks",
+     "Bookmarked": false,
+     "Unread": true,
+     "Url": "/content/enforced/5001-CS-240-A1_FA26/Lecture%207%20-%20Networks.pptx",
+     "SortOrder": 1101,
+     "StartDateTime": null,
+     "EndDateTime": null,
+     "ActivityId": "t1101",
+     "IsExempt": false,
+     "IsHidden": false,
+     "IsLocked": false,
+     "IsBroken": false,
+     "ActivityType": 1,
+     "ToolId": null,
+     "ToolItemId": null,
+     "LastModifiedDate": "2026-10-20T10:00:00.000Z"
+    },
+    {
+     "TopicId": 1102,
+     "Identifier": "1102",
+     "TypeIdentifier": "File",
+     "Title": "Syllabus",
+     "Bookmarked": false,
+     "Unread": true,
+     "Url": "/content/enforced/5001-CS-240-A1_FA26/Syllabus.pdf",
+     "SortOrder": 1102,
+     "StartDateTime": null,
+     "EndDateTime": null,
+     "ActivityId": "t1102",
+     "IsExempt": false,
+     "IsHidden": false,
+     "IsLocked": false,
+     "IsBroken": false,
+     "ActivityType": 1,
+     "ToolId": null,
+     "ToolItemId": null,
+     "LastModifiedDate": "2026-10-20T10:00:00.000Z"
+    },
+    {
+     "TopicId": 1103,
+     "Identifier": "1103",
+     "TypeIdentifier": "Link",
+     "Title": "Course website",
+     "Bookmarked": false,
+     "Unread": true,
+     "Url": "https://example.edu/cs240",
+     "SortOrder": 1103,
+     "StartDateTime": null,
+     "EndDateTime": null,
+     "ActivityId": "t1103",
+     "IsExempt": false,
+     "IsHidden": false,
+     "IsLocked": false,
+     "IsBroken": false,
+     "ActivityType": 1,
+     "ToolId": null,
+     "ToolItemId": null,
+     "LastModifiedDate": "2026-10-20T10:00:00.000Z"
+    }
+   ],
+   "Modules": [
+    {
+     "ModuleId": 12,
+     "Title": "Week 9",
+     "SortOrder": 1,
+     "IsHidden": false,
+     "Topics": [
+      {
+       "TopicId": 1201,
+       "Identifier": "1201",
+       "TypeIdentifier": "File",
+       "Title": "Lecture 8 - Security",
+       "Bookmarked": false,
+       "Unread": true,
+       "Url": "/content/enforced/5001-CS-240-A1_FA26/Week%209/Lecture%208.pptx",
+       "SortOrder": 1201,
+       "StartDateTime": null,
+       "EndDateTime": null,
+       "ActivityId": "t1201",
+       "IsExempt": false,
+       "IsHidden": false,
+       "IsLocked": false,
+       "IsBroken": false,
+       "ActivityType": 1,
+       "ToolId": null,
+       "ToolItemId": null,
+       "LastModifiedDate": "2026-10-20T10:00:00.000Z"
+      }
+     ],
+     "Modules": []
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+[
+ {
+  "Id": 801,
+  "CategoryId": null,
+  "Name": "Problem Set 4: TVM",
+  "CustomInstructions": {
+   "Text": "Chapters 5-6 problems.",
+   "Html": "<p>Chapters 5-6 problems.</p>"
+  },
+  "Attachments": [],
+  "TotalFiles": 0,
+  "UnreadFiles": 0,
+  "FlaggedFiles": 0,
+  "Availability": {
+   "StartDate": null,
+   "EndDate": null
+  },
+  "GroupTypeId": null,
+  "DueDate": "2026-11-05T04:59:00.000Z",
+  "DisplayInCalendar": true,
+  "Assessment": {
+   "ScoreDenominator": 50,
+   "Rubrics": []
+  },
+  "IsHidden": false,
+  "ActivityId": "a801",
+  "GradeItemId": null
+ }
+]

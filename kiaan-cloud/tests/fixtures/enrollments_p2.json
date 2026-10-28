@@ -1,0 +1,80 @@
+{
+ "PagingInfo": {
+  "Bookmark": null,
+  "HasMoreItems": false
+ },
+ "Items": [
+  {
+   "OrgUnit": {
+    "Id": 5003,
+    "Type": {
+     "Id": 3,
+     "Code": "Course Offering",
+     "Name": "Course Offering"
+    },
+    "Name": "ST 113 Business Statistics",
+    "Code": "ST113-C3_FA26",
+    "HomeUrl": null,
+    "ImageUrl": null
+   },
+   "Access": {
+    "IsActive": true,
+    "StartDate": "2026-08-31T04:00:00.000Z",
+    "EndDate": "2026-12-20T04:00:00.000Z",
+    "CanAccess": true,
+    "ClasslistRoleName": "Student",
+    "LISRoles": [],
+    "LastAccessed": "2026-10-27T15:00:00.000Z"
+   },
+   "PinDate": null
+  },
+  {
+   "OrgUnit": {
+    "Id": 4001,
+    "Type": {
+     "Id": 3,
+     "Code": "Course Offering",
+     "Name": "Course Offering"
+    },
+    "Name": "EC 111 - Microeconomics",
+    "Code": "EC-111-A_SP26",
+    "HomeUrl": null,
+    "ImageUrl": null
+   },
+   "Access": {
+    "IsActive": true,
+    "StartDate": "2026-01-15T05:00:00.000Z",
+    "EndDate": "2026-05-15T04:00:00.000Z",
+    "CanAccess": true,
+    "ClasslistRoleName": "Student",
+    "LISRoles": [],
+    "LastAccessed": "2026-10-27T15:00:00.000Z"
+   },
+   "PinDate": null
+  },
+  {
+   "OrgUnit": {
+    "Id": 4002,
+    "Type": {
+     "Id": 3,
+     "Code": "Course Offering",
+     "Name": "Course Offering"
+    },
+    "Name": "Student Orientation",
+    "Code": "ORIENT_2026",
+    "HomeUrl": null,
+    "ImageUrl": null
+   },
+   "Access": {
+    "IsActive": true,
+    "StartDate": null,
+    "EndDate": null,
+    "CanAccess": true,
+    "ClasslistRoleName": "Student",
+    "LISRoles": [],
+    "LastAccessed": "2026-10-27T15:00:00.000Z"
+   },
+   "PinDate": null
+  }
+ ]
+}
