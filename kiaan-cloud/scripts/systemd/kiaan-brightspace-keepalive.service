@@ -1,0 +1,11 @@
+[Unit]
+Description=Brightspace session keepalive (whoami GET)
+
+[Service]
+Type=oneshot
+WorkingDirectory=@ROOT@
+ExecStart=@PYTHON@ -m brightspace.client ping
+EnvironmentFile=-@ROOT@/brightspace.env
+SuccessExitStatus=3
+MemoryMax=80M
+SyslogIdentifier=kiaan-brightspace-keepalive

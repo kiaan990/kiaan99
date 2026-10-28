@@ -1,0 +1,23 @@
+[
+ {
+  "GradeObjectIdentifier": "41",
+  "GradeObjectName": "Exam 1",
+  "GradeObjectType": 1,
+  "GradeObjectTypeName": "Numeric",
+  "DisplayedGrade": "82 %",
+  "PointsNumerator": 82,
+  "PointsDenominator": 100,
+  "WeightedNumerator": null,
+  "WeightedDenominator": null,
+  "Comments": {
+   "Text": "",
+   "Html": ""
+  },
+  "PrivateComments": {
+   "Text": "",
+   "Html": ""
+  },
+  "LastModified": "2026-10-20T12:00:00.000Z",
+  "ReleasedDate": null
+ }
+]

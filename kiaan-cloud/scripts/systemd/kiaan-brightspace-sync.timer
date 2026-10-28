@@ -1,0 +1,13 @@
+[Unit]
+Description=Brightspace sync: 02:00 ET nightly, every 4h 08:00-20:00 ET, and 09:40 ET before the 10 AM brief
+
+[Timer]
+# The droplet clock is UTC; systemd converts these America/New_York times, DST included.
+OnCalendar=*-*-* 02:00:00 America/New_York
+OnCalendar=*-*-* 08,12,16,20:00:00 America/New_York
+OnCalendar=*-*-* 09:40:00 America/New_York
+Persistent=true
+RandomizedDelaySec=90
+
+[Install]
+WantedBy=timers.target

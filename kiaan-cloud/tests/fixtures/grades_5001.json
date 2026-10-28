@@ -1,0 +1,44 @@
+[
+ {
+  "GradeObjectIdentifier": "31",
+  "GradeObjectName": "Quiz 1",
+  "GradeObjectType": 1,
+  "GradeObjectTypeName": "Numeric",
+  "DisplayedGrade": "90 %",
+  "PointsNumerator": 9,
+  "PointsDenominator": 10,
+  "WeightedNumerator": null,
+  "WeightedDenominator": null,
+  "Comments": {
+   "Text": "",
+   "Html": ""
+  },
+  "PrivateComments": {
+   "Text": "",
+   "Html": ""
+  },
+  "LastModified": "2026-10-20T12:00:00.000Z",
+  "ReleasedDate": null
+ },
+ {
+  "GradeObjectIdentifier": "32",
+  "GradeObjectName": "Lab 5",
+  "GradeObjectType": 1,
+  "GradeObjectTypeName": "Numeric",
+  "DisplayedGrade": "90 %",
+  "PointsNumerator": 18,
+  "PointsDenominator": 20,
+  "WeightedNumerator": null,
+  "WeightedDenominator": null,
+  "Comments": {
+   "Text": "",
+   "Html": ""
+  },
+  "PrivateComments": {
+   "Text": "",
+   "Html": ""
+  },
+  "LastModified": "2026-10-20T12:00:00.000Z",
+  "ReleasedDate": null
+ }
+]

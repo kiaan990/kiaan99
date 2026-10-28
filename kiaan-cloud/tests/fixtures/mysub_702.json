@@ -1,0 +1,32 @@
+[
+ {
+  "Entity": {
+   "DisplayName": "Student Example",
+   "EntityId": 1001,
+   "EntityType": "User"
+  },
+  "Status": 1,
+  "Feedback": null,
+  "Submissions": [
+   {
+    "Id": 1,
+    "SubmittedBy": {
+     "Identifier": "1001",
+     "DisplayName": "Student Example"
+    },
+    "SubmissionDate": "2026-10-26T22:10:00.000Z",
+    "Comment": {
+     "Text": "",
+     "Html": ""
+    },
+    "Files": [
+     {
+      "FileId": 9,
+      "FileName": "reflection.docx",
+      "Size": 12000
+     }
+    ]
+   }
+  ]
+ }
+]

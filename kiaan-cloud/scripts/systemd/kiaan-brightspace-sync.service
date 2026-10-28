@@ -1,0 +1,18 @@
+[Unit]
+Description=Brightspace read-only sync (kiaan-mcp brightspace module)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@ROOT@
+ExecStart=@PYTHON@ -m brightspace.sync
+EnvironmentFile=-@ROOT@/brightspace.env
+# exit 3 = session expired: already reported to the activity feed, not a unit failure
+SuccessExitStatus=3
+Nice=10
+MemoryMax=160M
+TimeoutStartSec=20min
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kiaan-brightspace-sync
