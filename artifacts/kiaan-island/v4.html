@@ -1,0 +1,1353 @@
+<title>Kiaan Cloud Island</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<style>
+/* Layout: a night-time data-center aisle. A 3D server cabinet (open it, pull units out) beside the assistant, then plain-language cards. One committed dark look. */
+:root {
+  color-scheme: dark;
+  --bg: #06080c;
+  --bg-2: #0a0e14;
+  --panel: #0f141c;
+  --panel-2: #151d28;
+  --line: #213042;
+  --ink: #e6eef6;
+  --muted: #8b9cb2;
+  --cyan: #4fd8ff;
+  --amber: #ffb547;
+  --good: #3ef0a0;
+  --warn: #ffcf4a;
+  --bad: #ff5577;
+  --f-display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 14px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.5; background: radial-gradient(1100px 520px at 60% -12%, #10283d 0%, transparent 60%), var(--bg); background-attachment: fixed; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.app { max-width: 1280px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+a { color: var(--cyan); }
+button { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(160deg, #1b2a3a, #0b121a); border: 1px solid var(--line); display: grid; place-items: center; box-shadow: inset 0 0 12px rgba(79,216,255,.25); }
+.logo i { display: block; width: 18px; height: 3px; margin: 2px 0; border-radius: 2px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+.logo i:nth-child(2) { background: var(--good); box-shadow: 0 0 8px var(--good); width: 14px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 4vw, 34px); line-height: 1; margin: 0; letter-spacing: .02em; text-transform: uppercase; }
+h1 span { color: var(--cyan); }
+.sub { font-size: 13px; color: var(--muted); }
+.status-chip { display: flex; align-items: center; gap: 10px; padding: 9px 15px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-weight: 600; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; display: inline-block; }
+.dot.good { background: var(--good); box-shadow: 0 0 10px var(--good); }
+.dot.warn { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+.dot.bad { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+.live .dot { animation: pulse 2s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.banner { border-radius: 12px; padding: 12px 16px; background: #1a1a10; border: 1px solid var(--warn); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.banner.bad { border-color: var(--bad); background: #1d0f14; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+.card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.card h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: .03em; text-transform: uppercase; }
+.card h2 .ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 14px; flex: none; background: var(--panel-2); border: 1px solid var(--line); }
+.card h2 small { margin-left: auto; font: 400 12px var(--f-data); color: var(--muted); letter-spacing: 0; text-transform: none; }
+.explain { font-size: 13px; color: var(--muted); margin: -4px 0 0; }
+
+/* 3D stage */
+.world { padding: 0; overflow: hidden; gap: 0; }
+.stage { position: relative; aspect-ratio: 16 / 11; min-height: 380px; max-width: 100%; background: #05070b; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.plate { position: absolute; left: 12px; top: 12px; display: flex; align-items: center; gap: 8px; font: 600 12px var(--f-display); letter-spacing: .12em; background: rgba(6,8,12,.72); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; backdrop-filter: blur(6px); }
+.clock { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; font: 400 12px var(--f-data); background: rgba(6,8,12,.72); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-variant-numeric: tabular-nums; }
+.demo-tag { position: absolute; left: 12px; top: 48px; font: 700 11px var(--f-body); color: #1a1406; background: var(--warn); padding: 3px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: .05em; }
+.hint { position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); font-size: 13px; color: var(--ink); background: rgba(6,8,12,.72); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
+.stage-ctrls { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 6px; pointer-events: auto; }
+.tip { position: absolute; transform: translate(12px, -50%); font: 600 12px var(--f-body); background: rgba(6,8,12,.88); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.toast { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); font: 600 15px var(--f-display); letter-spacing: .04em; color: #041016; background: var(--cyan); border-radius: 10px; padding: 7px 16px; box-shadow: 0 0 24px rgba(79,216,255,.45); white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
+.unit-panel { position: absolute; right: 12px; top: 50px; bottom: 54px; width: min(320px, 46%); overflow-y: auto; background: rgba(8,12,18,.86); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; align-content: start; gap: 8px; backdrop-filter: blur(10px); pointer-events: auto; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.unit-panel .kicker { font: 600 11px var(--f-display); letter-spacing: .14em; color: var(--cyan); }
+.unit-panel h3 { margin: 0; font: 600 22px var(--f-display); letter-spacing: .02em; }
+.unit-panel p { margin: 0; font-size: 14px; }
+.unit-panel .x { position: absolute; right: 10px; top: 10px; }
+.unit-panel .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.unit-panel ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+.nogl { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 10px; padding: 20px; text-align: center; pointer-events: auto; }
+.nogl .units { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 560px; }
+.state { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--panel-2); width: fit-content; }
+
+.vitals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 14px 16px 16px; border-top: 1px solid var(--line); }
+.vital { min-width: 0; display: grid; gap: 4px; }
+.vital .k { font-size: 12px; color: var(--muted); }
+.vital .v { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter { height: 6px; border-radius: 999px; background: #0b1119; overflow: hidden; }
+.meter > i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--good); box-shadow: 0 0 10px currentColor; transition: width .8s ease; }
+.meter.warn > i { background: var(--warn); } .meter.bad > i { background: var(--bad); }
+
+/* chat */
+.chat { min-height: 420px; }
+.chat-log { flex: 1; min-height: 220px; max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.msg { max-width: 92%; padding: 9px 13px; border-radius: 14px; font-size: 14px; overflow-wrap: anywhere; }
+.msg.me { align-self: flex-end; background: linear-gradient(160deg, #1f6f9a, #155173); border-bottom-right-radius: 4px; }
+.msg.bot { align-self: flex-start; background: var(--panel-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.bot p { margin: 0 0 6px; } .msg.bot p:last-child { margin: 0; }
+.msg.bot ul { margin: 4px 0; padding-left: 18px; }
+.msg .acts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.act-chip { font: 400 11px var(--f-data); background: rgba(79,216,255,.1); color: var(--cyan); border: 1px solid rgba(79,216,255,.35); border-radius: 999px; padding: 1px 8px; }
+.act-chip.err { color: var(--bad); border-color: rgba(255,85,119,.4); background: rgba(255,85,119,.1); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12.5px var(--f-body); color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--cyan); }
+.chat-form { display: flex; gap: 8px; }
+.chat-form textarea { flex: 1; min-width: 0; resize: none; height: 46px; font: 14px var(--f-body); color: var(--ink); background: #070b10; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.btn { font: 600 14px var(--f-body); color: #041016; background: var(--cyan); border: 0; border-radius: 10px; padding: 9px 16px; cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.ghost { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
+.btn.small { font-size: 12.5px; padding: 5px 11px; border-radius: 8px; }
+.btn.danger { background: var(--bad); color: #fff; }
+.btn:disabled { opacity: .5; cursor: progress; }
+.thinking { color: var(--muted); font-style: italic; }
+
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.span-2 { grid-column: span 2; }
+ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 360px; overflow-y: auto; }
+ul.list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 10px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05); border-radius: 10px; }
+ul.list li.now { border-color: var(--cyan); background: rgba(79,216,255,.06); }
+ul.list .t { font-weight: 600; overflow-wrap: anywhere; }
+ul.list .s { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
+ul.list .when { font: 400 12px var(--f-data); color: var(--cyan); white-space: nowrap; text-align: right; min-width: 64px; }
+.tag { font: 400 10.5px var(--f-data); padding: 1px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); white-space: nowrap; border: 1px solid var(--line); }
+.tag.high { background: var(--bad); color: #fff; border-color: var(--bad); }
+.tag.warn { color: var(--warn); border-color: rgba(255,207,74,.4); }
+.row-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.empty { color: var(--muted); font-size: 13.5px; padding: 6px 2px; }
+details.add { border: 1px dashed var(--line); border-radius: 12px; padding: 2px 12px; }
+details.add[open] { padding-bottom: 12px; }
+details.add summary { cursor: pointer; font-weight: 600; padding: 8px 0; color: var(--cyan); list-style: none; }
+details.add summary::-webkit-details-marker { display: none; }
+form.f { display: grid; gap: 8px; }
+form.f .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+form.f label { display: grid; gap: 3px; min-width: 0; flex: 1 1 120px; }
+form.f label.grow { flex: 2 1 200px; }
+form.f label > span { font-size: 12px; font-weight: 600; color: var(--muted); }
+form.f label.check { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; padding-bottom: 8px; }
+form.f label.check span { color: var(--ink); font-weight: 500; }
+form.f input:not([type=checkbox]), form.f select, form.f textarea { font: 14px var(--f-body); color: var(--ink); background: #070b10; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+form.f textarea { resize: vertical; min-height: 70px; }
+.formmsg { margin: 0; font-size: 13px; color: var(--muted); }
+.formmsg.ok { color: var(--good); } .formmsg.err { color: var(--bad); } .formmsg:empty { display: none; }
+.kv { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; font-size: 13.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; font-weight: 500; }
+.big-status { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); }
+.big-status .dot { width: 12px; height: 12px; }
+.big-status b { display: block; font-size: 16px; }
+.big-status span { font-size: 13px; color: var(--muted); }
+.code-box { border: 2px solid var(--warn); border-radius: 12px; padding: 12px; display: grid; gap: 8px; background: rgba(255,207,74,.06); }
+.code-box.off { border-style: dashed; border-color: var(--line); background: transparent; opacity: .75; }
+.code-box input { font: 600 22px var(--f-data); letter-spacing: .3em; text-align: center; width: 100%; max-width: 220px; background: #070b10; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.code-box .num { font: 700 46px var(--f-display); color: var(--warn); line-height: 1; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; font-size: 13.5px; }
+.steps li::before { counter-increment: s; content: counter(s); width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font: 600 12px var(--f-data); color: var(--muted); }
+.steps li.done::before { content: "✓"; color: #041016; background: var(--good); border-color: var(--good); }
+.steps li.done { color: var(--muted); }
+.steps b { display: block; color: var(--ink); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.checks li::before { content: "✓ "; color: var(--good); font-weight: 700; }
+.svc { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 8px; align-items: center; font-size: 13.5px; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.07); }
+.svc small { color: var(--muted); font-family: var(--f-data); font-size: 11px; }
+.copy { display: flex; gap: 6px; align-items: center; }
+.copy code { font: 400 13px var(--f-data); background: #070b10; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; }
+.reader { max-height: 420px; overflow: auto; background: #070b10; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; }
+.reader table { border-collapse: collapse; font-size: 12.5px; }
+.reader th, .reader td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; }
+.reader h1, .reader h2, .reader h3 { font-family: var(--f-display); font-weight: 600; color: var(--cyan); margin: 10px 0 6px; font-size: 17px; }
+.reader-wrap { overflow-x: auto; }
+.brief-days { display: grid; gap: 8px; }
+.brief-day { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.brief-day b { font: 400 12px var(--f-data); color: var(--muted); min-width: 64px; }
+.foot { font-size: 12.5px; color: var(--muted); max-width: 90ch; }
+
+@media (max-width: 980px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .span-2 { grid-column: auto; }
+  .vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage { aspect-ratio: 4 / 5; min-height: 0; }
+  .unit-panel { left: 8px; right: 8px; top: auto; bottom: 52px; width: auto; max-height: 55%; }
+  .hint { bottom: 52px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .live .dot { animation: none; } .meter > i { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><div><i></i><i></i><i></i></div></div>
+      <div>
+        <h1>Kiaan <span>Cloud</span></h1>
+        <div class="sub" id="sub">Your own computer in a New York data center.</div>
+      </div>
+    </div>
+    <div class="status-chip" id="statusChip"><span class="dot"></span><span id="statusText">Connecting…</span></div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="hero">
+    <article class="card world">
+      <div class="stage" id="stage">
+        <canvas id="gl" aria-label="A 3D server cabinet. Each glowing unit inside is one part of your server. Tap the cabinet to open it, then tap a unit to see what it does."></canvas>
+        <div class="overlay" id="overlay">
+          <div class="plate"><span class="dot" id="beaconDot"></span>KIAAN-CLOUD · NYC1</div>
+          <div class="clock" id="clock">Boston –</div>
+          <div class="demo-tag" id="demoTag" hidden>Sample data</div>
+          <div class="hint" id="hint">Tap the cabinet to open it · drag to look around</div>
+          <div class="stage-ctrls"><button class="btn small" type="button" id="doorBtn">Open cabinet</button><button class="btn ghost small" type="button" id="resetBtn">Reset view</button></div>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <aside class="unit-panel" id="unitPanel" hidden aria-live="polite"></aside>
+        <div class="nogl" id="nogl" hidden><b>3D view isn't available on this device.</b><span class="explain">Tap a part of your server instead:</span><div class="units" id="noglUnits"></div></div>
+      </div>
+      <div class="vitals" aria-label="Server health">
+        <div class="vital"><span class="k">Thinking power (CPU)</span><span class="v" id="v-cpu">–</span><div class="meter" id="m-cpu"><i></i></div></div>
+        <div class="vital"><span class="k">Short-term memory (RAM)</span><span class="v" id="v-mem">–</span><div class="meter" id="m-mem"><i></i></div></div>
+        <div class="vital"><span class="k">Storage space</span><span class="v" id="v-disk">–</span><div class="meter" id="m-disk"><i></i></div></div>
+        <div class="vital"><span class="k">Next on your calendar</span><span class="v" id="v-next">–</span><span class="k" id="v-next2"></span></div>
+      </div>
+    </article>
+
+    <article class="card chat" id="chatCard">
+      <h2><span class="ico">✦</span>Ask Cloud <small>your assistant</small></h2>
+      <p class="explain">Type like you're texting. It can add to-dos and calendar events, set up automations, check your server and look things up.</p>
+      <div class="chat-log" id="chatLog" aria-live="polite"></div>
+      <div class="chips" id="chatChips">
+        <button class="chip" type="button">What's on today?</button>
+        <button class="chip" type="button">Add a to-do: finish CS 230 P3 by Sunday</button>
+        <button class="chip" type="button">Is my server OK?</button>
+        <button class="chip" type="button">What's due on Brightspace this week?</button>
+      </div>
+      <form class="chat-form" id="chatForm" autocomplete="off">
+        <textarea id="chatInput" placeholder="Ask anything…" aria-label="Message"></textarea>
+        <button class="btn" id="chatSend" type="submit">Send</button>
+      </form>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card" id="todayCard">
+      <h2><span class="ico">📅</span>Today &amp; tomorrow <small id="calMeta"></small></h2>
+      <ul class="list" id="calList"><li class="empty">Loading your calendar…</li></ul>
+      <details class="add" id="eventAdd">
+        <summary>＋ Add to Apple Calendar</summary>
+        <form class="f" id="eventForm">
+          <label class="grow"><span>What</span><input id="eTitle" required maxlength="200" placeholder="Study for ST 113"></label>
+          <div class="row">
+            <label><span>Day</span><input id="eDate" type="date" required></label>
+            <label><span>From</span><input id="eStart" type="time" value="18:00"></label>
+            <label><span>To</span><input id="eEnd" type="time" value="19:00"></label>
+          </div>
+          <div class="row">
+            <label><span>Calendar</span><select id="eCal"><option value="Personal ">Personal</option></select></label>
+            <label class="check"><input id="eAllDay" type="checkbox"><span>All day</span></label>
+            <button class="btn" type="submit" id="eSubmit">Add</button>
+          </div>
+          <p class="formmsg" id="eMsg" role="status"></p>
+        </form>
+      </details>
+    </article>
+
+    <article class="card" id="todoCard">
+      <h2><span class="ico">✅</span>To-do list <small id="taskMeta"></small></h2>
+      <ul class="list" id="taskList"><li class="empty">Loading…</li></ul>
+      <details class="add" id="todoAdd">
+        <summary>＋ Add a to-do</summary>
+        <form class="f" id="taskForm">
+          <label class="grow"><span>What needs doing</span><input id="tTitle" required maxlength="200" placeholder="Submit FI 118 stock analysis"></label>
+          <div class="row">
+            <label><span>Due</span><input id="tDue" type="date"></label>
+            <label><span>Importance</span><select id="tPri"><option value="high">High</option><option value="normal" selected>Normal</option><option value="low">Low</option></select></label>
+            <button class="btn" type="submit" id="tSubmit">Add</button>
+          </div>
+          <p class="formmsg" id="tMsg" role="status"></p>
+        </form>
+      </details>
+    </article>
+
+    <article class="card" id="bsCard">
+      <h2><span class="ico">🎓</span>Brightspace sync <small>every 3 hours</small></h2>
+      <p class="explain">A robot that signs into Brightspace for you and copies your courses, due dates and grades. New assignments due soon go on your to-do list.</p>
+      <div class="big-status" id="bsStatus"><span class="dot"></span><div><b>Checking…</b><span></span></div></div>
+      <div class="row-btns" style="justify-content:flex-start"><button class="btn small" type="button" id="bsSync">Sync now</button><span class="explain" id="bsSyncMsg" style="margin:0"></span></div>
+      <div class="code-box off" id="bsCode"></div>
+      <dl class="kv" id="bsKv"></dl>
+      <div id="bsSetup"></div>
+      <div id="bsDue"></div>
+      <details class="add">
+        <summary>What it checks</summary>
+        <ul class="checks">
+          <li>Your current courses</li>
+          <li>Assignments with due dates, and whether you've submitted them</li>
+          <li>Your grades for each graded item, plus your overall grade</li>
+        </ul>
+        <p class="explain" style="margin-top:8px">It signs in with your Bentley Microsoft account and stays signed in between runs, so it only asks for your Microsoft Authenticator code once in a while. When it does, the box above lights up and your phone gets a notification.</p>
+      </details>
+    </article>
+
+    <article class="card span-2" id="autoCard">
+      <h2><span class="ico">⏰</span>Automations <small id="autoMeta"></small></h2>
+      <p class="explain">Jobs Claude does for you on a schedule, like your morning brief. Each one runs on its own and can use your server, calendar and to-do list.</p>
+      <ul class="list" id="autoList"><li class="empty">Loading your automations…</li></ul>
+      <details class="add" id="autoAdd">
+        <summary>＋ New automation</summary>
+        <form class="f" id="autoForm">
+          <label class="grow"><span>Name</span><input id="aName" required maxlength="80" placeholder="Sunday week planner"></label>
+          <label class="grow"><span>What should Claude do? Write it like you'd tell a friend.</span><textarea id="aWhat" required maxlength="4000" placeholder="Look at my calendar for next week and add 2-hour study blocks before every exam. Add a to-do for anything due."></textarea></label>
+          <div class="row">
+            <label><span>How often</span><select id="aFreq"><option value="daily">Every day</option><option value="weekdays">Weekdays (Mon–Fri)</option><option value="weekly">Once a week</option><option value="hours">Every few hours</option><option value="once">Just once</option></select></label>
+            <label id="aDayL" hidden><span>Day</span><select id="aDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></label>
+            <label id="aDateL" hidden><span>Date</span><input id="aDate" type="date"></label>
+            <label id="aTimeL"><span>Time</span><input id="aTime" type="time" value="08:00"></label>
+            <label id="aHoursL" hidden><span>Every</span><select id="aHours"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="6" selected>6 hours</option><option value="12">12 hours</option></select></label>
+          </div>
+          <div class="row">
+            <label class="check"><input id="aPush" type="checkbox" checked><span>Notify my phone when it runs</span></label>
+            <button class="btn" type="submit" id="aSubmit">Create automation</button>
+          </div>
+          <p class="formmsg" id="aMsg" role="status"></p>
+        </form>
+      </details>
+    </article>
+
+    <article class="card" id="serverCard">
+      <h2><span class="ico">🖥️</span>Server room</h2>
+      <div class="big-status" id="srvStatus"><span class="dot"></span><div><b>Checking…</b><span></span></div></div>
+      <div id="svcList"></div>
+      <div style="display:grid;gap:8px">
+        <a class="btn" id="termBtn" href="https://cloud.digitalocean.com/droplets" target="_blank" rel="noopener">Open server terminal ↗</a>
+        <span class="explain">Opens a secure command line in DigitalOcean (you sign in there). From your Mac you can also type:</span>
+        <div class="copy"><code id="sshCmd">ssh kiaan-cloud</code><button class="btn ghost small" type="button" id="copySsh">Copy</button></div>
+      </div>
+      <details class="add">
+        <summary>More details</summary>
+        <dl class="kv" id="srvKv"></dl>
+      </details>
+    </article>
+
+    <article class="card" id="actCard">
+      <h2><span class="ico">📜</span>What happened lately</h2>
+      <ul class="list" id="actList"><li class="empty">Loading…</li></ul>
+    </article>
+
+    <article class="card" id="briefCard">
+      <h2><span class="ico">📰</span>Saved reads <small>briefs</small></h2>
+      <p class="explain">Reports your automations saved, like the AI brief and your Brightspace summary. Tap one to read it.</p>
+      <div class="brief-days" id="briefDays"><span class="empty">Loading…</span></div>
+      <div class="reader-wrap"><div class="reader" id="reader" hidden></div></div>
+    </article>
+  </section>
+
+  <p class="foot">Everything here is live from your server and refreshes on its own. In the cabinet, green lights mean a part is running and red blinking means it stopped. Changes you make here (to-dos, calendar events, automations) are real.</p>
+</div>
+
+<script>
+(() => {
+const SERVER = "kiaan-cloud";
+const REMOTE = "Claude Code Remote";
+const overlay = document.getElementById("overlay");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const md = s => { try { return DOMPurify.sanitize(marked.parse(String(s || ""), { breaks: true })); } catch { return esc(s).replace(/\n/g, "<br>"); } };
+/* ---------------- state ---------------- */
+const state = { status: null, activity: null, tasks: null, events: null, calendars: null, briefs: null, autos: null, bsData: null };
+const meta = { status: {}, activity: {}, tasks: {}, events: {} };
+let mcp = null, sample = null, demo = false;
+
+/* ---------------- time helpers ---------------- */
+const TZ = "America/New_York";
+function nyParts(d = new Date()) {
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" }).formatToParts(d);
+  const g = t => +p.find(x => x.type === t).value; return { h: g("hour"), m: g("minute"), s: g("second") };
+}
+const nyDate = (offsetDays = 0) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(Date.now() + offsetDays * 864e5));
+const fmtNY = (iso, opts) => { const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleString("en-US", { timeZone: TZ, ...opts }); };
+const fmtTime = iso => fmtNY(iso, { hour: "numeric", minute: "2-digit" });
+function nyOffset(dateStr) {
+  const d = new Date(dateStr + "T12:00:00Z");
+  const name = new Intl.DateTimeFormat("en-US", { timeZone: TZ, timeZoneName: "shortOffset" }).formatToParts(d).find(p => p.type === "timeZoneName")?.value || "GMT-5";
+  const m = name.match(/GMT([+-])(\d+)(?::(\d+))?/); if (!m) return "-05:00";
+  return `${m[1]}${m[2].padStart(2, "0")}:${(m[3] || "00").padStart(2, "0")}`;
+}
+function ago(ms) {
+  const s = Math.round((Date.now() - ms) / 1000);
+  if (s < 0) return inTime(-s * 1000);
+  if (s < 60) return "just now"; const m = Math.round(s / 60); if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 36) return h + " h ago"; return Math.round(h / 24) + " days ago";
+}
+function inTime(ms) {
+  const m = Math.round(ms / 60000); if (m < 1) return "now"; if (m < 60) return `in ${m} min`;
+  const h = Math.floor(m / 60), r = m % 60; if (h < 24) return `in ${h}h${r ? " " + r + "m" : ""}`; return `in ${Math.round(h / 24)} days`;
+}
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+function hm12(h, m) { const d = new Date(2000, 0, 1, h, m); return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); }
+function cronText(expr) {
+  if (!expr) return "No schedule (runs only when started)";
+  let tz = null, e = expr.trim();
+  const tzm = e.match(/^CRON_TZ=(\S+)\s+(.*)$/); if (tzm) { tz = tzm[1]; e = tzm[2]; }
+  const [mi, hr, dom, mon, dow] = e.split(/\s+/);
+  if (hr && hr.startsWith("*/")) return `Every ${hr.slice(2)} hours`;
+  if (hr === "*") return "Every hour";
+  if (!/^\d+$/.test(mi) || !/^\d+$/.test(hr)) return expr;
+  let h = +hr, m = +mi, note = "";
+  if (!tz) { const n = new Date(); const p = nyParts(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), h, m))); h = p.h; m = p.m; note = " Boston time"; }
+  const t = hm12(h, m) + note;
+  if (dom !== "*" || mon !== "*") return `${expr}`;
+  if (dow === "*") return `Every day at ${t}`;
+  if (dow === "1-5") return `Weekdays at ${t}`;
+  if (dow === "0,6" || dow === "6,0") return `Weekends at ${t}`;
+  if (/^\d$/.test(dow)) return `Every ${DAYS[+dow % 7]} at ${t}`;
+  return `${t} (${dow})`;
+}
+function jitter(h, m, name) {
+  if (m !== 0 && m !== 30) return [h, m];
+  let tot = h * 60 + m - ((name.length % 15) + 1); if (tot < 0) tot += 1440;
+  return [Math.floor(tot / 60), tot % 60];
+}
+
+/* ---------------- helpers ---------------- */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t) { const A = hex2rgb(a), Bc = hex2rgb(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, Bc[i], t))).join(",")})`; }
+const svcState = name => { const s = state.status?.services?.find(v => v.name === name); return s ? s.status : null; };
+const pctClass = (p, warn = 70, bad = 88) => p >= bad ? "bad" : p >= warn ? "warn" : "good";
+const unwrap = p => { if (typeof p === "string") { try { p = JSON.parse(p); } catch { return p; } } return p && typeof p === "object" && "result" in p && Object.keys(p).length === 1 ? p.result : p; };
+
+const nyDayOf = iso => /^\d{4}-\d{2}-\d{2}$/.test(String(iso)) ? String(iso) : new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(iso));
+const sameDay = iso => !!iso && nyDayOf(iso) === nyDate(0);
+
+
+/* ---------------- Brightspace state ---------------- */
+function bsEntries() { return (state.activity || []).filter(e => /^(brightspace|d2l)$/i.test(e.source || "")); }
+function bsAuto() { return (state.autos || []).find(a => /brightspace/i.test(a.name || "")); }
+function bsState() {
+  if (!state.activity) return { kind: "loading" };
+  const es = bsEntries(); if (!es.length) return { kind: "never" };
+  const last = es[0], msg = last.msg || "", age = Date.now() - new Date(last.ts).getTime();
+  const sent = (state.activity || []).find(e => /brightspace-mfa/i.test(e.source || ""));
+  const answered = sent && new Date(sent.ts) > new Date(last.ts);
+  let m;
+  if ((m = msg.match(/APPROVE_NUMBER[:=\s]+(\d+)/i))) return age < 9 * 6e4 ? { kind: "approve", num: m[1], last } : { kind: "error", last, stale: true };
+  if (/^NEEDS_CODE/i.test(msg)) return age < 9 * 6e4 ? { kind: answered ? "waiting" : "code", last } : { kind: "error", last, stale: true };
+  if (/^Sync started/i.test(msg)) return age < 20 * 6e4 ? { kind: "running", last } : { kind: "error", last, stale: true };
+  if (/^ERROR/i.test(msg) || last.level === "error") return { kind: "error", last };
+  return { kind: "ok", last };
+}
+function parseBsData(p) {
+  if (!p) return null; if (typeof p === "object") return p.courses ? p : null;
+  const s = String(p).replace(/^[\s\S]*?```(?:json)?\s*/i, "").replace(/```[\s\S]*$/, "");
+  try { const j = JSON.parse(s.trim() || String(p)); return j && j.courses ? j : null; } catch { return null; }
+}
+
+/* ---------------- the server's parts ---------------- */
+const UNITS = [
+  { id: "mcp",    u: 33, h: 1, kind: "switch",   label: "CLAUDE LINK",      name: "Claude link",       svc: "kiaan-mcp" },
+  { id: "caddy",  u: 32, h: 1, kind: "firewall", label: "FRONT GATE",       name: "Front gate",        svc: "caddy" },
+  { id: "f2b",    u: 31, h: 1, kind: "server",   label: "SECURITY GUARD",   name: "Security guard",    svc: "fail2ban" },
+  { id: "ssh",    u: 30, h: 1, kind: "kvm",      label: "LOGIN DOOR",       name: "Login door",        svc: "ssh" },
+  { id: "dash",   u: 28, h: 1, kind: "server",   label: "DASHBOARD",        name: "Your dashboard",    svc: "kiaan-dashboard" },
+  { id: "hermes", u: 27, h: 1, kind: "server",   label: "WHATSAPP BOT",     name: "WhatsApp bot",      svc: "hermes-gateway" },
+  { id: "cron",   u: 26, h: 1, kind: "display",  label: "TIMER",            name: "Server timer",      svc: "cron" },
+  { id: "icloud", u: 24, h: 1, kind: "display",  label: "CALENDAR & TO-DO", name: "Calendar & to-dos" },
+  { id: "bs",     u: 23, h: 1, kind: "display",  label: "BRIGHTSPACE",      name: "Brightspace sync" },
+  { id: "auto",   u: 22, h: 1, kind: "display",  label: "AUTOMATIONS",      name: "Automations" },
+  { id: "cpu",    u: 19, h: 2, kind: "compute",  label: "PROCESSOR",        name: "Processor (CPU)" },
+  { id: "mem",    u: 18, h: 1, kind: "memory",   label: "MEMORY",           name: "Memory (RAM)" },
+  { id: "disk",   u: 15, h: 2, kind: "storage",  label: "STORAGE",          name: "Storage" },
+  { id: "ups",    u: 11, h: 2, kind: "ups",      label: "POWER & COST",     name: "Power & cost" },
+];
+const UNIT_BY = Object.fromEntries(UNITS.map(u => [u.id, u]));
+const UNIT_ABOUT = {
+  mcp: "The connection that lets Claude, and this page, use your calendar, to-dos and server.",
+  caddy: "Lets visitors from the internet reach your websites safely, and handles the padlock (HTTPS).",
+  f2b: "Watches the login door and blocks anyone who keeps guessing passwords.",
+  ssh: "How you log into the server's command line (SSH).",
+  dash: "Your personal Command Center website.",
+  hermes: "Your WhatsApp assistant (Hermes).",
+  cron: "The server's own alarm clock. It can run jobs on a schedule right on the server.",
+  icloud: "Your Apple Calendar and to-do list, reached through your server.",
+  bs: "Copies your courses, due dates and grades from Brightspace every 3 hours.",
+  auto: "Jobs Claude runs for you on a schedule, like your morning brief.",
+  cpu: "The server's brain. The fans spin faster when it's working harder.",
+  mem: "Short-term memory for running programs. When it fills up, things slow down.",
+  disk: "Where your files live.",
+  ups: "Power, how long the server has been up, and what it costs.",
+};
+const LVL = { good: "Working", warn: "Needs a look", bad: "Problem", "": "Checking…" };
+function unitLevel(id) {
+  const u = UNIT_BY[id], s = state.status;
+  if (id === "bs") { const k = bsState().kind; return { ok: "good", running: "good", waiting: "good", error: "bad", never: "warn", code: "warn", approve: "warn" }[k] || ""; }
+  if (id === "auto") return state.autos ? (state.autos.some(a => a.enabled && /FAILED/.test(a.last_run?.status || "")) ? "warn" : "good") : "";
+  if (id === "icloud") return meta.events.code ? "bad" : state.events ? "good" : "";
+  if (!s) return "";
+  if (u.svc) { const v = svcState(u.svc); return v == null ? "" : v === "up" ? "good" : "bad"; }
+  if (id === "cpu") return pctClass(s.cpu.pct, 70, 90);
+  if (id === "mem") return pctClass(s.mem.pct, 75, 90);
+  if (id === "disk") return pctClass(s.disk.pct, 75, 90);
+  return "good";
+}
+function overallLevel() { const ls = UNITS.map(u => unitLevel(u.id)); return ls.includes("bad") ? "bad" : ls.includes("warn") ? "warn" : state.status ? "good" : ""; }
+function faceLines(id) {
+  const s = state.status, u = UNIT_BY[id], lv = unitLevel(id);
+  const st = lv === "good" ? "RUNNING" : lv === "bad" ? "STOPPED" : lv === "warn" ? "CHECK" : "…";
+  const { h, m } = nyParts();
+  switch (id) {
+    case "cron": return { status: st, lcd: [hm12(h, m).toUpperCase(), `${(s?.cron || []).length} TIMERS`] };
+    case "icloud": { const n = (state.events || []).filter(e => sameDay(e.start)).length; return { status: lv === "bad" ? "OFFLINE" : "LINKED", lcd: [`${state.events ? n : "–"} EVENTS TODAY`, `${state.tasks ? state.tasks.length : "–"} TO-DOS`] }; }
+    case "bs": { const b = bsState(); const t = { ok: ["SYNCED", b.last ? ago(new Date(b.last.ts).getTime()).toUpperCase() : ""], running: ["SYNCING…", "SIGNING IN"], waiting: ["SIGNING IN", "CODE SENT"], code: ["NEEDS CODE", "OPEN BOX BELOW"], approve: ["APPROVE", `NUMBER ${b.num || ""}`], error: ["FAILED", "SEE DETAILS"], never: ["NOT SET UP", "SEE STEPS"], loading: ["…", ""] }[b.kind]; return { status: { ok: "OK", running: "BUSY", waiting: "BUSY", code: "WAITING", approve: "WAITING", error: "ERROR", never: "SETUP", loading: "…" }[b.kind], lcd: t }; }
+    case "auto": { const a = state.autos || []; const nxt = a.filter(x => x.enabled && x.next_run_at).sort((p, q) => new Date(p.next_run_at) - new Date(q.next_run_at))[0]; return { status: st, lcd: [`${a.filter(x => x.enabled).length} ON / ${a.length}`, nxt ? "NEXT " + fmtNY(nxt.next_run_at, { hour: "numeric", minute: "2-digit" }).toUpperCase() : "NONE SCHEDULED"] }; }
+    case "cpu": return { status: st, lcd: [s ? `${s.cpu.pct.toFixed(0)}% BUSY` : "–", s ? `LOAD ${s.load[0].toFixed(2)}` : ""] };
+    case "mem": return { status: st, lcd: [s ? `${(s.mem.used_mb / 1024).toFixed(1)} / ${(s.mem.total_mb / 1024).toFixed(1)} GB` : "–"] };
+    case "disk": return { status: st, lcd: [s ? `${s.disk.used_gb} / ${s.disk.total_gb} GB` : "–"] };
+    case "ups": return { status: "ONLINE", lcd: [s?.digitalocean?.price_monthly ? `$${s.digitalocean.price_monthly}/MO` : "–", s ? `UP ${Math.floor(s.uptime_s / 86400)}D ${Math.floor(s.uptime_s % 86400 / 3600)}H` : ""] };
+    default: return { status: st, lcd: [] };
+  }
+}
+
+/* ---------------- unit info panel ---------------- */
+function renderUnitPanel(id) {
+  const p = $("unitPanel"); const u = UNIT_BY[id]; if (!u) { p.hidden = true; return; }
+  const s = state.status, lv = unitLevel(id); let rows = [], acts = "", extra = "";
+  if (u.svc) { const v = s?.services?.find(x => x.name === u.svc); rows.push(["Program", u.svc], ["Status", v ? (v.status === "up" ? "Running" : "Stopped") : "Checking…"], ["Starts on its own", v ? (v.enabled === "enabled" ? "Yes, after every restart" : "No") : "–"]); }
+  if (id === "ssh" && s) { (s.logins || []).slice(0, 3).forEach((l, i) => rows.push([i ? "" : "Recent logins", `${l.user} · ${ago(new Date(l.when).getTime())}`])); acts = `<a class="btn small" href="${esc(s.links?.console || "https://cloud.digitalocean.com/droplets")}" target="_blank" rel="noopener">Open terminal ↗</a>`; }
+  if (id === "cron" && s) rows.push(["Server timers", (s.cron || []).length ? `${s.cron.length} set up` : "None yet. Your scheduled jobs run as Automations instead."]);
+  if (id === "cpu" && s) rows = [["Working at", `${s.cpu.pct.toFixed(0)}% (${word(s.cpu.pct, 30, 75, "relaxed", "busy", "working hard")})`], ["Load, last 1/5/15 min", s.load.map(v => v.toFixed(2)).join(" / ")], ["Cores", s.digitalocean?.vcpus ?? "–"]];
+  if (id === "mem" && s) rows = [["In use", `${s.mem.used_mb} of ${s.mem.total_mb} MB (${s.mem.pct.toFixed(0)}%)`], ["Overflow (swap)", `${s.swap.pct.toFixed(0)}%`], ["Verdict", s.mem.pct > 85 ? "Getting full" : "Plenty of room"]];
+  if (id === "disk" && s) rows = [["Used", `${s.disk.used_gb} of ${s.disk.total_gb} GB`], ["Free", `${(s.disk.total_gb - s.disk.used_gb).toFixed(1)} GB`]];
+  if (id === "ups" && s) { const d = s.digitalocean || {}; rows = [["Cost", d.price_monthly ? `$${d.price_monthly}/month` : "–"], ["So far this month", d.month_to_date_usage ? `$${d.month_to_date_usage}` : "–"], ["Up for", `${Math.floor(s.uptime_s / 86400)} days ${Math.floor(s.uptime_s % 86400 / 3600)} h`], ["Location", d.region ? d.region.toUpperCase() + " · New York" : "–"], ["Size", d.size ? `${d.vcpus} CPU · ${Math.round(d.memory_mb / 1024)} GB RAM · ${d.disk_gb} GB disk` : "–"]]; acts = `<a class="btn small" href="${esc(s.links?.console || "https://cloud.digitalocean.com/droplets")}" target="_blank" rel="noopener">Open terminal ↗</a>`; }
+  if (id === "icloud") {
+    const today = (state.events || []).filter(e => sameDay(e.start) && (e.all_day || new Date(e.end) > Date.now())).slice(0, 5);
+    extra = today.length ? `<ul>${today.map(e => `<li>${esc(e.all_day ? "All day" : fmtTime(e.start))} · ${esc(e.title)}</li>`).join("")}</ul>` : `<p class="explain" style="margin:0">Nothing else today.</p>`;
+    rows = [["Open to-dos", state.tasks ? String(state.tasks.length) : "–"], ["Calendars", state.calendars ? String(state.calendars.length) : "–"]];
+    acts = `<button class="btn small" type="button" data-go="eventAdd">Add event</button><button class="btn ghost small" type="button" data-go="todoAdd">Add to-do</button>`;
+  }
+  if (id === "bs") {
+    const b = bsState(), a = bsAuto();
+    rows = [["Status", { ok: "Working", running: "Syncing now", waiting: "Signing in", code: "Waiting for your code", approve: "Approve on your phone", error: "Last sync failed", never: "Not set up yet", loading: "Checking…" }[b.kind]], ["Last sync", b.last ? ago(new Date(b.last.ts).getTime()) : "No record yet"], ["Schedule", a ? cronText(a.cron_expression) + (a.enabled ? "" : " (paused)") : "Not scheduled"]];
+    if (b.kind === "approve") extra = `<p>Open Microsoft Authenticator and enter <b style="font-size:22px;color:var(--warn)">${esc(b.num)}</b></p>`;
+    acts = `<button class="btn small" type="button" data-act="bs-sync">Sync now</button><button class="btn ghost small" type="button" data-go="bsCard">Details</button>`;
+  }
+  if (id === "auto") {
+    const a = state.autos || [];
+    extra = a.length ? `<ul>${a.slice(0, 6).map(x => `<li>${esc(x.name)} · <span class="explain">${x.enabled ? esc(x.run_once_at ? "once" : cronText(x.cron_expression)) : "paused"}</span></li>`).join("")}</ul>` : `<p class="explain" style="margin:0">No automations yet.</p>`;
+    acts = `<button class="btn small" type="button" data-go="autoAdd">New automation</button><button class="btn ghost small" type="button" data-go="autoCard">Manage</button>`;
+  }
+  p.innerHTML = `<button class="btn ghost small x" type="button" data-close aria-label="Close">✕</button>
+    <span class="kicker">${esc(u.label)}</span><h3>${esc(u.name)}</h3>
+    <span class="state"><span class="dot ${lv}"></span>${LVL[lv]}</span>
+    <p>${esc(UNIT_ABOUT[id])}</p>${extra}
+    <dl class="kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${acts ? `<div class="acts">${acts}</div>` : ""}`;
+  p.hidden = false;
+}
+$("unitPanel").addEventListener("click", e => {
+  if (e.target.closest("[data-close]")) { rack.deselect(); return; }
+  const go = e.target.closest("[data-go]"); if (go) { const el = $(go.dataset.go); if (el) { if (el.tagName === "DETAILS") el.open = true; el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); const f = el.querySelector("input,textarea"); if (f) setTimeout(() => f.focus({ preventScroll: true }), 400); } return; }
+  if (e.target.closest('[data-act="bs-sync"]')) syncBrightspace();
+});
+function toast(text) { overlay.querySelectorAll(".toast").forEach(t => t.remove()); const el = document.createElement("div"); el.className = "toast"; el.textContent = text; overlay.appendChild(el); setTimeout(() => el.remove(), 2600); }
+
+/* ---------------- 3D cabinet ---------------- */
+let chatBusy = false;
+const rack = (() => {
+  const stage = $("stage"), canvas = $("gl");
+  let selected = null, opened = false;
+  const api = { ok: false, refresh() { if (selected) renderUnitPanel(selected); }, flash() {}, pulse() {}, deselect() { selected = null; $("unitPanel").hidden = true; } };
+  function fallback() {
+    $("nogl").hidden = false; canvas.hidden = true; $("hint").hidden = true; document.querySelector(".stage-ctrls").hidden = true;
+    $("noglUnits").innerHTML = UNITS.map(u => `<button class="btn ghost small" type="button" data-unit="${u.id}"><span class="dot" data-dot="${u.id}"></span>${esc(u.name)}</button>`).join("");
+    $("noglUnits").onclick = e => { const b = e.target.closest("[data-unit]"); if (b) { selected = b.dataset.unit; renderUnitPanel(selected); } };
+    api.refresh = () => { UNITS.forEach(u => { const d = document.querySelector(`[data-dot="${u.id}"]`); if (d) d.className = "dot " + unitLevel(u.id); }); if (selected) renderUnitPanel(selected); };
+    return api;
+  }
+  if (!window.THREE || !THREE.OrbitControls) return fallback();
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" }); } catch { return fallback(); }
+  const small = Math.min(innerWidth, innerHeight) < 700;
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, small ? 1.5 : 2));
+  renderer.outputEncoding = THREE.LinearEncoding;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x05070b);
+  scene.fog = new THREE.FogExp2(0x05070b, 0.17);
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.03, 60);
+  try { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture; } catch {}
+
+  /* lights */
+  scene.add(new THREE.HemisphereLight(0x9ccfff, 0x07090e, 0.6));
+  const key = new THREE.SpotLight(0xe6f2ff, 3.2, 14, 0.55, 0.75, 1.3); key.position.set(0.9, 3.5, 2.4); key.target.position.set(0, 1, 0);
+  key.castShadow = true; key.shadow.mapSize.set(small ? 512 : 1024, small ? 512 : 1024); key.shadow.bias = -0.0006; scene.add(key, key.target);
+  const rim = new THREE.PointLight(0x2a7fff, 1.3, 7, 2); rim.position.set(-1.6, 1.8, -1.0); scene.add(rim);
+  const glow = new THREE.PointLight(0x00d0ff, 0.5, 3, 2); glow.position.set(0, 0.2, 1.2); scene.add(glow);
+  const inner = new THREE.PointLight(0x9fd8ff, 0.0, 1.6, 2); inner.position.set(0, 1.1, 0.75); scene.add(inner);
+
+  /* textures */
+  function canvasTex(w, h, draw) { const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); draw(g, w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; }
+  const floorTex = canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#1a2029"; g.fillRect(0, 0, w, h); for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * .03})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } g.strokeStyle = "#0a0d12"; g.lineWidth = 8; g.strokeRect(0, 0, w, h); });
+  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(30, 30);
+  const ventTex = canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#1a2029"; g.fillRect(0, 0, w, h); g.fillStyle = "#0b0f15"; for (let y = 24; y < h - 16; y += 22) for (let x = 24; x < w - 16; x += 22) { g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); } g.strokeStyle = "#0a0d12"; g.lineWidth = 8; g.strokeRect(0, 0, w, h); });
+  const meshAlpha = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#000"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; const s = 16; for (let y = 0; y < h; y += s) for (let x = 0; x < w; x += s) { g.fillRect(x, y, s, 3); g.fillRect(x, y, 3, s); } });
+  meshAlpha.encoding = THREE.LinearEncoding; meshAlpha.wrapS = meshAlpha.wrapT = THREE.RepeatWrapping; meshAlpha.repeat.set(10, 34);
+
+  /* floor + room */
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.32, metalness: 0.45, envMapIntensity: 0.5 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  [[0, 1.2], [0.6, 1.2], [-0.6, 1.2]].forEach(([x, z]) => { const v = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.6), new THREE.MeshStandardMaterial({ map: ventTex, roughness: 0.5, metalness: 0.4 })); v.rotation.x = -Math.PI / 2; v.position.set(x, 0.002, z); v.receiveShadow = true; scene.add(v); });
+  const stripMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xcfe6ff).multiplyScalar(1.6), toneMapped: false });
+  [1.5, -1.6].forEach(z => { const s = new THREE.Mesh(new THREE.BoxGeometry(8, 0.02, 0.08), stripMat); s.position.set(0, 3.3, z); scene.add(s); });
+  const tray = new THREE.Mesh(new THREE.BoxGeometry(8, 0.06, 0.4), new THREE.MeshStandardMaterial({ color: 0x2a313b, metalness: 0.8, roughness: 0.45 })); tray.position.set(0, 2.55, 0); scene.add(tray);
+  const cableMat = new THREE.MeshStandardMaterial({ color: 0x1b6dff, roughness: 0.6 }), cableMat2 = new THREE.MeshStandardMaterial({ color: 0xffb547, roughness: 0.6 });
+  for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 8, 6), i % 2 ? cableMat : cableMat2); c.rotation.z = Math.PI / 2; c.position.set(0, 2.6, -0.12 + i * 0.06); scene.add(c); }
+
+  /* materials */
+  const mFrame = new THREE.MeshStandardMaterial({ color: 0x13161b, metalness: 0.75, roughness: 0.38, envMapIntensity: 0.6 });
+  const mChassis = new THREE.MeshStandardMaterial({ color: 0x23282f, metalness: 0.8, roughness: 0.3, envMapIntensity: 0.8 });
+  const mDark = new THREE.MeshStandardMaterial({ color: 0x07090c, metalness: 0.1, roughness: 0.95 });
+  const mRail = new THREE.MeshStandardMaterial({ color: 0x7a838f, metalness: 0.9, roughness: 0.35 });
+  const mMesh = new THREE.MeshStandardMaterial({ color: 0x0d1015, metalness: 0.7, roughness: 0.4, alphaMap: meshAlpha, transparent: true, side: THREE.DoubleSide });
+  const mGlass = new THREE.MeshStandardMaterial({ color: 0x0a1520, metalness: 0.2, roughness: 0.06, transparent: true, opacity: 0.18, envMapIntensity: 1.5, side: THREE.DoubleSide });
+  const box = (w, h, d, m, x, y, z, parent) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; (parent || scene).add(o); return o; };
+
+  /* cabinet */
+  const CW = 0.6, CH = 2.1, CD = 1.0, U = 0.0445, RB = 0.12, FZ = 0.40;
+  const cab = new THREE.Group(); scene.add(cab);
+  const cabParts = [];
+  cabParts.push(box(0.02, CH, CD, mFrame, -CW / 2 + 0.01, CH / 2, 0, cab), box(0.02, CH, CD, mFrame, CW / 2 - 0.01, CH / 2, 0, cab), box(CW, 0.04, CD, mFrame, 0, CH - 0.02, 0, cab), box(CW, 0.09, CD, mFrame, 0, 0.045, 0, cab), box(CW - 0.04, CH - 0.13, 0.02, mDark, 0, CH / 2, -CD / 2 + 0.02, cab));
+  [-0.245, 0.245].forEach(x => { cabParts.push(box(0.016, CH - 0.2, 0.02, mRail, x, CH / 2, FZ - 0.01, cab)); box(0.016, CH - 0.2, 0.02, mRail, x, CH / 2, -0.38, cab); });
+  const plateTex = canvasTex(1024, 96, (g, w, h) => { g.fillStyle = "#0c1016"; g.fillRect(0, 0, w, h); g.fillStyle = "#cfe8ff"; g.font = '600 46px "Chakra Petch", sans-serif'; g.textBaseline = "middle"; g.fillText("KIAAN-CLOUD", 30, h / 2); g.fillStyle = "#6f8aa6"; g.font = '400 30px "JetBrains Mono", monospace'; g.fillText("NYC1 · RACK A-07", 560, h / 2); });
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.047), new THREE.MeshStandardMaterial({ map: plateTex, emissiveMap: plateTex, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.5 })); plate.position.set(0, CH - 0.075, CD / 2 + 0.004); cab.add(plate);
+  const beaconMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x3ef0a0).multiplyScalar(3), toneMapped: false });
+  const beacon = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.006, 0.006), beaconMat); beacon.position.set(0, CH - 0.115, CD / 2 + 0.004); cab.add(beacon);
+
+  /* door (hinged on the left) */
+  const door = new THREE.Group(); door.position.set(-CW / 2, 0, CD / 2 + 0.012); cab.add(door);
+  const doorParts = [];
+  doorParts.push(box(0.03, CH - 0.06, 0.02, mFrame, 0.015, CH / 2, 0, door), box(0.03, CH - 0.06, 0.02, mFrame, CW - 0.015, CH / 2, 0, door), box(CW, 0.05, 0.02, mFrame, CW / 2, CH - 0.055, 0, door), box(CW, 0.05, 0.02, mFrame, CW / 2, 0.115, 0, door));
+  const meshPanel = new THREE.Mesh(new THREE.PlaneGeometry(CW - 0.06, CH - 0.2), mMesh); meshPanel.position.set(CW / 2, CH / 2 + 0.03, 0.004); door.add(meshPanel); doorParts.push(meshPanel);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(CW - 0.06, CH - 0.2), mGlass); glass.position.set(CW / 2, CH / 2 + 0.03, 0.008); door.add(glass); doorParts.push(glass);
+  doorParts.push(box(0.014, 0.2, 0.03, new THREE.MeshStandardMaterial({ color: 0xc9d1da, metalness: 1, roughness: 0.2 }), CW - 0.045, 1.08, 0.025, door));
+  doorParts.forEach(o => o.userData.part = "door"); cabParts.forEach(o => o.userData.part = "cab");
+
+  /* neighbour racks with twinkling lights */
+  const ledColors = [0x3ef0a0, 0x3ef0a0, 0x4fd8ff, 0xffb547];
+  const neighbourLeds = [];
+  [-1.24, -0.62, 0.62, 1.24].forEach(x => {
+    const g = new THREE.Group(); g.position.x = x; scene.add(g);
+    box(CW, CH, CD, mFrame, 0, CH / 2, 0, g);
+    const front = new THREE.Mesh(new THREE.PlaneGeometry(CW - 0.06, CH - 0.2), mMesh); front.position.set(0, CH / 2, CD / 2 + 0.006); g.add(front);
+    const n = 70, im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.006, 0.004, 0.002), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), n);
+    const d = new THREE.Object3D(), col = new THREE.Color();
+    for (let i = 0; i < n; i++) { d.position.set((Math.random() - 0.5) * 0.4, 0.25 + Math.floor(Math.random() * 36) * 0.0445, CD / 2 + 0.003); d.updateMatrix(); im.setMatrixAt(i, d.matrix); col.setHex(ledColors[i % 4]).multiplyScalar(2.2); im.setColorAt(i, col); }
+    g.add(im); neighbourLeds.push(im);
+  });
+
+  /* units */
+  const unitObjs = {};
+  const pickables = [];
+  const H1 = 96;
+  function paintFace(o, t) {
+    const g = o.ctx, w = o.cw, h = o.ch, u = o.u, lv = unitLevel(u.id), info = faceLines(u.id);
+    const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0, "#2c323b"); grd.addColorStop(0.5, "#1d2128"); grd.addColorStop(1, "#14171c"); g.fillStyle = grd; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#383e48"; g.fillRect(0, 0, 36, h); g.fillRect(w - 36, 0, 36, h);
+    g.fillStyle = "#11141a"; for (const yy of (u.h === 1 ? [h / 2] : [h * .25, h * .75])) { g.beginPath(); g.arc(18, yy, 7, 0, 7); g.fill(); g.beginPath(); g.arc(w - 18, yy, 7, 0, 7); g.fill(); }
+    g.fillStyle = "rgba(255,255,255,.07)"; g.fillRect(36, 0, w - 72, 2);
+    const col = lv === "bad" ? "#ff5577" : lv === "warn" ? "#ffcf4a" : "#3ef0a0";
+    g.textBaseline = "middle";
+    g.fillStyle = "#dbe8f6"; g.font = '600 30px "Chakra Petch", sans-serif'; g.fillText(u.label, 56, u.h === 1 ? 36 : 44);
+    g.fillStyle = col; g.font = '600 18px "JetBrains Mono", monospace'; g.fillText("● " + info.status, 58, u.h === 1 ? 70 : 82);
+    // vents
+    const vent = (x0, x1, y0, y1) => { g.fillStyle = "#0b0d11"; for (let x = x0; x < x1; x += 14) g.fillRect(x, y0, 7, y1 - y0); };
+    const lcd = (x0, y0, ww, hh, lines, big) => { g.fillStyle = "#031a17"; g.fillRect(x0, y0, ww, hh); g.strokeStyle = "#0b2e29"; g.lineWidth = 2; g.strokeRect(x0, y0, ww, hh); g.fillStyle = lv === "bad" ? "#ff7a92" : "#5cffd6"; g.font = `600 ${big || 22}px "JetBrains Mono", monospace`; lines.forEach((ln, i) => g.fillText(ln, x0 + 14, y0 + (hh / (lines.length + 1)) * (i + 1))); };
+    switch (u.kind) {
+      case "switch": {
+        for (let r = 0; r < 2; r++) for (let i = 0; i < 12; i++) { const x = 430 + i * 38, y = 16 + r * 36; g.fillStyle = "#0a0c10"; g.fillRect(x, y, 30, 26); g.strokeStyle = "#454c57"; g.strokeRect(x, y, 30, 26); const on = (i * 7 + r * 3) % 5 !== 0; const blink = on && Math.random() < (chatBusy ? .5 : .15); g.fillStyle = !on ? "#222" : blink ? "#1a3d2c" : "#3ef0a0"; g.fillRect(x + 4, y + 3, 7, 4); g.fillStyle = on ? "#ffb547" : "#222"; g.fillRect(x + 19, y + 3, 7, 4); }
+        break; }
+      case "firewall": vent(430, 760, 18, 78); g.fillStyle = "#0a0c10"; for (let i = 0; i < 4; i++) { g.fillRect(790 + i * 36, 30, 28, 30); g.fillStyle = "#3ef0a0"; g.fillRect(794 + i * 36, 33, 6, 4); g.fillStyle = "#0a0c10"; } break;
+      case "kvm": g.fillStyle = "#0a0c10"; g.fillRect(430, 22, 120, 52); g.fillRect(570, 22, 120, 52); vent(720, 940, 18, 78); break;
+      case "server": vent(430, 940, 18, 78); g.fillStyle = "#2b3038"; g.fillRect(430, 40, 80, 16); break;
+      case "display": lcd(430, 12, 380, 72, info.lcd, 22); vent(830, 950, 18, 78); break;
+      case "compute": {
+        lcd(430, 20, 230, 70, info.lcd, 20);
+        const cpu = state.status?.cpu?.pct ?? 5; o.spin = (o.spin || 0) + (reduced ? 0 : 0.05 + cpu / 100 * 0.6);
+        for (let f = 0; f < 3; f++) { const cx = 720 + f * 78, cy = h / 2, r = 32; g.fillStyle = "#08090c"; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.strokeStyle = "#3a414b"; g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+          g.fillStyle = "#59616d"; for (let b = 0; b < 7; b++) { const a = o.spin + f + b * Math.PI * 2 / 7; g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, r - 4, a, a + 0.42); g.closePath(); g.fill(); }
+          g.fillStyle = "#1c2026"; g.beginPath(); g.arc(cx, cy, 8, 0, 7); g.fill(); g.strokeStyle = "rgba(160,170,185,.35)"; g.lineWidth = 1; for (let k = -r; k <= r; k += 8) { g.beginPath(); g.moveTo(cx - r, cy + k); g.lineTo(cx + r, cy + k); g.stroke(); } }
+        break; }
+      case "memory": { const pct = state.status?.mem?.pct ?? 0, lit = Math.round(pct / 100 * 8); for (let i = 0; i < 8; i++) { g.fillStyle = i < lit ? (pct > 85 ? "#ff5577" : "#4fd8ff") : "#0d1117"; g.fillRect(430 + i * 34, 22, 24, 52); } lcd(720, 18, 220, 60, info.lcd, 18); break; }
+      case "storage": { const pct = state.status?.disk?.pct ?? 0, used = Math.round(pct / 100 * 12); for (let i = 0; i < 12; i++) { const x = 400 + (i % 6) * 92, y = 18 + Math.floor(i / 6) * 84; g.fillStyle = "#0d1015"; g.fillRect(x, y, 84, 74); g.strokeStyle = "#454c57"; g.lineWidth = 2; g.strokeRect(x, y, 84, 74); g.fillStyle = "#2b3038"; g.fillRect(x + 6, y + 30, 60, 8); g.fillStyle = i < used ? (Math.random() < .12 ? "#ffffff" : "#4fd8ff") : "#1e242c"; g.fillRect(x + 70, y + 8, 6, 6); } lcd(56, 120, 300, 56, info.lcd, 20); break; }
+      case "ups": { lcd(430, 22, 300, 148, info.lcd, 30); const lit = 5; for (let i = 0; i < 5; i++) { g.fillStyle = i < lit ? "#3ef0a0" : "#14171c"; g.fillRect(760 + i * 34, 140, 24, 18); } g.fillStyle = "#0a0c10"; g.beginPath(); g.arc(880, 70, 30, 0, 7); g.fill(); g.strokeStyle = "#4fd8ff"; g.lineWidth = 4; g.beginPath(); g.arc(880, 70, 16, -1.1, 4.2); g.stroke(); g.beginPath(); g.moveTo(880, 48); g.lineTo(880, 70); g.stroke(); break; }
+    }
+    o.tex.needsUpdate = true;
+  }
+  UNITS.forEach(u => {
+    const hh = u.h * U, y = RB + (u.u - 1) * U + hh / 2;
+    const grp = new THREE.Group(); grp.position.set(0, y, 0); cab.add(grp);
+    const chassis = box(0.44, hh - 0.003, 0.7, mChassis, 0, 0, FZ - 0.35, grp);
+    const cw = 1024, ch = H1 * u.h;
+    const c = document.createElement("canvas"); c.width = cw; c.height = ch;
+    const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8;
+    const faceMat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.7, metalness: 0.5, roughness: 0.42, envMapIntensity: 0.6 });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.482, hh - 0.002), faceMat); face.position.set(0, 0, FZ + 0.001); grp.add(face);
+    const ledMat = () => new THREE.MeshBasicMaterial({ color: 0x3ef0a0, toneMapped: false });
+    const led1 = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.004, 0.003), ledMat()), led2 = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.004, 0.003), ledMat());
+    led1.position.set(0.205, hh * 0.18, FZ + 0.003); led2.position.set(0.205, -hh * 0.18, FZ + 0.003); grp.add(led1, led2);
+    // insides, seen when the unit slides out
+    const top = hh / 2 - 0.0015;
+    const board = box(0.42, 0.002, 0.6, new THREE.MeshStandardMaterial({ color: 0x0d3b2e, roughness: 0.7 }), 0, top - 0.004, FZ - 0.36, grp); board.castShadow = false;
+    if (u.kind === "compute") { for (let i = 0; i < 2; i++) { const hs = box(0.09, hh * 0.55, 0.09, new THREE.MeshStandardMaterial({ color: 0xb8c0ca, metalness: 1, roughness: 0.3 }), -0.08 + i * 0.16, top - hh * 0.28, FZ - 0.3, grp); hs.castShadow = false; } }
+    else if (u.kind === "memory") { for (let i = 0; i < 8; i++) box(0.004, hh * 0.6, 0.13, new THREE.MeshStandardMaterial({ color: 0x1a4fb0, roughness: 0.5 }), -0.1 + i * 0.03, top - hh * 0.3, FZ - 0.3, grp); }
+    else if (u.kind === "storage") { box(0.4, hh * 0.7, 0.22, new THREE.MeshStandardMaterial({ color: 0x3a4250, metalness: 0.8, roughness: 0.4 }), 0, top - hh * 0.35, FZ - 0.14, grp); }
+    else { for (let i = 0; i < 3; i++) box(0.05, 0.006, 0.05, mDark, -0.12 + i * 0.1, top, FZ - 0.25, grp); }
+    const o = { u, grp, face, faceMat, tex, ctx: c.getContext("2d"), cw, ch, leds: [led1, led2], z: 0, zTarget: 0, flash: 0, hh, y };
+    unitObjs[u.id] = o; chassis.userData.unit = u.id; face.userData.unit = u.id; pickables.push(chassis, face);
+    paintFace(o, 0);
+  });
+  // blank panels in the empty rack spaces
+  const usedU = new Set(); UNITS.forEach(u => { for (let i = 0; i < u.h; i++) usedU.add(u.u + i); });
+  const blankTex = canvasTex(1024, 96, (g, w, h) => { g.fillStyle = "#16191e"; g.fillRect(0, 0, w, h); g.fillStyle = "#2a2f37"; g.fillRect(0, 0, 36, h); g.fillRect(w - 36, 0, 36, h); g.fillStyle = "#0b0d10"; for (let x = 60; x < w - 60; x += 12) g.fillRect(x, 30, 5, 36); });
+  const blankMat = new THREE.MeshStandardMaterial({ map: blankTex, metalness: 0.6, roughness: 0.45 });
+  for (let k = 1; k <= 42; k++) { if (usedU.has(k)) continue; const y = RB + (k - 1) * U + U / 2; const b = new THREE.Mesh(new THREE.PlaneGeometry(0.482, U - 0.002), blankMat); b.position.set(0, y, FZ + 0.001); b.userData.part = "cab"; cab.add(b); cabParts.push(b); }
+  pickables.push(...cabParts, ...doorParts);
+
+  /* post-processing glow */
+  let composer = null;
+  try {
+    composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(512, 512), small ? 0.7 : 0.85, 0.42, 0.78));
+  } catch { composer = null; }
+
+  /* camera + controls */
+  const controls = new THREE.OrbitControls(camera, canvas);
+  Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, minDistance: 0.35, maxDistance: 5.5, minPolarAngle: 0.22 * Math.PI, maxPolarAngle: 0.53 * Math.PI, minAzimuthAngle: -1.15, maxAzimuthAngle: 1.15, rotateSpeed: 0.6, zoomSpeed: 0.7 });
+  const VIEW = { closed: { p: [1.7, 1.55, 4.3], t: [0, 1.0, 0] }, open: { p: [0.5, 1.15, 2.55], t: [0, 1.0, 0.3] } };
+  camera.position.set(...VIEW.closed.p); controls.target.set(...VIEW.closed.t); controls.update();
+  let tween = null;
+  const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  function flyTo(p, t, ms = 950) { tween = { fp: camera.position.clone(), ft: controls.target.clone(), tp: new THREE.Vector3(...p), tt: new THREE.Vector3(...t), s: performance.now(), ms: reduced ? 1 : ms }; }
+  let doorAngle = 0, doorTarget = 0, lastInteract = performance.now();
+
+  function setOpen(v) {
+    opened = v; doorTarget = v ? -1.95 : 0;
+    $("doorBtn").textContent = v ? "Close cabinet" : "Open cabinet";
+    $("hint").textContent = v ? "Tap any unit to pull it out · drag to look around" : "Tap the cabinet to open it · drag to look around";
+    if (!v) { deselect(); flyTo(VIEW.closed.p, VIEW.closed.t); } else flyTo(VIEW.open.p, VIEW.open.t);
+  }
+  function select(id) {
+    if (selected && unitObjs[selected]) unitObjs[selected].zTarget = 0;
+    selected = id; const o = unitObjs[id]; o.zTarget = 0.3;
+    const fz = FZ + 0.3, small2 = stage.clientWidth < 600;
+    flyTo([small2 ? 0.05 : 0.2, o.y + (small2 ? 0.22 : 0.17), fz + (small2 ? 0.95 : 0.7)], [small2 ? 0 : 0.06, o.y - (small2 ? 0.06 : 0), fz - 0.12], 800);
+    renderUnitPanel(id); $("hint").hidden = true;
+  }
+  function deselect() {
+    if (selected && unitObjs[selected]) unitObjs[selected].zTarget = 0;
+    selected = null; $("unitPanel").hidden = true; $("hint").hidden = false;
+    if (opened) flyTo(VIEW.open.p, VIEW.open.t, 700);
+  }
+  $("doorBtn").onclick = () => setOpen(!opened);
+  $("resetBtn").onclick = () => { deselect(); flyTo(opened ? VIEW.open.p : VIEW.closed.p, opened ? VIEW.open.t : VIEW.closed.t); };
+
+  /* picking */
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function pick(ev) { const r = canvas.getBoundingClientRect(); ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); const hits = ray.intersectObjects(pickables, false); return hits.find(h => !(opened && h.object.userData.part === "door")) || null; }
+  let down = null, hovered = null;
+  canvas.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; lastInteract = performance.now(); controls.autoRotate = false; });
+  canvas.addEventListener("pointerup", e => {
+    if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) { down = null; return; } down = null;
+    const h = pick(e);
+    if (!opened) { if (h) setOpen(true); return; }
+    const id = h?.object.userData.unit;
+    if (id) { if (id === selected) deselect(); else select(id); } else if (selected) deselect();
+  });
+  const tip = $("tip");
+  canvas.addEventListener("pointermove", e => {
+    if (e.pointerType === "touch") return;
+    const h = pick(e); const id = opened ? h?.object.userData.unit : null;
+    if (hovered && hovered !== id && unitObjs[hovered]) unitObjs[hovered].faceMat.emissiveIntensity = 0.7;
+    hovered = id || null;
+    if (id) { unitObjs[id].faceMat.emissiveIntensity = 1.15; const r = stage.getBoundingClientRect(); tip.hidden = false; tip.style.left = (e.clientX - r.left) + "px"; tip.style.top = (e.clientY - r.top) + "px"; tip.innerHTML = `<span class="dot ${unitLevel(id)}"></span>${esc(UNIT_BY[id].name)}`; }
+    else tip.hidden = true;
+    canvas.style.cursor = (id || (!opened && h)) ? "pointer" : "grab";
+  });
+  canvas.addEventListener("pointerleave", () => { tip.hidden = true; });
+
+  /* sizing + visibility */
+  function resize() { const w = stage.clientWidth, h = canvas.clientHeight || stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); composer?.setSize(w, h); }
+  new ResizeObserver(resize).observe(stage); resize();
+  let onScreen = true; new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }).observe(stage);
+
+  /* loop */
+  const RED = new THREE.Color(0xff3355).multiplyScalar(3), GREEN = new THREE.Color(0x3ef0a0).multiplyScalar(2.4), AMBER = new THREE.Color(0xffb547).multiplyScalar(2.6), CYAN = new THREE.Color(0x4fd8ff).multiplyScalar(3), OFF = new THREE.Color(0x0a0d10);
+  let lastT = performance.now(), lastPaint = 0, lastTwinkle = 0;
+  const tmpCol = new THREE.Color();
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!onScreen || document.hidden) return;
+    const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+    if (tween) { const k = ease(Math.min(1, (now - tween.s) / tween.ms)); camera.position.lerpVectors(tween.fp, tween.tp, k); controls.target.lerpVectors(tween.ft, tween.tt, k); if (k >= 1) tween = null; }
+    controls.autoRotate = !reduced && !opened && !tween && now - lastInteract > 7000; controls.autoRotateSpeed = 0.35;
+    controls.update();
+    doorAngle += (doorTarget - doorAngle) * Math.min(1, dt * (reduced ? 30 : 3.2)); door.rotation.y = doorAngle;
+    inner.intensity = Math.min(1, -doorAngle / 1.9) * 0.9;
+    const t = now / 1000;
+    for (const id in unitObjs) {
+      const o = unitObjs[id]; o.z += (o.zTarget - o.z) * Math.min(1, dt * (reduced ? 30 : 6)); o.grp.position.z = o.z;
+      const lv = unitLevel(id), fl = o.flash > now;
+      const c1 = o.leds[0].material.color, c2 = o.leds[1].material.color;
+      c1.copy(lv === "bad" ? OFF : GREEN);
+      if (fl) c2.copy(Math.floor(t * 10) % 2 ? CYAN : OFF);
+      else if (lv === "bad") c2.copy(Math.floor(t * 2.5) % 2 ? RED : OFF);
+      else if (lv === "warn") c2.copy(Math.floor(t * 1.2) % 2 ? AMBER : OFF);
+      else c2.copy(Math.random() < (id === "mcp" && chatBusy ? 0.5 : 0.06) ? OFF : GREEN);
+    }
+    if (now - lastPaint > (reduced ? 2000 : 80)) { lastPaint = now; ["cpu", "mcp", "disk"].forEach(id => paintFace(unitObjs[id], now)); }
+    if (now - lastTwinkle > 450) { lastTwinkle = now; neighbourLeds.forEach(im => { for (let k = 0; k < 6; k++) { const i = Math.floor(Math.random() * im.count); tmpCol.setHex(Math.random() < .3 ? 0x0a0d10 : ledColors[i % 4]).multiplyScalar(2.2); im.setColorAt(i, tmpCol); } im.instanceColor.needsUpdate = true; }); }
+    const ol = overallLevel(); beaconMat.color.copy(ol === "bad" ? (Math.floor(t * 2) % 2 ? RED : OFF) : ol === "warn" ? AMBER : GREEN);
+    if (composer) composer.render(); else renderer.render(scene, camera);
+  }
+  requestAnimationFrame(frame);
+  document.fonts?.ready?.then(() => { Object.values(unitObjs).forEach(o => paintFace(o, 0)); plateTex.image.getContext("2d"); });
+
+  api.ok = true;
+  api.refresh = () => { Object.values(unitObjs).forEach(o => paintFace(o, performance.now())); $("beaconDot").className = "dot " + overallLevel(); if (selected) renderUnitPanel(selected); };
+  api.flash = id => { const o = unitObjs[id]; if (!o) return; o.flash = performance.now() + 1600; if (!o.zTarget) { o.zTarget = 0.04; setTimeout(() => { if (selected !== id) o.zTarget = 0; }, 450); } };
+  api.pulse = src => { const map = { dashboard: "dash", calendar: "icloud", tasks: "icloud", claude: "mcp", mcp: "mcp", hermes: "hermes", briefs: "auto", brightspace: "bs", "brightspace-mfa": "bs", setup: "ups", system: "ups", cron: "cron" }; api.flash(map[(src || "").toLowerCase()] || "mcp"); };
+  api.deselect = deselect;
+  api.open = () => setOpen(true);
+  return api;
+})();
+
+/* ---------------- render: Brightspace ---------------- */
+let bsFastTimer = null, bsKicked = 0;
+function bsFastPoll(on) {
+  if (demo || !mcp) return;
+  if (on && !bsFastTimer) bsFastTimer = setInterval(async () => {
+    try { const r = await mcp.callTool(SERVER, "activity_log", { limit: 80 }, { cache: false }); state.activity = unwrap(r.payload); meta.activity = { at: Date.now() }; RENDER.activity(); } catch {}
+  }, 10000);
+  if (!on && bsFastTimer) { clearInterval(bsFastTimer); bsFastTimer = null; }
+}
+async function syncBrightspace() {
+  const a = bsAuto(); const msg = $("bsSyncMsg");
+  if (!a) { msg.textContent = "The Brightspace sync automation isn't set up yet."; return; }
+  $("bsSync").disabled = true; msg.textContent = "Starting…";
+  try {
+    if (!demo) await mcp.callTool(REMOTE, "fire_trigger", { trigger_id: a.id });
+    bsKicked = Date.now(); msg.textContent = "Started. It takes a few minutes; keep this page open in case it needs your code.";
+    toast("Brightspace sync started"); rack.flash("bs"); bsFastPoll(true);
+  } catch (e) { msg.textContent = writeErr(e); }
+  finally { $("bsSync").disabled = false; }
+}
+$("bsSync").addEventListener("click", syncBrightspace);
+async function bsSetEnabled(on) {
+  const a = bsAuto(); if (!a) return;
+  try { if (!demo) await mcp.callTool(REMOTE, "update_trigger", { trigger_id: a.id, enabled: on }); else a.enabled = on; toast(on ? "Brightspace sync turned on" : "Paused"); await loadAutos(); renderBrightspace(); }
+  catch (e) { $("bsSyncMsg").textContent = writeErr(e); }
+}
+function renderBrightspace() {
+  const st = bsState(), es = bsEntries(), a = bsAuto();
+  const last = es[0], lastOk = es.find(e => /^Sync OK/i.test(e.msg || ""));
+  const S = {
+    loading: ["", "Checking…", ""],
+    never: ["warn", "Not set up yet", "Finish the setup steps below and it will run every 3 hours."],
+    running: ["good", "Syncing now…", "Signing in to Brightspace. This takes a few minutes."],
+    waiting: ["good", "Code received, finishing sign-in…", "Hang tight."],
+    ok: ["good", "Working", last ? `Last sync ${ago(new Date(last.ts).getTime())}` : ""],
+    error: ["bad", "Last sync didn't work", st.stale ? "The last run stopped before finishing." : (last?.msg || "").replace(/^ERROR:\s*/i, "")],
+    code: ["warn", "Waiting for your code", "Microsoft wants the 6-digit code from your Authenticator app."],
+    approve: ["warn", "Approve the sign-in on your phone", "Open Microsoft Authenticator and enter the number below."],
+  }[st.kind];
+  $("bsStatus").innerHTML = `<span class="dot ${S[0]}"></span><div><b>${esc(S[1])}</b><span>${esc(S[2])}</span></div>`;
+  $("bsSync").hidden = !a;
+  $("bsKv").innerHTML = state.activity ? [
+    ["Schedule", a ? (a.enabled ? cronText(a.cron_expression) : "Paused") : "Not scheduled"],
+    ["Next run", a?.enabled && a.next_run_at ? inTime(new Date(a.next_run_at) - Date.now()) : "–"],
+    ["Last sync", last ? fmtNY(last.ts, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "No record yet"],
+    ["Last good sync", lastOk ? ago(new Date(lastOk.ts).getTime()) : "Not yet"],
+    ["Last result", lastOk && lastOk === last ? lastOk.msg.replace(/^Sync OK:\s*/i, "") : last ? (last.msg || "").replace(/^ERROR:\s*/i, "") : "–"],
+  ].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("") : "";
+
+  const box = $("bsCode");
+  if (st.kind === "code") {
+    if (!$("bsForm")) {
+      box.className = "code-box";
+      box.innerHTML = `<b>Type the 6-digit code from Microsoft Authenticator</b><form class="f" id="bsForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="bsInput" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{6,8}" placeholder="000000" aria-label="Authenticator code" required><button class="btn" type="submit" id="bsSend">Send code</button></form><p class="formmsg" id="bsMsg"></p><span class="explain">Codes change every 30 seconds, so send it right away.</span>`;
+      $("bsForm").onsubmit = sendBsCode;
+    }
+  } else if (st.kind === "approve") {
+    box.className = "code-box";
+    box.innerHTML = `<b>Microsoft is asking you to approve the sign-in</b><span class="num">${esc(st.num)}</span><span class="explain">Open Microsoft Authenticator on your phone and type this number. Nothing to send here.</span>`;
+  } else {
+    box.className = "code-box off";
+    box.innerHTML = `<b>Sign-in code box</b><span class="explain">When Brightspace sync needs your Microsoft Authenticator code, this box lights up so you can type it here. Nothing needed right now.</span>`;
+  }
+
+  // setup steps until the first good sync
+  const hasConn = a ? a.connectors > 0 : false;
+  const loginOk = !!lastOk || (last && !/Missing login|password was not accepted|username may be incorrect/i.test(last.msg || "") && /APPROVE|NEEDS_CODE|Sync OK/i.test(last.msg || ""));
+  if (lastOk && a?.enabled) $("bsSetup").innerHTML = "";
+  else $("bsSetup").innerHTML = `<ol class="steps">
+    <li class="${a ? "done" : ""}"><div><b>Sync automation created</b>Runs every 3 hours in your "Hira Cloud" environment.</div></li>
+    <li class="${loginOk ? "done" : ""}"><div><b>Add your Bentley login</b>In Claude, edit the <i>Hira Cloud</i> environment and add two environment variables: <code>BRIGHTSPACE_USER</code> (your Bentley username) and <code>BRIGHTSPACE_PASS</code> (your password). It stays in your private settings, not on this page.</div></li>
+    <li class="${hasConn ? "done" : ""}"><div><b>Let it reach your server</b>On claude.ai, open your scheduled tasks, edit <i>Brightspace sync</i>, and add the <i>kiaan-cloud</i> connector.</div></li>
+    <li class="${a?.enabled ? "done" : ""}"><div><b>Turn it on</b>${a && !a.enabled ? `<button class="btn small" type="button" id="bsOn" style="margin-top:6px">Turn on every-3-hour sync</button>` : a ? "It's on." : ""}</div></li>
+  </ol>`;
+  const on = $("bsOn"); if (on) on.onclick = () => bsSetEnabled(true);
+
+  // what's due, from the last sync
+  const d = state.bsData;
+  if (d && Array.isArray(d.assignments)) {
+    const now = Date.now(), soon = d.assignments.filter(x => x.due && new Date(x.due) > now && new Date(x.due) - now < 14 * 864e5 && x.submitted !== true).sort((p, q) => new Date(p.due) - new Date(q.due)).slice(0, 8);
+    const finals = (d.courses || []).filter(c => c.final);
+    $("bsDue").innerHTML = `<b style="font-size:13px">Due in the next 2 weeks</b>` + (soon.length ? `<ul class="list" style="margin-top:6px">${soon.map(x => `<li><span class="tag">${esc((x.course || "").split(/[\s-]/).slice(0, 2).join(" "))}</span><span class="t">${esc(x.title)}${x.submitted === false ? `<span class="s" style="color:var(--warn)">Not submitted yet</span>` : ""}</span><span class="when">${esc(fmtNY(x.due, { weekday: "short", hour: "numeric", minute: "2-digit" }))}</span></li>`).join("")}</ul>` : `<p class="empty">Nothing due in the next 2 weeks.</p>`)
+      + (finals.length ? `<div class="chips" style="margin-top:8px">${finals.map(c => `<span class="tag">${esc((c.code || c.name).slice(0, 18))}: ${esc(c.final)}</span>`).join("")}</div>` : "")
+      + `<p class="explain" style="margin:6px 0 0">From the sync ${esc(ago(new Date(d.syncedAt).getTime()))}.</p>`;
+  } else $("bsDue").innerHTML = "";
+
+  bsFastPoll(["running", "code", "approve", "waiting"].includes(st.kind) || Date.now() - bsKicked < 5 * 6e4);
+}
+async function sendBsCode(ev) {
+  ev.preventDefault(); const code = $("bsInput").value.trim(); if (!/^\d{6,8}$/.test(code)) { setMsg("bsMsg", "Codes are 6 digits.", "err"); return; }
+  $("bsSend").disabled = true; setMsg("bsMsg", "Sending…");
+  try { await act("activity_note", { source: "brightspace-mfa", message: "CODE " + code }); setMsg("bsMsg", "Sent. Brightspace sync will use it now.", "ok"); toast("Code sent!"); rack.flash("bs"); refresh("activity_log"); }
+  catch (e) { setMsg("bsMsg", writeErr(e), "err"); $("bsSend").disabled = false; }
+}
+
+
+/* ---------------- render: status ---------------- */
+const SVC_NAMES = { "kiaan-dashboard": "Your dashboard website", caddy: "Front gate (web traffic)", ssh: "Login door (SSH)", fail2ban: "Security guard", cron: "Timer (server schedules)", "kiaan-mcp": "Claude link", "hermes-gateway": "WhatsApp bot" };
+function setMeter(id, pct, text, cls) { $("v-" + id).textContent = text; const m = $("m-" + id); m.className = "meter " + (cls || ""); m.firstElementChild.style.width = clamp(pct || 0, 0, 100) + "%"; }
+function word(p, lo, hi, a, b, c) { return p < lo ? a : p < hi ? b : c; }
+function renderStatus() {
+  const s = state.status;
+  if (!s) { renderSummary(); rack.refresh(); return; }
+  setMeter("cpu", s.cpu.pct, `${word(s.cpu.pct, 30, 75, "Relaxed", "Busy", "Working hard")} · ${s.cpu.pct.toFixed(0)}%`, pctClass(s.cpu.pct, 70, 90));
+  setMeter("mem", s.mem.pct, `${s.mem.pct.toFixed(0)}% used`, pctClass(s.mem.pct, 75, 90));
+  setMeter("disk", s.disk.pct, `${s.disk.pct.toFixed(0)}% full`, pctClass(s.disk.pct, 75, 90));
+  const up = s.services.filter(v => v.status === "up").length;
+  $("srvStatus").innerHTML = `<span class="dot ${up === s.services.length ? "good" : "bad"}"></span><div><b>${up === s.services.length ? "All parts running" : `${s.services.length - up} part${s.services.length - up > 1 ? "s" : ""} stopped`}</b><span>Online for ${Math.floor(s.uptime_s / 86400)} days ${Math.floor(s.uptime_s % 86400 / 3600)} h without a restart</span></div>`;
+  $("svcList").innerHTML = s.services.map(v => `<div class="svc"><span class="dot ${v.status === "up" ? "good" : "bad"}"></span><span>${esc(SVC_NAMES[v.name] || v.name)} <small>${esc(v.name)}</small></span><span style="font-size:12px;color:var(--muted)">${v.status === "up" ? "running" : "stopped"}</span></div>`).join("");
+  const d = s.digitalocean || {};
+  if (s.links?.console) $("termBtn").href = s.links.console;
+  const cron = s.cron || [];
+  $("srvKv").innerHTML = [["Address", s.ip], ["Location", d.region ? d.region.toUpperCase() + " (New York)" : "–"], ["Size", d.size ? `${d.vcpus} CPU · ${Math.round(d.memory_mb / 1024)} GB memory · ${d.disk_gb} GB disk` : "–"], ["System", d.image ? "Ubuntu " + d.image : "–"], ["Cost", d.price_monthly ? `$${d.price_monthly}/month · $${d.month_to_date_usage} so far this month` : "–"], ["Server timers", cron.length ? cron.length + " set up" : "None yet"], ["Last login", s.logins?.[0] ? `${s.logins[0].user} · ${ago(new Date(s.logins[0].when).getTime())}` : "–"]].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  rack.refresh();
+  renderSummary(); rack.refresh();
+}
+function issues() {
+  const out = [], s = state.status;
+  if (s) { s.services.filter(v => v.status !== "up").forEach(v => out.push(`${SVC_NAMES[v.name] || v.name} stopped`)); if (s.mem.pct >= 90) out.push("Memory almost full"); if (s.disk.pct >= 90) out.push("Storage almost full"); }
+  const k = bsState().kind; if (k === "code" || k === "approve") out.push("Brightspace needs your code"); if (k === "error") out.push("Brightspace sync failed");
+  (state.autos || []).filter(a => a.enabled && /FAILED/.test(a.last_run?.status || "")).forEach(a => out.push(`Automation "${a.name}" failed`));
+  return out;
+}
+function renderSummary() {
+  const chip = $("statusChip"), txt = $("statusText");
+  if (demo) { chip.className = "status-chip"; chip.querySelector(".dot").className = "dot warn"; txt.textContent = "Sample data"; return; }
+  if (!state.status) { if (meta.status.code) { chip.querySelector(".dot").className = "dot bad"; txt.textContent = "Can't reach your server"; } return; }
+  const is = issues();
+  chip.className = "status-chip live"; chip.querySelector(".dot").className = "dot " + (is.length ? "warn" : "good");
+  txt.textContent = is.length ? `${is.length} thing${is.length > 1 ? "s" : ""} need${is.length > 1 ? "" : "s"} a look: ${is[0]}` : "Everything's running smoothly";
+  $("sub").textContent = `Live · checked ${meta.status.at ? ago(meta.status.at) : "just now"}`;
+  rack.refresh();
+}
+
+/* ---------------- render: calendar / next up ---------------- */
+function renderEvents() {
+  const ev = state.events;
+  if (!ev) { $("calList").innerHTML = `<li class="empty">${esc(meta.events.err || "Loading your calendar…")}</li>`; return; }
+  const now = Date.now(), today = nyDate(0), tom = nyDate(1);
+  const dayOf = e => e.all_day ? String(e.start).slice(0, 10) : nyDayOf(e.start);
+  const rel = ev.filter(e => { const d = dayOf(e); return d === today || d === tom || (e.all_day && e.start <= today && e.end > today); });
+  rel.sort((a, b) => (a.all_day ? 0 : 1) - (b.all_day ? 0 : 1) || String(a.start).localeCompare(String(b.start)));
+  const nToday = rel.filter(e => dayOf(e) === today).length;
+  $("calMeta").textContent = `${nToday} today`;
+  let lastDay = "";
+  $("calList").innerHTML = rel.length ? rel.map(e => {
+    const d = e.all_day && e.start <= today ? today : dayOf(e); let head = "";
+    if (d !== lastDay) { lastDay = d; head = `<li style="background:none;border:0;padding:4px 2px 0;display:block"><span class="tag">${d === today ? "Today" : "Tomorrow"}</span></li>`; }
+    const on = !e.all_day && new Date(e.start) <= now && new Date(e.end) > now;
+    const when = e.all_day ? "All day" : fmtTime(e.start);
+    return head + `<li class="${on ? "now" : ""}"><span class="tag">${esc((e.calendar || "").trim())}</span><span class="t">${esc(e.title)}${e.location ? `<span class="s">📍 ${esc(e.location)}</span>` : ""}${on ? `<span class="s" style="color:var(--sun)">Happening now</span>` : ""}</span><span class="when">${esc(when)}</span></li>`;
+  }).join("") : `<li class="empty">Nothing on today or tomorrow.</li>`;
+  const next = ev.filter(e => !e.all_day && new Date(e.start) > now).sort((a, b) => new Date(a.start) - new Date(b.start))[0];
+  $("v-next").textContent = next ? next.title : "Nothing coming up";
+  $("v-next2").textContent = next ? `${fmtTime(next.start)} · ${inTime(new Date(next.start) - now)}` : "";
+}
+function renderCalendars() {
+  const sel = $("eCal"), keep = sel.value, list = state.calendars?.length ? state.calendars.map(c => c.name) : ["Personal "];
+  sel.innerHTML = list.map(n => `<option value="${esc(n)}">${esc(n.trim())}</option>`).join("");
+  sel.value = list.includes(keep) ? keep : (list.find(n => n.trim() === "Personal") || list[0]);
+}
+
+/* ---------------- render: tasks ---------------- */
+const taskId = x => x.id ?? x.task_id ?? x.uid ?? x._id ?? null;
+const busy = new Set();
+function renderTasks() {
+  const tk = state.tasks;
+  if (!tk) { $("taskList").innerHTML = `<li class="empty">${esc(meta.tasks.err || "Loading…")}</li>`; return; }
+  $("taskMeta").textContent = tk.length ? `${tk.length} open` : "";
+  const order = { high: 0, normal: 1, low: 2 };
+  const sorted = [...tk].sort((a, b) => (order[a.priority] ?? 1) - (order[b.priority] ?? 1) || String(a.due || "9").localeCompare(String(b.due || "9")));
+  $("taskList").innerHTML = sorted.length ? sorted.map(x => {
+    const id = taskId(x), b = id != null && busy.has("t:" + id);
+    const due = x.due ? fmtNY(String(x.due).length <= 10 ? x.due + "T12:00:00" : x.due, { weekday: "short", month: "short", day: "numeric" }) : "";
+    const btns = id != null ? `<span class="row-btns"><button class="btn small" type="button" data-act="done" data-id="${esc(id)}" ${b ? "disabled" : ""}>${b ? "…" : "Done"}</button><button class="btn ghost small" type="button" data-act="del" data-id="${esc(id)}" ${b ? "disabled" : ""}>✕</button></span>` : "";
+    return `<li><span class="tag ${x.priority === "high" ? "high" : ""}">${esc(x.priority === "high" ? "Important" : x.project || "To-do")}</span><span class="t">${esc(x.title || x.text || "Untitled")}${due ? `<span class="s">Due ${esc(due)}</span>` : ""}</span>${btns}</li>`;
+  }).join("") : `<li class="empty">All clear. Nothing on your list.</li>`;
+}
+
+/* ---------------- render: activity ---------------- */
+const SRC_NAMES = { dashboard: "Dashboard", calendar: "Calendar", briefs: "Saved reads", claude: "Claude", hermes: "WhatsApp bot", mcp: "Claude link", setup: "Setup", system: "Server", brightspace: "Brightspace", "brightspace-mfa": "Brightspace code", "cloud-game-test": "Test" };
+function plainMsg(e) {
+  let m = e.msg || "";
+  let x;
+  if ((x = m.match(/^created event '(.+)' in (.+)$/))) return `Added "${x[1]}" to ${x[2].trim()}`;
+  if ((x = m.match(/^saved brief '(.+)' for (.+)$/))) return `Saved the ${x[1].replace(/-/g, " ")} for ${x[2]}`;
+  if (m === "dashboard started") return "Dashboard started up";
+  if (/brightspace-mfa/i.test(e.source)) return "Sent a sign-in code to Brightspace sync";
+  return m;
+}
+function renderActivity() {
+  const a = state.activity;
+  if (!a) { $("actList").innerHTML = `<li class="empty">${esc(meta.activity.err || "Loading…")}</li>`; return; }
+  const groups = [];
+  for (const e of a) {
+    const g = groups[groups.length - 1];
+    const cal = e.source === "calendar" && /^created event/.test(e.msg);
+    const brief = e.source === "briefs";
+    if (g && g.source === e.source && (cal || brief) && g.kind === (cal ? "cal" : "brief") && Math.abs(new Date(g.items[g.items.length - 1].ts) - new Date(e.ts)) < 15 * 6e4) { g.items.push(e); continue; }
+    groups.push({ source: e.source, kind: cal ? "cal" : brief ? "brief" : "one", items: [e] });
+  }
+  $("actList").innerHTML = groups.slice(0, 25).map(g => {
+    const e = g.items[0], n = g.items.length;
+    const text = n > 1 ? (g.kind === "cal" ? `Added ${n} events to your calendar` : `Saved ${n} reads`) : plainMsg(e);
+    const sub = n > 1 ? g.items.slice(0, 3).map(i => (plainMsg(i).match(/"(.+)"/) || [])[1] || plainMsg(i)).join(", ") + (n > 3 ? "…" : "") : "";
+    return `<li><span class="tag">${esc(SRC_NAMES[e.source] || e.source)}</span><span class="t" style="font-weight:600">${esc(text)}${sub ? `<span class="s">${esc(sub)}</span>` : ""}</span><span class="when">${esc(ago(new Date(e.ts).getTime()))}</span></li>`;
+  }).join("") || `<li class="empty">Nothing yet.</li>`;
+}
+
+/* ---------------- render: automations ---------------- */
+function renderAutos() {
+  const a = state.autos;
+  if (!a) { $("autoList").innerHTML = `<li class="empty">${esc(autoErr || "Loading your automations…")}</li>`; return; }
+  $("autoMeta").textContent = `${activeAutos()} on · ${a.length} total`;
+  $("autoList").innerHTML = a.length ? a.map(x => {
+    const b = busy.has("a:" + x.id), lr = x.last_run;
+    const lrText = !lr ? "Hasn't run yet" : /SUCCEEDED/.test(lr.status) ? `Last run worked · ${ago(new Date(lr.finished_at || lr.fired_at).getTime())}` : /FAILED/.test(lr.status) ? `Last run failed · ${ago(new Date(lr.fired_at).getTime())}` : /PENDING|RUNNING/.test(lr.status) ? "Running now…" : lr.status;
+    const nextText = x.enabled && x.next_run_at ? `Next ${inTime(new Date(x.next_run_at) - Date.now())}` : x.enabled ? "" : "Paused";
+    const lvl = !x.enabled ? "" : /FAILED/.test(lr?.status || "") ? "bad" : "good";
+    const sched = x.run_once_at ? `Once on ${fmtNY(x.run_once_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : cronText(x.cron_expression);
+    return `<li><span class="dot ${lvl}" title="${x.enabled ? "On" : "Paused"}"></span><span class="t">${esc(x.name)}<span class="s">${esc(sched)} · ${esc(nextText)}</span><span class="s">${esc(lrText)}</span>${x.connectors === 0 ? `<span class="s" style="color:var(--warn)">Can't reach your server yet: on claude.ai, add the kiaan-cloud connector to it.</span>` : ""}</span><span class="row-btns">
+      <button class="btn ghost small" type="button" data-auto="run" data-id="${esc(x.id)}" ${b ? "disabled" : ""}>Run now</button>
+      <button class="btn ghost small" type="button" data-auto="${x.enabled ? "pause" : "resume"}" data-id="${esc(x.id)}" ${b ? "disabled" : ""}>${x.enabled ? "Pause" : "Turn on"}</button>
+      <button class="btn ghost small" type="button" data-auto="del" data-id="${esc(x.id)}" ${b ? "disabled" : ""}>✕</button></span></li>`;
+  }).join("") : `<li class="empty">No automations yet. Make one below, or ask Cloud.</li>`;
+}
+let autoErr = "";
+async function loadAutos() {
+  if (demo) return;
+  try {
+    let all = [], cursor;
+    for (let i = 0; i < 3; i++) {
+      const r = await mcp.callTool(REMOTE, "list_triggers", cursor ? { limit: 50, cursor } : { limit: 50 });
+      const p = unwrap(r.payload);
+      all = all.concat(p?.data || []); if (!p?.has_more || !p.next_cursor) break; cursor = p.next_cursor;
+    }
+    state.autos = all.map(x => ({ id: x.id, name: x.name, enabled: x.enabled, cron_expression: x.cron_expression, run_once_at: x.run_once_at, next_run_at: x.next_run_at, last_run: x.last_run, ended_reason: x.ended_reason, connectors: (x.mcp_connections || []).length }));
+    autoErr = "";
+  } catch (e) { autoErr = connErr(e, "Claude Code Remote"); state.autos = state.autos || null; }
+  renderAutos(); renderSummary(); renderBrightspace(); rack.refresh();
+}
+$("autoList").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-auto]"); if (!btn || btn.disabled) return;
+  const kind = btn.dataset.auto, id = btn.dataset.id, x = state.autos.find(a => a.id === id);
+  if (kind === "del" && !btn.classList.contains("danger")) { btn.classList.add("danger"); btn.textContent = "Delete?"; setTimeout(() => { btn.classList.remove("danger"); btn.textContent = "✕"; }, 4000); return; }
+  busy.add("a:" + id); renderAutos();
+  try {
+    if (demo) { if (kind === "pause" || kind === "resume") x.enabled = kind === "resume"; if (kind === "del") state.autos = state.autos.filter(a => a.id !== id); }
+    else if (kind === "run") await mcp.callTool(REMOTE, "fire_trigger", { trigger_id: id });
+    else if (kind === "pause" || kind === "resume") await mcp.callTool(REMOTE, "update_trigger", { trigger_id: id, enabled: kind === "resume" });
+    else if (kind === "del") await mcp.callTool(REMOTE, "delete_trigger", { trigger_id: id });
+    toast(kind === "run" ? `Started "${x.name}"` : kind === "del" ? "Automation deleted" : kind === "pause" ? "Paused" : "Turned on");
+    if (kind === "run") rack.flash("auto");
+    setMsg("aMsg", "");
+  } catch (err) { setMsg("aMsg", writeErr(err), "err"); $("autoAdd").open = true; }
+  finally { busy.delete("a:" + id); await loadAutos(); }
+});
+function freqUI() {
+  const f = $("aFreq").value;
+  $("aDayL").hidden = f !== "weekly"; $("aDateL").hidden = f !== "once"; $("aHoursL").hidden = f !== "hours"; $("aTimeL").hidden = f === "hours";
+}
+$("aFreq").addEventListener("change", freqUI); $("aDate").value = nyDate(1);
+const AUTO_CONTEXT = `\n\n---\nThis is an unattended scheduled job for Kiaan, created from his Kiaan Cloud Island page. His time zone is America/New_York. Use the kiaan-cloud connector tools (mcp__kiaan-cloud__*) for his server, his Apple/iCloud calendar (calendar_events, calendar_create_event; calendar names can have a trailing space, e.g. "Personal "), his to-do list (tasks_*) and the activity log (activity_note). Do not ask questions; do the job, then reply with a 2-line summary.`;
+function buildSchedule(freq, time, day, date, hours, name) {
+  if (freq === "once") { const [h, m] = (time || "08:00").split(":").map(Number); const iso = new Date(`${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00${nyOffset(date)}`); if (isNaN(iso) || iso < new Date()) throw { code: "bad_input", message: "Pick a date and time in the future." }; return { run_once_at: iso.toISOString() }; }
+  if (freq === "hours") return { cron_expression: `0 */${hours} * * *` };
+  let [h, m] = (time || "08:00").split(":").map(Number); [h, m] = jitter(h, m, name);
+  const dow = freq === "weekdays" ? "1-5" : freq === "weekly" ? String(day) : "*";
+  return { cron_expression: `CRON_TZ=${TZ} ${m} ${h} * * ${dow}` };
+}
+let envId = null;
+async function getEnv() {
+  if (envId) return envId;
+  const r = await mcp.callTool(REMOTE, "list_environments", { limit: 20 }); const envs = unwrap(r.payload)?.environments || [];
+  const pick = envs.find(e => e.kind === "anthropic_cloud" && /hira cloud/i.test(e.name)) || envs.find(e => e.kind === "anthropic_cloud" && /^default$/i.test(e.name)) || envs.find(e => e.kind === "anthropic_cloud" && e.state === "active");
+  if (!pick) throw { code: "no_env", message: "No cloud environment found to run automations in." };
+  return (envId = pick.environment_id);
+}
+async function createAutomation({ name, instructions, schedule, push = true }) {
+  if (demo) { const id = "demo" + Date.now(); state.autos = [...(state.autos || []), { id, name, enabled: true, ...schedule, next_run_at: null }]; renderAutos(); return { id }; }
+  const environment_id = await getEnv();
+  const input = { name, prompt: instructions.trim() + AUTO_CONTEXT, initiation: "human_request", create_new_session_on_fire: true, environment_id, notifications: push ? { push: true } : {}, ...schedule };
+  const r = await mcp.callTool(REMOTE, "create_trigger", input);
+  loadAutos(); return unwrap(r.payload);
+}
+$("autoForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const name = $("aName").value.trim(), what = $("aWhat").value.trim(); if (!name || !what) return;
+  const btn = $("aSubmit"); btn.disabled = true; setMsg("aMsg", "Creating…");
+  try {
+    const schedule = buildSchedule($("aFreq").value, $("aTime").value, $("aDay").value, $("aDate").value, $("aHours").value, name);
+    await createAutomation({ name, instructions: what, schedule, push: $("aPush").checked });
+    setMsg("aMsg", `Created "${name}". ${schedule.cron_expression ? cronText(schedule.cron_expression) : "Runs once"}. One more step: on claude.ai, edit it and add the kiaan-cloud connector so it can reach your server.`, "ok");
+    $("aName").value = ""; $("aWhat").value = ""; toast("Automation created!"); rack.flash("auto");
+  } catch (e) { setMsg("aMsg", writeErr(e), "err"); }
+  finally { btn.disabled = false; }
+});
+
+/* ---------------- render: briefs ---------------- */
+function renderBriefs() {
+  const b = state.briefs; const el = $("briefDays");
+  if (!b) { el.innerHTML = `<span class="empty">Loading…</span>`; return; }
+  const byDate = {};
+  b.forEach(f => { const m = String(f).match(/^(\d{4}-\d{2}-\d{2})_(.+)\.md$/); if (m && !/^brightspace-/.test(m[2])) (byDate[m[1]] = byDate[m[1]] || []).push(m[2]); });
+  const dates = Object.keys(byDate).sort().reverse().slice(0, 4);
+  const nice = n => ({ "ai-brief": "AI brief", "ai-brief-tools": "Tools", "ai-brief-predictions": "Predictions", "ai-brief-covered": "Covered", "ai-brief-learnings": "Learnings", morning: "Morning", brightspace: "Brightspace" }[n] || n.replace(/-/g, " "));
+  el.innerHTML = dates.length ? dates.map(d => `<div class="brief-day"><b>${esc(fmtNY(d + "T12:00:00", { month: "short", day: "numeric" }))}</b>${byDate[d].sort().map(n => `<button class="chip" type="button" data-brief="${esc(n)}" data-date="${esc(d)}">${esc(nice(n))}</button>`).join("")}</div>`).join("") : `<span class="empty">No saved reads yet.</span>`;
+}
+$("briefDays").addEventListener("click", async e => {
+  const b = e.target.closest("[data-brief]"); if (!b) return; const rd = $("reader"); rd.hidden = false; rd.innerHTML = `<span class="thinking">Opening…</span>`;
+  try { const r = demo ? { payload: { result: "# Sample\nThis is a sample brief." } } : await mcp.callTool(SERVER, "brief_get", { name: b.dataset.brief, date: b.dataset.date }, { cache: { staleTime: 36e5, gcTime: 864e5 } }); rd.innerHTML = md(unwrap(r.payload)); }
+  catch (err) { rd.textContent = connErr(err, "kiaan-cloud"); }
+});
+
+/* ---------------- write helpers ---------------- */
+function setMsg(id, text, kind) { const el = $(id); if (!el) return; el.textContent = text; el.className = "formmsg " + (kind || ""); }
+function checkOk(r) { const p = unwrap(r?.payload); if (p && typeof p === "object" && p.ok === false) throw { code: "tool_error", message: p.error || "the server said no" }; return p; }
+async function act(tool, input) { if (demo) return { ok: true }; return checkOk(await mcp.callTool(SERVER, tool, input)); }
+async function refresh(...tools) { if (demo) return; try { for (const t of tools) await mcp.invalidate(SERVER, t); } catch {} }
+function connErr(e, server) {
+  switch (e?.code) {
+    case "needs_reauth": return `Reconnect ${server} in claude.ai Settings → Connectors.`;
+    case "server_not_connected": return `Add the ${server} connector in claude.ai Settings → Connectors.`;
+    case "selection_required": return `Choose which ${server} connector to use when claude.ai asks.`;
+    case "approval_required": return `This page needs your OK to use ${server}. Reload and choose Allow.`;
+    case "not_in_manifest": return `${server} is switched off for this page. Turn it on from the page's Permissions menu.`;
+    case "blocked_by_policy": return "Your organization blocks this.";
+    case "server_unavailable": return `${server} didn't answer. It will try again shortly.`;
+    case "tool_error": return `${server} reported a problem: ${e.message || "unknown"}`;
+    case "not_granted": case "capability_disabled": case "capability_removed": return "Live data isn't available in this view.";
+    default: return `Couldn't reach ${server} (${e?.code || "error"}).`;
+  }
+}
+function writeErr(e) {
+  if (e?.code === "bad_input" || e?.code === "no_env") return e.message;
+  if (e?.code === "server_unavailable" || e?.code === "upstream_error" || e?.code === "cancelled") return "No clear answer. It may have worked, so check after the list refreshes before trying again.";
+  return connErr(e, "the server");
+}
+
+/* tasks */
+$("taskForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const title = $("tTitle").value.trim(); if (!title) return;
+  const input = { title, priority: $("tPri").value }; if ($("tDue").value) input.due = $("tDue").value;
+  $("tSubmit").disabled = true; setMsg("tMsg", "Adding…");
+  try { await act("tasks_add", input); setMsg("tMsg", `Added "${title}".`, "ok"); $("tTitle").value = ""; $("tDue").value = ""; toast("To-do added!"); rack.flash("icloud");
+    if (demo) { state.tasks = [...state.tasks, { id: "s" + Date.now(), ...input }]; renderTasks(); } else refresh("tasks_list", "activity_log"); }
+  catch (e) { setMsg("tMsg", writeErr(e), "err"); } finally { $("tSubmit").disabled = false; }
+});
+$("taskList").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-act]"); if (!btn || btn.disabled) return; const id = btn.dataset.id, kind = btn.dataset.act;
+  if (kind === "del" && !btn.classList.contains("danger")) { btn.classList.add("danger"); btn.textContent = "Delete?"; setTimeout(() => { btn.classList.remove("danger"); btn.textContent = "✕"; }, 4000); return; }
+  busy.add("t:" + id); renderTasks();
+  try { await act(kind === "done" ? "tasks_complete" : "tasks_delete", { task_id: id }); if (kind === "done") { toast("Nice, done!"); rack.flash("icloud"); } if (demo) state.tasks = state.tasks.filter(x => String(taskId(x)) !== id); else refresh("tasks_list"); setMsg("tMsg", ""); }
+  catch (err) { setMsg("tMsg", writeErr(err), "err"); $("todoCard").querySelector("details").open = true; }
+  finally { busy.delete("t:" + id); renderTasks(); }
+});
+/* events */
+$("eDate").value = nyDate(0);
+$("eAllDay").addEventListener("change", e => { $("eStart").disabled = $("eEnd").disabled = e.target.checked; });
+$("eventForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const title = $("eTitle").value.trim(), date = $("eDate").value; if (!title || !date) return;
+  const input = { title, calendar: $("eCal").value, all_day: $("eAllDay").checked };
+  if (input.all_day) input.start = date; else { const s = $("eStart").value || "09:00", en = $("eEnd").value; input.start = `${date}T${s}:00`; if (en && en > s) input.end = `${date}T${en}:00`; }
+  $("eSubmit").disabled = true; setMsg("eMsg", "Adding…");
+  try { await act("calendar_create_event", input); setMsg("eMsg", `Added "${title}" to ${input.calendar.trim()}. It'll show on your iPhone in a moment.`, "ok"); $("eTitle").value = ""; toast("Added to your calendar!"); rack.flash("icloud");
+    if (demo) { state.events = [...state.events, { uid: "s" + Date.now(), title, all_day: input.all_day, start: input.all_day ? date : `${date}T${$("eStart").value}:00${nyOffset(date)}`, end: input.end || input.start, calendar: input.calendar }]; renderEvents(); } else refresh("calendar_events", "activity_log"); }
+  catch (e) { setMsg("eMsg", writeErr(e), "err"); } finally { $("eSubmit").disabled = false; }
+});
+$("copySsh").addEventListener("click", async () => { try { await navigator.clipboard.writeText("ssh kiaan-cloud"); $("copySsh").textContent = "Copied"; } catch { const r = document.createRange(); r.selectNodeContents($("sshCmd")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } });
+
+/* ---------------- chat ---------------- */
+let turns = [];
+try { turns = JSON.parse(localStorage.getItem("kci3-chat") || "[]").slice(-16); } catch {}
+const saveTurns = () => { try { localStorage.setItem("kci3-chat", JSON.stringify(turns.slice(-16))); } catch {} };
+function addMsg(role, html, acts) {
+  const el = document.createElement("div"); el.className = "msg " + (role === "user" ? "me" : "bot"); el.innerHTML = html;
+  if (acts) { const a = document.createElement("div"); a.className = "acts"; el.appendChild(a); }
+  $("chatLog").appendChild(el); $("chatLog").scrollTop = $("chatLog").scrollHeight; return el;
+}
+function renderChatHistory() {
+  $("chatLog").innerHTML = "";
+  if (!turns.length) addMsg("bot", md("Hi Kiaan! I'm hooked up to your server, Apple Calendar and to-do list. Ask me to add something, check on the server, or set up an automation."));
+  turns.forEach(t => addMsg(t.role, t.role === "user" ? esc(t.content) : md(t.content)));
+}
+function chipFor(bubble, text, err) { const a = bubble.querySelector(".acts"); if (!a) return; const c = document.createElement("span"); c.className = "act-chip" + (err ? " err" : ""); c.textContent = text; a.appendChild(c); }
+function compactEvents(list) { return (list || []).map(e => ({ title: e.title, start: e.start, end: e.end, all_day: e.all_day, calendar: (e.calendar || "").trim(), location: e.location || undefined, notes: e.notes ? String(e.notes).slice(0, 140) : undefined })); }
+function chatTools(bubble) {
+  const run = async (label, fn) => { try { const r = await fn(); chipFor(bubble, "✓ " + label); return r; } catch (e) { chipFor(bubble, "✕ " + label, true); throw new Error(e?.message || writeErr(e)); } };
+  return [
+    { name: "get_calendar", description: "Read Kiaan's Apple/iCloud calendar events from today for N days (default 2). Returns a list of {title,start,end,all_day,calendar,location,notes}.", inputSchema: { type: "object", properties: { days: { type: "integer", minimum: 1, maximum: 14 } } },
+      execute: async ({ days }) => run("Read calendar", async () => { if (demo) return compactEvents(state.events); const n = clamp(Number(days) || 2, 1, 14); const r = await mcp.callTool(SERVER, "calendar_events", { start: "today", end: `${nyDate(n)}T00:00:00` }); return compactEvents(unwrap(r.payload)).slice(0, 60); }) },
+    { name: "add_calendar_event", description: "Add an event to Kiaan's Apple Calendar. start/end are local Boston times like 2026-10-30T14:00:00 (or a date for all-day). calendar must be one of the exact calendar names given in the instructions.", inputSchema: { type: "object", properties: { title: { type: "string" }, start: { type: "string" }, end: { type: "string" }, all_day: { type: "boolean" }, calendar: { type: "string" }, location: { type: "string" }, notes: { type: "string" } }, required: ["title", "start"] },
+      execute: async i => run(`Added "${i.title}" to calendar`, async () => { const input = { title: String(i.title), start: String(i.start) }; ["end", "calendar", "location", "notes"].forEach(k => i[k] && (input[k] = String(i[k]))); if (i.all_day) input.all_day = true; const r = await act("calendar_create_event", input); refresh("calendar_events", "activity_log"); rack.flash("icloud"); return r || { ok: true }; }) },
+    { name: "get_todos", description: "List Kiaan's open to-dos. Returns [{id,title,due,priority,project}].", execute: async () => run("Read to-dos", async () => demo ? state.tasks : (unwrap((await mcp.callTool(SERVER, "tasks_list", { status: "open" })).payload) || [])) },
+    { name: "add_todo", description: "Add a to-do. due is a date like 2026-11-02. priority: high | normal | low.", inputSchema: { type: "object", properties: { title: { type: "string" }, due: { type: "string" }, priority: { type: "string", enum: ["high", "normal", "low"] }, project: { type: "string" }, notes: { type: "string" } }, required: ["title"] },
+      execute: async i => run(`Added to-do "${i.title}"`, async () => { const input = { title: String(i.title) }; ["due", "priority", "project", "notes"].forEach(k => i[k] && (input[k] = String(i[k]))); const r = await act("tasks_add", input); if (demo) { state.tasks = [...state.tasks, { id: "s" + Date.now(), ...input }]; renderTasks(); } else refresh("tasks_list", "activity_log"); return r || { ok: true }; }) },
+    { name: "complete_todo", description: "Mark a to-do done by its id (get ids from get_todos).", inputSchema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
+      execute: async i => run("Marked to-do done", async () => { const r = await act("tasks_complete", { task_id: String(i.id) }); refresh("tasks_list"); rack.flash("icloud"); return r || { ok: true }; }) },
+    { name: "get_brightspace", description: "Read the latest Brightspace sync: courses (with overall grade), upcoming assignments with due dates and whether submitted, and recent grades.", execute: async () => run("Read Brightspace", async () => { const d = state.bsData; if (!d) throw new Error("No Brightspace data yet: the every-3-hours sync isn't set up or hasn't finished a run."); return { synced: d.syncedAt, courses: d.courses, upcoming: (d.assignments || []).filter(x => x.due && new Date(x.due) > Date.now()).sort((p, q) => new Date(p.due) - new Date(q.due)).slice(0, 25), recent_grades: (d.grades || []).slice(-40) }; }) },
+    { name: "server_health", description: "Check the server: running parts, CPU, memory, storage, uptime, cost. Returns plain data.", execute: async () => run("Checked server", async () => { const s = state.status; if (!s) throw new Error("No server data yet"); return { services: s.services.map(v => ({ name: SVC_NAMES[v.name] || v.name, running: v.status === "up" })), cpu_pct: s.cpu.pct, memory_pct: s.mem.pct, swap_pct: s.swap.pct, disk_pct: s.disk.pct, disk_free_gb: +(s.disk.total_gb - s.disk.used_gb).toFixed(1), uptime_days: Math.floor(s.uptime_s / 86400), monthly_cost: s.digitalocean?.price_monthly, brightspace: bsState().kind, issues: issues() }; }) },
+    { name: "list_automations", description: "List Kiaan's scheduled automations with id, name, schedule (plain English), on/off and last run result.", execute: async () => run("Read automations", async () => (state.autos || []).map(a => ({ id: a.id, name: a.name, on: a.enabled, schedule: a.run_once_at ? "once " + a.run_once_at : cronText(a.cron_expression), last_run: a.last_run?.status || "never" }))) },
+    { name: "create_automation", description: "Create a scheduled automation that Claude runs on its own. frequency: daily | weekdays | weekly | hours | once. time is HH:MM (24h, Boston). weekday 0-6 (0=Sunday) for weekly. every_hours for hours. date YYYY-MM-DD for once. instructions: what Claude should do each time, written as a full instruction.", inputSchema: { type: "object", properties: { name: { type: "string" }, instructions: { type: "string" }, frequency: { type: "string", enum: ["daily", "weekdays", "weekly", "hours", "once"] }, time: { type: "string" }, weekday: { type: "integer" }, every_hours: { type: "integer" }, date: { type: "string" } }, required: ["name", "instructions", "frequency"] },
+      execute: async i => run(`Created automation "${i.name}"`, async () => { const name = String(i.name).slice(0, 80); const sched = buildSchedule(String(i.frequency), String(i.time || "08:00"), Number(i.weekday ?? 1), String(i.date || nyDate(1)), clamp(Number(i.every_hours) || 6, 1, 24), name); await createAutomation({ name, instructions: String(i.instructions), schedule: sched }); rack.flash("auto"); return { ok: true, next_step: "Tell Kiaan: on claude.ai, edit this scheduled task and add the kiaan-cloud connector so it can reach his server.", schedule: sched.cron_expression ? cronText(sched.cron_expression) : "once at " + sched.run_once_at }; }) },
+    { name: "search_web", description: "Look something up on the live web (news, prices, opening hours, facts). Returns an answer with sources.", inputSchema: { type: "object", properties: { question: { type: "string" } }, required: ["question"] },
+      execute: async i => run("Searched the web", async () => { if (demo) return "Sample mode: no web search."; const r = await mcp.callTool(SERVER, "ask_perplexity", { question: String(i.question), depth: "fast" }); const p = unwrap(r.payload); return typeof p === "string" ? p.slice(0, 6000) : JSON.stringify(p).slice(0, 6000); }) },
+  ];
+}
+function rules() {
+  const cals = (state.calendars || []).map(c => JSON.stringify(c.name)).join(", ") || '"Personal "';
+  return `You are Cloud, the friendly assistant inside Kiaan's "Kiaan Cloud Island" page. Kiaan is a first-year student at Bentley University (Waltham, near Boston). Right now it is ${new Date().toLocaleString("en-US", { timeZone: TZ, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })} Boston time (today is ${nyDate(0)}).
+
+You can use tools to read and change his real Apple Calendar, to-do list and scheduled automations, check his server, and search the web.
+Rules:
+- Talk like a helpful friend: short, plain, no jargon. Use a short list only when listing several things.
+- When he asks you to add or schedule something, just do it with the tool, then confirm what you did in one line (what, when, where). Fill in sensible defaults (1 hour long, "Personal " calendar) instead of asking, unless the request is truly unclear.
+- Calendar names (use EXACTLY, including any trailing space): ${cals}.
+- Times are Boston local time. Write tool times like 2026-10-30T14:00:00.
+- You cannot delete calendar events or run commands on the server. If he wants to SSH or type server commands, tell him to tap "Open server terminal" in the Server room box (or run "ssh kiaan-cloud" on his Mac).
+- For automations: write the instructions as a complete, standalone task for a future Claude run. Confirm the schedule in plain words after creating.
+- Never invent results; if a tool fails, say what failed in plain words.`;
+}
+let chatCtl = null;
+async function sendChat(text) {
+  text = text.trim(); if (!text || chatBusy) return;
+  if (!sample) { addMsg("bot", "The assistant isn't available in this view. Open this page in Claude to chat."); return; }
+  turns.push({ role: "user", content: text }); saveTurns(); addMsg("user", esc(text));
+  const bubble = addMsg("bot", `<span class="thinking">Thinking…</span>`, true); const body = document.createElement("div"); bubble.prepend(body); bubble.querySelector(".thinking").remove(); body.innerHTML = `<span class="thinking">Thinking…</span>`;
+  chatBusy = true; $("chatSend").textContent = "Stop"; $("chatInput").value = ""; chatCtl = new AbortController();
+  try {
+    const { text: out, truncated } = await sample([{ role: "user", content: rules() }, ...turns.slice(-12)], { tools: chatTools(bubble), signal: chatCtl.signal, modelTier: "default", onText: ({ text }) => { body.innerHTML = md(text); $("chatLog").scrollTop = $("chatLog").scrollHeight; } });
+    body.innerHTML = md(out) + (truncated ? `<p class="thinking">(Cut short. Ask for less at a time.)</p>` : "");
+    turns.push({ role: "assistant", content: out }); saveTurns();
+  } catch (e) {
+    const msg = { cancelled: "Stopped.", not_granted: "You'll need to allow this page to use Claude for the chat to work.", sampling_disabled: "Claude isn't available on this account.", rate_limited: "Too many messages at once. Try again in a minute.", tools_unavailable: "This view can't run the assistant's actions.", refused: "I can't help with that one." }[e?.code] || "Something went wrong. Try again.";
+    body.innerHTML = (e?.text ? md(e.text) : "") + `<p class="thinking">${esc(msg)}</p>`;
+    if (e?.code === "not_granted" || e?.code === "sampling_disabled") { $("chatForm").hidden = true; $("chatChips").hidden = true; }
+  } finally { chatBusy = false; $("chatSend").textContent = "Send"; chatCtl = null; }
+}
+$("chatForm").addEventListener("submit", e => { e.preventDefault(); if (chatBusy) { chatCtl?.abort(); return; } sendChat($("chatInput").value); });
+$("chatInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chatForm").requestSubmit(); } });
+$("chatChips").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) sendChat(c.textContent); });
+
+/* ---------------- live data ---------------- */
+const RENDER = { status: renderStatus, activity: () => { renderActivity(); renderBrightspace(); renderSummary(); rack.refresh(); spawnFromActivity(); }, tasks: () => { renderTasks(); rack.refresh(); }, events: () => { renderEvents(); rack.refresh(); } };
+let seen = null;
+function spawnFromActivity() {
+  const a = state.activity; if (!a) return; const key = e => e.ts + "|" + e.msg;
+  if (seen === null) { seen = new Set(a.map(key)); a.slice(0, 2).reverse().forEach((e, i) => setTimeout(() => rack.pulse(e.source), 1500 + i * 1800)); return; }
+  a.forEach(e => { if (!seen.has(key(e))) { seen.add(key(e)); rack.pulse(e.source); } });
+}
+const DENY = new Set(["needs_reauth", "server_not_connected", "blocked_by_policy", "approval_required", "not_in_manifest", "selection_required", "server_not_found", "not_granted", "capability_disabled", "capability_removed"]);
+function onData(key, result) { state[key] = unwrap(result.payload ?? null); meta[key] = { at: result.cache?.storedAt ?? Date.now() }; RENDER[key](); updateBanner(); }
+function onErr(key, e) { meta[key] = { ...meta[key], code: e.code, err: connErr(e, "kiaan-cloud") }; if (DENY.has(e.code)) { state[key] = null; RENDER[key](); } updateBanner(); }
+function updateBanner() {
+  const b = $("banner");
+  if (demo) { b.className = "banner"; b.innerHTML = "<span>Showing sample numbers. Open this page in Claude, signed in with the kiaan-cloud connector added, to see your server live.</span>"; b.hidden = false; return; }
+  const errs = Object.values(meta).filter(m => m.code);
+  if (!errs.length) { b.hidden = true; renderSummary(); return; }
+  const texts = [...new Set(errs.map(e => e.err))];
+  b.className = "banner" + (errs.some(e => DENY.has(e.code)) ? " bad" : ""); b.innerHTML = `<span>${esc(texts.join(" "))}</span>`; b.hidden = false; renderSummary();
+}
+function startLive() {
+  const w = (key, tool, input, every) => mcp.watchTool(SERVER, tool, input, ev => ev.type === "data" ? onData(key, ev.result) : onErr(key, ev.error), { refetchInterval: every });
+  w("status", "server_status", null, 30000);
+  w("activity", "activity_log", { limit: 80 }, 30000);
+  w("tasks", "tasks_list", { status: "open" }, 60000);
+  w("events", "calendar_events", { start: "today", end: `${nyDate(2)}T00:00:00` }, 120000);
+  mcp.watchTool(SERVER, "calendar_list_calendars", null, ev => { if (ev.type === "data") { const c = unwrap(ev.result.payload); if (Array.isArray(c)) { state.calendars = c; renderCalendars(); } } }, { cache: { staleTime: 36e5, gcTime: 864e5 } });
+  mcp.watchTool(SERVER, "brief_list", null, ev => { if (ev.type === "data") { const c = unwrap(ev.result.payload); if (Array.isArray(c)) { state.briefs = c; renderBriefs(); } } }, { refetchInterval: 600000 });
+  mcp.watchTool(SERVER, "brief_get", { name: "brightspace-data", date: "2026-01-01" }, ev => { if (ev.type === "data") { state.bsData = parseBsData(unwrap(ev.result.payload)); renderBrightspace(); } }, { refetchInterval: 600000 });
+  loadAutos(); setInterval(loadAutos, 180000);
+}
+function startDemo() {
+  demo = true; $("demoTag").hidden = false;
+  const iso = ms => new Date(Date.now() - ms).toISOString(), at = (h, m) => `${nyDate(0)}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00${nyOffset(nyDate(0))}`;
+  state.status = { ip: "203.0.113.10", uptime_s: 3 * 86400, load: [.2, .2, .1], cpu: { pct: 14 }, mem: { pct: 46, used_mb: 900, total_mb: 1967 }, swap: { pct: 0, used_mb: 0, total_mb: 2047 }, disk: { pct: 21, used_gb: 9.8, total_gb: 47.4 },
+    services: ["kiaan-dashboard", "caddy", "ssh", "fail2ban", "cron", "kiaan-mcp", "hermes-gateway"].map(n => ({ name: n, status: "up" })), logins: [{ user: "sample", when: iso(864e5) }], cron: [],
+    digitalocean: { region: "sample", size: "s-1vcpu-2gb", vcpus: 1, memory_mb: 2048, disk_gb: 50, image: "24.04 (LTS) x64", price_monthly: 12, month_to_date_usage: "3.00" } };
+  meta.status = { at: Date.now() };
+  state.activity = [{ ts: iso(6e4), source: "dashboard", msg: "dashboard started" }, { ts: iso(36e5), source: "calendar", msg: "created event 'Sample study block' in Personal " }];
+  state.tasks = [{ id: "s1", title: "Sample to-do", priority: "high", due: nyDate(2) }];
+  state.events = [{ uid: "e1", title: "Sample class", start: at(15, 30), end: at(16, 50), all_day: false, calendar: "Sample" }, { uid: "e2", title: "Sample gym session", start: at(20, 0), end: at(21, 0), all_day: false, calendar: "Sample" }];
+  state.calendars = [{ name: "Sample" }]; state.briefs = [`${nyDate(0)}_sample-brief.md`];
+  state.autos = [{ id: "a1", name: "Sample morning brief", enabled: true, cron_expression: "CRON_TZ=America/New_York 23 7 * * *", next_run_at: new Date(Date.now() + 5 * 36e5).toISOString(), last_run: { status: "SUCCEEDED", finished_at: iso(864e5) }, connectors: 1 }, { id: "a2", name: "Brightspace sync", enabled: true, cron_expression: "51 */3 * * *", next_run_at: new Date(Date.now() + 2 * 36e5).toISOString(), connectors: 1 }];
+  state.activity.unshift({ ts: iso(30 * 6e4), source: "brightspace", msg: "Sync OK: 5 courses, 24 assignments (2 new), 31 grades, 2 to-dos added" });
+  state.bsData = { syncedAt: iso(30 * 6e4), courses: [{ id: "1", name: "Sample Course A", code: "SMP-101", final: "A-" }], assignments: [{ course: "Sample Course A", title: "Sample assignment", due: new Date(Date.now() + 2 * 864e5).toISOString(), submitted: false }], grades: [] };
+  renderStatus(); renderActivity(); renderBrightspace(); renderTasks(); renderEvents(); renderCalendars(); renderBriefs(); renderAutos(); updateBanner(); rack.refresh();
+}
+
+/* clock + boot */
+setInterval(() => { const { h, m } = nyParts(); $("clock").textContent = `Boston ${hm12(h, m)}`; if (state.events) renderEvents(); if (!demo && meta.status.at) $("sub").textContent = `Live · checked ${ago(meta.status.at)}`; }, 15000);
+{ const { h, m } = nyParts(); $("clock").textContent = `Boston ${hm12(h, m)}`; }
+renderChatHistory(); renderBrightspace(); renderAutos(); renderBriefs(); renderCalendars(); freqUI();
+(async () => {
+  const C = window.claude && typeof window.claude.use === "function" ? window.claude : null;
+  try { [mcp, sample] = C ? await Promise.all([C.use("mcp"), C.use("sample")]) : [null, null]; } catch { mcp = null; }
+  if (!sample) { $("chatForm").hidden = true; $("chatChips").hidden = true; }
+  if (!mcp) { startDemo(); return; }
+  startLive();
+})();
+})();
+</script>
