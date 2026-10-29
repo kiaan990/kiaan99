@@ -1,0 +1,1144 @@
+<title>Kiaan Cloud Island</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&family=DM+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<style>
+/* Layout: a dusk sky-island game screen. Island + chat side by side, then a grid of plain-language cards. One committed dark dusk look. */
+:root {
+  color-scheme: dark;
+  --bg: #110d26;
+  --bg-2: #171236;
+  --panel: #1b1640;
+  --panel-2: #241d52;
+  --line: #352c6e;
+  --ink: #f5f1ff;
+  --muted: #a99fd6;
+  --sun: #ffb36b;
+  --aqua: #5eecd2;
+  --good: #5ef2a0;
+  --warn: #ffd04d;
+  --bad: #ff6b8b;
+  --f-display: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --f-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "DM Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 18px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.5; background: radial-gradient(1200px 600px at 70% -10%, #3a2470 0%, transparent 60%), radial-gradient(900px 500px at 0% 10%, #1e3a6e 0%, transparent 55%), var(--bg); background-attachment: fixed; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.app { max-width: 1240px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+a { color: var(--aqua); }
+button { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--aqua); outline-offset: 2px; }
+
+/* header */
+header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(160deg, var(--sun), #ff6b8b 60%, #7b4dff); display: grid; place-items: center; box-shadow: 0 6px 20px rgba(255,107,139,.35); }
+.logo svg { width: 28px; height: 28px; }
+h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 4.4vw, 38px); line-height: 1; margin: 0; letter-spacing: .01em; }
+h1 span { color: var(--sun); }
+.sub { font-size: 13px; color: var(--muted); }
+.status-chip { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-weight: 800; }
+.status-chip .dot { width: 12px; height: 12px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; display: inline-block; }
+.dot.good { background: var(--good); box-shadow: 0 0 10px var(--good); }
+.dot.warn { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+.dot.bad { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+.live .dot { animation: pulse 2s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.banner { border-radius: 14px; padding: 12px 16px; background: #2b2150; border: 1px solid var(--warn); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.banner.bad { border-color: var(--bad); }
+
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+.card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.card h2 { font-family: var(--f-display); font-weight: 400; font-size: 21px; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: .01em; }
+.card h2 .ico { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; flex: none; }
+.card h2 small { margin-left: auto; font: 500 12px var(--f-data); color: var(--muted); letter-spacing: 0; }
+.explain { font-size: 13px; color: var(--muted); margin: -4px 0 0; }
+.world { padding: 0; overflow: hidden; gap: 0; }
+.stage { position: relative; }
+canvas#world { display: block; width: 100%; height: auto; aspect-ratio: 400 / 250; image-rendering: pixelated; cursor: pointer; max-width: 100%; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.pin { position: absolute; transform: translate(-50%, -100%); pointer-events: auto; display: inline-flex; align-items: center; gap: 5px; font: 700 11px var(--f-body); color: var(--ink); background: rgba(17,13,38,.78); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 2px 8px 2px 6px; cursor: pointer; white-space: nowrap; backdrop-filter: blur(4px); }
+.pin .dot { width: 7px; height: 7px; }
+.pin[aria-pressed="true"] { border-color: var(--sun); color: var(--sun); }
+.bubble { position: absolute; transform: translate(-50%, calc(-100% - 6px)); max-width: 220px; font: 600 12px/1.3 var(--f-body); background: #fff7ea; color: #241a10; border-radius: 10px; padding: 5px 9px; pointer-events: none; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.bubble b { display: block; font: 500 10px var(--f-data); text-transform: uppercase; letter-spacing: .05em; color: #a1561a; }
+.toast { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); font: 400 17px var(--f-display); color: #241a10; background: var(--sun); border-radius: 12px; padding: 7px 16px; box-shadow: 0 5px 0 rgba(0,0,0,.35); pointer-events: none; white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
+.clock { position: absolute; right: max(10px, env(safe-area-inset-right, 0px)); top: 10px; font: 500 12px var(--f-data); background: rgba(17,13,38,.7); border-radius: 999px; padding: 3px 10px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.demo-tag { position: absolute; left: 10px; top: 10px; font: 800 11px var(--f-body); color: #241a10; background: var(--warn); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+.vitals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 14px 16px 16px; border-top: 1px solid var(--line); }
+.vital { min-width: 0; display: grid; gap: 4px; }
+.vital .k { font-size: 12px; color: var(--muted); font-weight: 600; }
+.vital .v { font-weight: 800; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter { height: 8px; border-radius: 999px; background: #0e0a22; overflow: hidden; }
+.meter > i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--good); transition: width .8s ease; }
+.meter.warn > i { background: var(--warn); } .meter.bad > i { background: var(--bad); }
+
+/* inspector inside world card */
+.inspect { padding: 14px 16px 16px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+.inspect h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 20px; color: var(--sun); }
+.inspect p { margin: 0; max-width: 70ch; }
+.state { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--panel-2); width: fit-content; }
+
+/* chat */
+.chat { min-height: 420px; }
+.chat-log { flex: 1; min-height: 220px; max-height: 470px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.msg { max-width: 92%; padding: 9px 13px; border-radius: 16px; font-size: 14px; overflow-wrap: anywhere; }
+.msg.me { align-self: flex-end; background: linear-gradient(160deg, #7b4dff, #5b3bd6); border-bottom-right-radius: 4px; }
+.msg.bot { align-self: flex-start; background: var(--panel-2); border-bottom-left-radius: 4px; }
+.msg.bot p { margin: 0 0 6px; } .msg.bot p:last-child { margin: 0; }
+.msg.bot ul { margin: 4px 0; padding-left: 18px; }
+.msg .acts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.act-chip { font: 500 11px var(--f-data); background: rgba(94,236,210,.12); color: var(--aqua); border: 1px solid rgba(94,236,210,.35); border-radius: 999px; padding: 1px 8px; }
+.act-chip.err { color: var(--bad); border-color: rgba(255,107,139,.4); background: rgba(255,107,139,.1); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 700 12.5px var(--f-body); color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--aqua); }
+.chat-form { display: flex; gap: 8px; }
+.chat-form textarea { flex: 1; min-width: 0; resize: none; height: 46px; font: 14px var(--f-body); color: var(--ink); background: #0e0a22; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.btn { font: 800 14px var(--f-body); color: #241a10; background: var(--sun); border: 0; border-radius: 12px; padding: 9px 16px; cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.ghost { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
+.btn.small { font-size: 12.5px; padding: 5px 11px; border-radius: 10px; }
+.btn.danger { background: var(--bad); color: #fff; }
+.btn:disabled { opacity: .5; cursor: progress; }
+.thinking { color: var(--muted); font-style: italic; }
+
+/* grid of cards */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.span-2 { grid-column: span 2; }
+ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 360px; overflow-y: auto; }
+ul.list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 10px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; }
+ul.list li.now { border-color: var(--sun); background: rgba(255,179,107,.08); }
+ul.list .t { font-weight: 700; overflow-wrap: anywhere; }
+ul.list .s { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
+ul.list .when { font: 500 12px var(--f-data); color: var(--aqua); white-space: nowrap; text-align: right; min-width: 64px; }
+.tag { font: 500 10.5px var(--f-data); padding: 1px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+.tag.high { background: var(--bad); color: #fff; }
+.row-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.empty { color: var(--muted); font-size: 13.5px; padding: 6px 2px; }
+details.add { border: 1px dashed var(--line); border-radius: 14px; padding: 2px 12px; }
+details.add[open] { padding-bottom: 12px; }
+details.add summary { cursor: pointer; font-weight: 800; padding: 8px 0; color: var(--aqua); list-style: none; }
+details.add summary::-webkit-details-marker { display: none; }
+form.f { display: grid; gap: 8px; }
+form.f .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+form.f label { display: grid; gap: 3px; min-width: 0; flex: 1 1 120px; }
+form.f label.grow { flex: 2 1 200px; }
+form.f label > span { font-size: 12px; font-weight: 700; color: var(--muted); }
+form.f label.check { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; padding-bottom: 8px; }
+form.f label.check span { color: var(--ink); font-weight: 600; }
+form.f input:not([type=checkbox]), form.f select, form.f textarea { font: 14px var(--f-body); color: var(--ink); background: #0e0a22; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; width: 100%; min-width: 0; }
+form.f textarea { resize: vertical; min-height: 70px; }
+.formmsg { margin: 0; font-size: 13px; color: var(--muted); }
+.formmsg.ok { color: var(--good); } .formmsg.err { color: var(--bad); } .formmsg:empty { display: none; }
+.kv { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; font-size: 13.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+.big-status { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--panel-2); }
+.big-status .dot { width: 14px; height: 14px; }
+.big-status b { display: block; font-size: 16px; }
+.big-status span { font-size: 13px; color: var(--muted); }
+.code-box { border: 2px solid var(--warn); border-radius: 14px; padding: 12px; display: grid; gap: 8px; background: rgba(255,208,77,.07); }
+.code-box.off { border-style: dashed; border-color: var(--line); background: transparent; opacity: .75; }
+.code-box input { font: 500 22px var(--f-data); letter-spacing: .3em; text-align: center; width: 100%; max-width: 220px; background: #0e0a22; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.code-box .num { font: 400 46px var(--f-display); color: var(--warn); line-height: 1; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.checks li::before { content: "✓ "; color: var(--good); font-weight: 800; }
+.svc { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 8px; align-items: center; font-size: 13.5px; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.07); }
+.svc small { color: var(--muted); font-family: var(--f-data); font-size: 11px; }
+.copy { display: flex; gap: 6px; align-items: center; }
+.copy code { font: 500 13px var(--f-data); background: #0e0a22; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; }
+.reader { max-height: 420px; overflow: auto; background: #0e0a22; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; }
+.reader table { border-collapse: collapse; font-size: 12.5px; }
+.reader th, .reader td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; }
+.reader h1, .reader h2, .reader h3 { font-family: var(--f-display); font-weight: 400; color: var(--sun); margin: 10px 0 6px; font-size: 18px; }
+.reader-wrap { overflow-x: auto; }
+.brief-days { display: grid; gap: 8px; }
+.brief-day { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.brief-day b { font: 500 12px var(--f-data); color: var(--muted); min-width: 64px; }
+.foot { font-size: 12.5px; color: var(--muted); max-width: 90ch; }
+
+@media (max-width: 980px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .span-2 { grid-column: auto; }
+  .vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pin .lbl { display: none; }
+  .pin { padding: 4px; }
+  .bubble { max-width: 160px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .live .dot { animation: none; } .meter > i { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 18h10a4 4 0 0 0 .6-7.96A5.5 5.5 0 0 0 7.1 9.1 4.5 4.5 0 0 0 7 18Z" fill="#fff"/><path d="M9 21l3-3 3 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div>
+        <h1>Kiaan <span>Cloud</span> Island</h1>
+        <div class="sub" id="sub">Your own computer in the cloud, shown as a little island.</div>
+      </div>
+    </div>
+    <div class="status-chip" id="statusChip"><span class="dot"></span><span id="statusText">Connecting…</span></div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="hero">
+    <article class="card world">
+      <div class="stage">
+        <canvas id="world" width="400" height="250" role="img" aria-label="Your server drawn as a floating island. Each building is one part of the server. Tap one to learn what it does."></canvas>
+        <div class="overlay" id="overlay">
+          <div class="clock" id="clock">Boston –</div>
+          <div class="demo-tag" id="demoTag" hidden>Sample data</div>
+        </div>
+      </div>
+      <div class="vitals" aria-label="Server health">
+        <div class="vital"><span class="k">Thinking power (CPU)</span><span class="v" id="v-cpu">–</span><div class="meter" id="m-cpu"><i></i></div></div>
+        <div class="vital"><span class="k">Short-term memory (RAM)</span><span class="v" id="v-mem">–</span><div class="meter" id="m-mem"><i></i></div></div>
+        <div class="vital"><span class="k">Storage space</span><span class="v" id="v-disk">–</span><div class="meter" id="m-disk"><i></i></div></div>
+        <div class="vital"><span class="k">Next on your calendar</span><span class="v" id="v-next">–</span><span class="k" id="v-next2"></span></div>
+      </div>
+      <div class="inspect" id="inspect" aria-live="polite"></div>
+    </article>
+
+    <article class="card chat" id="chatCard">
+      <h2><span class="ico" style="background:linear-gradient(160deg,#7b4dff,#ff6b8b)">✦</span>Ask Cloud <small>your assistant</small></h2>
+      <p class="explain">Type like you're texting. It can add to-dos and calendar events, set up automations, check your server and look things up.</p>
+      <div class="chat-log" id="chatLog" aria-live="polite"></div>
+      <div class="chips" id="chatChips">
+        <button class="chip" type="button">What's on today?</button>
+        <button class="chip" type="button">Add a to-do: finish CS 230 P3 by Sunday</button>
+        <button class="chip" type="button">Is my server OK?</button>
+        <button class="chip" type="button">Every weekday at 8am, text me my first class</button>
+      </div>
+      <form class="chat-form" id="chatForm" autocomplete="off">
+        <textarea id="chatInput" placeholder="Ask anything…" aria-label="Message"></textarea>
+        <button class="btn" id="chatSend" type="submit">Send</button>
+      </form>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card" id="todayCard">
+      <h2><span class="ico" style="background:#ff8a5c33">📅</span>Today &amp; tomorrow <small id="calMeta"></small></h2>
+      <ul class="list" id="calList"><li class="empty">Loading your calendar…</li></ul>
+      <details class="add">
+        <summary>＋ Add to Apple Calendar</summary>
+        <form class="f" id="eventForm">
+          <label class="grow"><span>What</span><input id="eTitle" required maxlength="200" placeholder="Study for ST 113"></label>
+          <div class="row">
+            <label><span>Day</span><input id="eDate" type="date" required></label>
+            <label><span>From</span><input id="eStart" type="time" value="18:00"></label>
+            <label><span>To</span><input id="eEnd" type="time" value="19:00"></label>
+          </div>
+          <div class="row">
+            <label><span>Calendar</span><select id="eCal"><option value="Personal ">Personal</option></select></label>
+            <label class="check"><input id="eAllDay" type="checkbox"><span>All day</span></label>
+            <button class="btn" type="submit" id="eSubmit">Add</button>
+          </div>
+          <p class="formmsg" id="eMsg" role="status"></p>
+        </form>
+      </details>
+    </article>
+
+    <article class="card" id="todoCard">
+      <h2><span class="ico" style="background:#5ef2a033">✅</span>To-do list <small id="taskMeta"></small></h2>
+      <ul class="list" id="taskList"><li class="empty">Loading…</li></ul>
+      <details class="add">
+        <summary>＋ Add a to-do</summary>
+        <form class="f" id="taskForm">
+          <label class="grow"><span>What needs doing</span><input id="tTitle" required maxlength="200" placeholder="Submit FI 118 stock analysis"></label>
+          <div class="row">
+            <label><span>Due</span><input id="tDue" type="date"></label>
+            <label><span>Importance</span><select id="tPri"><option value="high">High</option><option value="normal" selected>Normal</option><option value="low">Low</option></select></label>
+            <button class="btn" type="submit" id="tSubmit">Add</button>
+          </div>
+          <p class="formmsg" id="tMsg" role="status"></p>
+        </form>
+      </details>
+    </article>
+
+    <article class="card" id="bsCard">
+      <h2><span class="ico" style="background:#ffd04d33">🎓</span>Brightspace sync <small>school portal</small></h2>
+      <p class="explain">A robot that logs into Brightspace for you and copies your courses, due dates and grades.</p>
+      <div class="big-status" id="bsStatus"><span class="dot"></span><div><b>Checking…</b><span></span></div></div>
+      <dl class="kv" id="bsKv"></dl>
+      <div class="code-box off" id="bsCode"></div>
+      <details class="add">
+        <summary>What it checks</summary>
+        <ul class="checks">
+          <li>Your enrolled courses (up to 10)</li>
+          <li>Assignments in each course's Dropbox, with due dates and whether you submitted</li>
+          <li>Your grades for each graded item, with weights</li>
+        </ul>
+        <p class="explain" style="margin-top:8px">It signs in with your Bentley Microsoft account, so it sometimes needs your Microsoft Authenticator code. When it does, a box appears above for you to type it.</p>
+      </details>
+    </article>
+
+    <article class="card span-2" id="autoCard">
+      <h2><span class="ico" style="background:#5eecd233">⏰</span>Automations <small id="autoMeta"></small></h2>
+      <p class="explain">Jobs Claude does for you on a schedule, like your morning brief. Each one runs on its own and can use your server, calendar and to-do list.</p>
+      <ul class="list" id="autoList"><li class="empty">Loading your automations…</li></ul>
+      <details class="add" id="autoAdd">
+        <summary>＋ New automation</summary>
+        <form class="f" id="autoForm">
+          <label class="grow"><span>Name</span><input id="aName" required maxlength="80" placeholder="Sunday week planner"></label>
+          <label class="grow"><span>What should Claude do? Write it like you'd tell a friend.</span><textarea id="aWhat" required maxlength="4000" placeholder="Look at my calendar for next week and add 2-hour study blocks before every exam. Add a to-do for anything due."></textarea></label>
+          <div class="row">
+            <label><span>How often</span><select id="aFreq"><option value="daily">Every day</option><option value="weekdays">Weekdays (Mon–Fri)</option><option value="weekly">Once a week</option><option value="hours">Every few hours</option><option value="once">Just once</option></select></label>
+            <label id="aDayL" hidden><span>Day</span><select id="aDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></label>
+            <label id="aDateL" hidden><span>Date</span><input id="aDate" type="date"></label>
+            <label id="aTimeL"><span>Time</span><input id="aTime" type="time" value="08:00"></label>
+            <label id="aHoursL" hidden><span>Every</span><select id="aHours"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="6" selected>6 hours</option><option value="12">12 hours</option></select></label>
+          </div>
+          <div class="row">
+            <label class="check"><input id="aPush" type="checkbox" checked><span>Notify my phone when it runs</span></label>
+            <button class="btn" type="submit" id="aSubmit">Create automation</button>
+          </div>
+          <p class="formmsg" id="aMsg" role="status"></p>
+        </form>
+      </details>
+    </article>
+
+    <article class="card" id="serverCard">
+      <h2><span class="ico" style="background:#7b4dff44">🖥️</span>Server room</h2>
+      <div class="big-status" id="srvStatus"><span class="dot"></span><div><b>Checking…</b><span></span></div></div>
+      <div id="svcList"></div>
+      <div style="display:grid;gap:8px">
+        <a class="btn" id="termBtn" href="https://cloud.digitalocean.com/droplets" target="_blank" rel="noopener">Open server terminal ↗</a>
+        <span class="explain">Opens a secure command line in DigitalOcean (you sign in there). From your Mac you can also type:</span>
+        <div class="copy"><code id="sshCmd">ssh kiaan-cloud</code><button class="btn ghost small" type="button" id="copySsh">Copy</button></div>
+      </div>
+      <details class="add">
+        <summary>More details</summary>
+        <dl class="kv" id="srvKv"></dl>
+      </details>
+    </article>
+
+    <article class="card" id="actCard">
+      <h2><span class="ico" style="background:#ff6b8b33">📜</span>What happened lately</h2>
+      <ul class="list" id="actList"><li class="empty">Loading…</li></ul>
+    </article>
+
+    <article class="card" id="briefCard">
+      <h2><span class="ico" style="background:#ffb36b33">📰</span>Saved reads <small>briefs</small></h2>
+      <p class="explain">Reports your automations saved, like the AI brief. Tap one to read it.</p>
+      <div class="brief-days" id="briefDays"><span class="empty">Loading…</span></div>
+      <div class="reader-wrap"><div class="reader" id="reader" hidden></div></div>
+    </article>
+  </section>
+
+  <p class="foot">Everything here is live from your server and refreshes on its own. Buildings light up when their part of the server is running. Smoke and a red alert mean something stopped. The sky follows Boston time. Changes you make here (to-dos, calendar events, automations) are real.</p>
+</div>
+
+<script>
+(() => {
+const SERVER = "kiaan-cloud";
+const REMOTE = "Claude Code Remote";
+const W = 400, H = 250;
+const cv = document.getElementById("world");
+const ctx = cv.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+const overlay = document.getElementById("overlay");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const md = s => { try { return DOMPurify.sanitize(marked.parse(String(s || ""), { breaks: true })); } catch { return esc(s).replace(/\n/g, "<br>"); } };
+
+/* ---------------- state ---------------- */
+const state = { status: null, activity: null, tasks: null, events: null, calendars: null, briefs: null, autos: null };
+const meta = { status: {}, activity: {}, tasks: {}, events: {} };
+let mcp = null, sample = null, demo = false, selected = "island";
+
+/* ---------------- time helpers ---------------- */
+const TZ = "America/New_York";
+function nyParts(d = new Date()) {
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" }).formatToParts(d);
+  const g = t => +p.find(x => x.type === t).value; return { h: g("hour"), m: g("minute"), s: g("second") };
+}
+const nyDate = (offsetDays = 0) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(Date.now() + offsetDays * 864e5));
+const fmtNY = (iso, opts) => { const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleString("en-US", { timeZone: TZ, ...opts }); };
+const fmtTime = iso => fmtNY(iso, { hour: "numeric", minute: "2-digit" });
+function nyOffset(dateStr) {
+  const d = new Date(dateStr + "T12:00:00Z");
+  const name = new Intl.DateTimeFormat("en-US", { timeZone: TZ, timeZoneName: "shortOffset" }).formatToParts(d).find(p => p.type === "timeZoneName")?.value || "GMT-5";
+  const m = name.match(/GMT([+-])(\d+)(?::(\d+))?/); if (!m) return "-05:00";
+  return `${m[1]}${m[2].padStart(2, "0")}:${(m[3] || "00").padStart(2, "0")}`;
+}
+function ago(ms) {
+  const s = Math.round((Date.now() - ms) / 1000);
+  if (s < 0) return inTime(-s * 1000);
+  if (s < 60) return "just now"; const m = Math.round(s / 60); if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 36) return h + " h ago"; return Math.round(h / 24) + " days ago";
+}
+function inTime(ms) {
+  const m = Math.round(ms / 60000); if (m < 1) return "now"; if (m < 60) return `in ${m} min`;
+  const h = Math.floor(m / 60), r = m % 60; if (h < 24) return `in ${h}h${r ? " " + r + "m" : ""}`; return `in ${Math.round(h / 24)} days`;
+}
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+function hm12(h, m) { const d = new Date(2000, 0, 1, h, m); return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); }
+function cronText(expr) {
+  if (!expr) return "No schedule (runs only when started)";
+  let tz = null, e = expr.trim();
+  const tzm = e.match(/^CRON_TZ=(\S+)\s+(.*)$/); if (tzm) { tz = tzm[1]; e = tzm[2]; }
+  const [mi, hr, dom, mon, dow] = e.split(/\s+/);
+  if (hr && hr.startsWith("*/")) return `Every ${hr.slice(2)} hours`;
+  if (hr === "*") return "Every hour";
+  if (!/^\d+$/.test(mi) || !/^\d+$/.test(hr)) return expr;
+  let h = +hr, m = +mi, note = "";
+  if (!tz) { const n = new Date(); const p = nyParts(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), h, m))); h = p.h; m = p.m; note = " Boston time"; }
+  const t = hm12(h, m) + note;
+  if (dom !== "*" || mon !== "*") return `${expr}`;
+  if (dow === "*") return `Every day at ${t}`;
+  if (dow === "1-5") return `Weekdays at ${t}`;
+  if (dow === "0,6" || dow === "6,0") return `Weekends at ${t}`;
+  if (/^\d$/.test(dow)) return `Every ${DAYS[+dow % 7]} at ${t}`;
+  return `${t} (${dow})`;
+}
+function jitter(h, m, name) {
+  if (m !== 0 && m !== 30) return [h, m];
+  let tot = h * 60 + m - ((name.length % 15) + 1); if (tot < 0) tot += 1440;
+  return [Math.floor(tot / 60), tot % 60];
+}
+
+/* ---------------- helpers ---------------- */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t) { const A = hex2rgb(a), Bc = hex2rgb(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, Bc[i], t))).join(",")})`; }
+function R(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function disc(cx, cy, r, c, topOnly) { for (let dy = -r; dy <= (topOnly ? 0 : r); dy++) { const dx = Math.floor(Math.sqrt(r * r - dy * dy)); R(cx - dx, cy + dy, dx * 2 + 1, 1, c); } }
+function roof(x, y, w, h, c) { for (let i = 0; i < h; i++) { const inset = (h - i - 1) * (w / 2) / h; R(x + inset, y + i, w - 2 * inset, 1, c); } }
+function ellipseFill(cx, cy, rx, ry, c) { for (let dy = -ry; dy <= ry; dy++) { const dx = Math.floor(rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry)))); R(cx - dx, cy + dy, dx * 2, 1, c); } }
+const onIsland = (x, y) => ((x - 200) / 165) ** 2 + ((y - 140) / 52) ** 2 < 1;
+const svcState = name => { const s = state.status?.services?.find(v => v.name === name); return s ? s.status : null; };
+const pctClass = (p, warn = 70, bad = 88) => p >= bad ? "bad" : p >= warn ? "warn" : "good";
+const unwrap = p => { if (typeof p === "string") { try { p = JSON.parse(p); } catch { return p; } } return p && typeof p === "object" && "result" in p && Object.keys(p).length === 1 ? p.result : p; };
+
+/* ---------------- Brightspace state ---------------- */
+function bsEntries() { return (state.activity || []).filter(e => /brightspace|d2l/i.test(e.source || "") && !/mfa/i.test(e.source || "")); }
+function bsState() {
+  const es = bsEntries(); if (!state.activity) return { kind: "loading" };
+  if (!es.length) return { kind: "never" };
+  const last = es[0], msg = last.msg || "";
+  const sent = (state.activity || []).find(e => /brightspace-mfa/i.test(e.source || ""));
+  const answered = sent && new Date(sent.ts) > new Date(last.ts);
+  let m;
+  if ((m = msg.match(/APPROVE_NUMBER[:=\s]+(\d+)/i))) return { kind: answered ? "waiting" : "approve", num: m[1], last };
+  if (/NEEDS_CODE/i.test(msg) || last.level === "needs_code") return { kind: answered ? "waiting" : "code", last };
+  if (last.level === "error" || /fail|error/i.test(msg)) return { kind: "error", last };
+  return { kind: "ok", last };
+}
+
+/* ---------------- buildings ---------------- */
+const B = [
+  { id: "tower",    svc: "fail2ban",        name: "Security guard",  short: "Guard",      x: 46,  y: 110, w: 26, h: 64 },
+  { id: "obs",      svc: "kiaan-dashboard", name: "Your dashboard",  short: "Dashboard",  x: 100, y: 112, w: 34, h: 40 },
+  { id: "clock",    svc: "cron",            name: "Timer tower",     short: "Timer",      x: 155, y: 108, w: 24, h: 70 },
+  { id: "school",   svc: null,              name: "Brightspace sync",short: "Brightspace",x: 215, y: 110, w: 40, h: 46 },
+  { id: "aviary",   svc: "hermes-gateway",  name: "WhatsApp bot",    short: "WhatsApp",   x: 278, y: 112, w: 30, h: 30 },
+  { id: "workshop", svc: "kiaan-mcp",       name: "Claude link",     short: "Claude link",x: 340, y: 114, w: 34, h: 54 },
+  { id: "gate",     svc: "caddy",           name: "Front gate",      short: "Front gate", x: 44,  y: 160, w: 34, h: 38 },
+  { id: "door",     svc: "ssh",             name: "Login door",      short: "Login door", x: 90,  y: 166, w: 22, h: 24 },
+  { id: "forge",    svc: null,              name: "Thinking forge",  short: "CPU",        x: 136, y: 168, w: 32, h: 36 },
+  { id: "hall",     svc: null,              name: "Town hall",       short: "Calendar",   x: 196, y: 170, w: 50, h: 40 },
+  { id: "mill",     svc: null,              name: "Automation mill", short: "Automations",x: 254, y: 168, w: 30, h: 50 },
+  { id: "water",    svc: null,              name: "Memory tank",     short: "Memory",     x: 302, y: 172, w: 34, h: 54 },
+  { id: "ware",     svc: null,              name: "Storage barn",    short: "Storage",    x: 352, y: 166, w: 40, h: 38 },
+];
+const byId = Object.fromEntries(B.map(b => [b.id, b]));
+const isUp = b => !b.svc || !state.status || svcState(b.svc) === "up";
+const ABOUT = {
+  island: ["Your server", "This whole island is your server: a small computer that DigitalOcean runs for you 24/7 in New York. Tap any building to see what it does."],
+  tower: ["Security guard (fail2ban)", "Watches the login door and blocks anyone who keeps guessing passwords. The flag flies while it's on duty."],
+  obs: ["Your dashboard", "Your personal Command Center website. Lit windows mean it's up and reachable."],
+  clock: ["Timer tower (cron)", "The server's built-in alarm clock. It can run jobs on a schedule right on the server. The clock shows Boston time."],
+  school: ["Brightspace sync", "The robot that copies your courses, due dates and grades from Brightspace. See the Brightspace box below for its status."],
+  aviary: ["WhatsApp bot (Hermes)", "Your WhatsApp assistant. The birds fly while it's running."],
+  workshop: ["Claude link", "The connection that lets Claude (and this page) use your calendar, to-dos and server. The antenna broadcasts while it's on."],
+  gate: ["Front gate (Caddy)", "Lets visitors from the internet in safely, and handles the padlock (HTTPS) on your websites. Blue dots are visitors passing through."],
+  door: ["Login door (SSH)", "How you log into the server's command line. Each hot-air balloon is a login from the last 7 days."],
+  forge: ["Thinking forge (CPU)", "How hard the server's brain is working right now. A bigger fire means it's busier."],
+  hall: ["Town hall", "Where news arrives. The banner lights up when you have events today. Notes on the board are open to-dos."],
+  mill: ["Automation mill", "Spins while you have automations switched on. Each lit blade is one active automation."],
+  water: ["Memory tank (RAM)", "Short-term memory for running programs. If it fills up, things slow down. The small barrel is overflow memory (swap)."],
+  ware: ["Storage barn (disk)", "Where your files live. Each crate is about 1/12 of your space."],
+};
+
+/* ---------------- world drawing ---------------- */
+let dayFactor = 1, lights = [];
+const particles = [], couriers = [];
+const clouds = Array.from({ length: 7 }, (_, i) => ({ x: i * 64 + Math.random() * 40, y: 8 + Math.random() * 50, w: 22 + Math.random() * 30 }));
+const lowClouds = Array.from({ length: 9 }, (_, i) => ({ x: i * 50 + Math.random() * 30, y: 205 + Math.random() * 40, w: 40 + Math.random() * 40 }));
+const stars = Array.from({ length: 80 }, () => [Math.random() * W, Math.random() * 150, Math.random()]);
+const rain = Array.from({ length: 90 }, () => [Math.random() * W, Math.random() * H]);
+function light(x, y, w, h, c = "#ffd36b") { lights.push([x, y, w, h, c]); }
+function win(x, y, w, h, on) { if (on) light(x, y, w, h); else R(x, y, w, h, "#2a2550"); }
+const wall = (b, c) => isUp(b) ? c : "#555a6e";
+function alertMark(b, t, col = "#ff6b8b") { const blink = Math.floor(t / 400) % 2; R(b.x - 2, b.y - b.h - 12, 5, 8, blink ? col : "#7a2a40"); R(b.x, b.y - b.h - 10, 1, 3, "#fff"); R(b.x, b.y - b.h - 6, 1, 1, "#fff"); }
+function downFx(b, t) {
+  if (isUp(b)) return;
+  if (!reduced && Math.random() < 0.25) particles.push({ x: b.x + (Math.random() - .5) * 8, y: b.y - b.h + 4, vx: (Math.random() - .5) * .1, vy: -.18, life: 90, c: "#5b6077", s: 3 });
+  alertMark(b, t);
+}
+const activeAutos = () => (state.autos || []).filter(a => a.enabled).length;
+
+const DRAW = {
+  tower(b, t) { const { x, y } = b, up = isUp(b);
+    R(x - 9, y - 32, 3, 32, "#6b4a2b"); R(x + 6, y - 32, 3, 32, "#6b4a2b"); for (let i = 0; i < 3; i++) R(x - 8, y - 8 - i * 10, 16, 2, "#5a3d22");
+    R(x - 11, y - 46, 22, 14, wall(b, "#8c6a46")); R(x - 12, y - 33, 24, 2, "#5a3d22"); win(x - 6, y - 42, 12, 6, up);
+    roof(x - 13, y - 56, 26, 10, "#7a2e5a"); R(x, y - 64, 1, 8, "#cfd3e6");
+    for (let i = 0; i < 4; i++) { const off = up && !reduced ? Math.round(Math.sin(t / 250 + i)) : 0; R(x + 1, y - 64 + i, 7 + off, 1, up ? "#ff6b8b" : "#666"); } },
+  obs(b, t) { const { x, y } = b, up = isUp(b);
+    R(x - 15, y - 20, 30, 20, wall(b, "#cfd2ee")); disc(x, y - 20, 13, up ? "#8a9be0" : "#666", true); R(x - 1, y - 33, 3, 13, "#1b2140");
+    const a = up ? Math.sin(t / 3000) * .5 - .9 : -.6; for (let i = 0; i < 10; i++) R(x + 1 + Math.cos(a) * i, y - 30 + Math.sin(a) * i, 2, 2, "#b6bde0");
+    R(x - 3, y - 9, 6, 9, "#4a3a2a"); win(x - 12, y - 16, 4, 4, up); win(x + 8, y - 16, 4, 4, up); },
+  clock(b, t) { const { x, y } = b, up = isUp(b);
+    R(x - 10, y - 54, 20, 54, wall(b, "#b0a8cc")); for (let i = 0; i < 6; i++) R(x - 10, y - 50 + i * 9, 20, 1, "#948cb3");
+    roof(x - 12, y - 70, 24, 16, "#4b3d96"); R(x, y - 74, 1, 4, "#ffb36b");
+    disc(x, y - 42, 7, "#f6efe0"); disc(x, y - 42, 1, "#222"); const { h, m } = nyParts();
+    const ha = ((h % 12) + m / 60) / 12 * Math.PI * 2 - Math.PI / 2, ma = m / 60 * Math.PI * 2 - Math.PI / 2;
+    for (let i = 1; i <= 4; i++) R(x + Math.cos(ha) * i, y - 42 + Math.sin(ha) * i, 1, 1, "#222");
+    for (let i = 1; i <= 6; i++) R(x + Math.cos(ma) * i, y - 42 + Math.sin(ma) * i, 1, 1, "#a1305a");
+    R(x - 3, y - 10, 6, 10, "#4a3a2a"); win(x - 3, y - 27, 6, 6, up); },
+  school(b, t) { const { x, y } = b, s = bsState().kind;
+    const ok = s === "ok", wantsCode = s === "code" || s === "approve" || s === "waiting";
+    R(x - 18, y - 24, 36, 24, ok ? "#c85a4a" : "#8a6a6a"); for (let i = 0; i < 5; i++) R(x - 18, y - 22 + i * 5, 36, 1, ok ? "#a84a3c" : "#705858");
+    roof(x - 21, y - 34, 42, 10, "#3d3070"); R(x - 4, y - 46, 8, 12, "#e9dcc0"); roof(x - 6, y - 52, 12, 6, "#3d3070");
+    disc(x, y - 41, 2, wantsCode ? (Math.floor(t / 300) % 2 ? "#ffd04d" : "#7a6a20") : "#b89a3a");
+    R(x - 3, y - 11, 6, 11, "#3a2a1a"); win(x - 14, y - 18, 6, 6, ok); win(x + 8, y - 18, 6, 6, ok);
+    R(x + 18, y - 26, 1, 26, "#cfd3e6"); R(x + 19, y - 26, 6, 4, ok ? "#5ef2a0" : s === "error" ? "#ff6b8b" : "#888");
+    if (wantsCode) alertMark(b, t, "#ffd04d"); else if (s === "error") alertMark(b, t); },
+  aviary(b, t) { const { x, y } = b, up = isUp(b);
+    R(x - 14, y - 10, 28, 10, wall(b, "#7a5a3a"));
+    for (let dx = -12; dx <= 12; dx += 4) { const hh = Math.floor(Math.sqrt(169 - dx * dx)); R(x + dx, y - 10 - hh, 1, hh, "#d8c9a0"); }
+    for (let dy = 0; dy < 13; dy++) { const dx = Math.floor(Math.sqrt(169 - dy * dy)); R(x - dx, y - 10 - dy, 1, 1, "#d8c9a0"); R(x + dx, y - 10 - dy, 1, 1, "#d8c9a0"); }
+    for (let i = 0; i < (up ? 4 : 0); i++) { const a = t / (900 + i * 170) + i * 1.7; const bx = x + Math.cos(a) * (24 + i * 6), by = y - 40 - i * 4 + Math.sin(a) * (10 + i * 3), f = Math.floor(t / 150 + i) % 2;
+      R(bx, by, 2, 1, "#fff7ea"); R(bx - 1, by - f, 1, 1, "#fff7ea"); R(bx + 2, by - f, 1, 1, "#fff7ea"); } },
+  workshop(b, t) { const { x, y } = b, up = isUp(b);
+    R(x - 16, y - 22, 32, 22, wall(b, "#4d6b9f")); roof(x - 18, y - 34, 36, 12, "#2f3f73");
+    R(x + 8, y - 52, 2, 20, "#c0c6de"); R(x + 6, y - 54, 6, 2, "#c0c6de");
+    if (up) { light(x + 8, y - 56, 2, 2, "#ff6b8b"); for (let k = 0; k < 3; k++) { const r = ((t / 40 + k * 14) % 42); ctx.strokeStyle = `rgba(94,236,210,${(1 - r / 42) * .8})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + 9, y - 55, r, -2.6, -0.5); ctx.stroke(); } }
+    R(x - 12, y - 10, 8, 10, "#2a1d14"); win(x + 2, y - 16, 10, 6, up);
+    if (chatBusy && !reduced && Math.random() < .3) particles.push({ x: x + 9, y: y - 56, vx: (Math.random() - .5) * .8, vy: -.6, life: 30, c: "#5eecd2", s: 1, fire: true }); },
+  gate(b, t) { const { x, y } = b, up = isUp(b), c = wall(b, "#9b9fc3");
+    R(x - 17, y - 34, 11, 34, c); R(x + 6, y - 34, 11, 34, c); R(x - 6, y - 30, 12, 10, c);
+    for (let i = 0; i < 3; i++) { R(x - 17 + i * 4, y - 37, 3, 3, c); R(x + 6 + i * 4, y - 37, 3, 3, c); }
+    R(x - 6, y - 20, 12, 20, up ? "#0d1226" : "#5b2230"); disc(x, y - 20, 6, up ? "#0d1226" : "#5b2230", true);
+    win(x - 14, y - 26, 4, 5, up); win(x + 10, y - 26, 4, 5, up);
+    if (up) for (let k = 0; k < 4; k++) { const px = ((t / 20 + k * 22) % 60) - 30; light(x + px, y - 6, 2, 2, "#7fd3ff"); } },
+  door(b, t) { const { x, y } = b, up = isUp(b);
+    R(x - 10, y - 16, 20, 16, wall(b, "#8a8fae")); roof(x - 12, y - 24, 24, 8, "#4a3d80"); R(x - 4, y - 12, 8, 12, "#3a2a1a"); R(x + 2, y - 7, 1, 1, "#ffd36b");
+    if (up) light(x + 7, y - 14, 2, 3, "#ffd36b"); },
+  forge(b, t) { const { x, y } = b, cpu = state.status?.cpu?.pct ?? 0;
+    R(x - 16, y - 18, 32, 18, "#8a4a5a"); for (let i = 0; i < 4; i++) R(x - 16, y - 16 + i * 4, 32, 1, "#6e384a");
+    R(x - 17, y - 21, 34, 3, "#4a2a32"); R(x + 6, y - 36, 7, 16, "#6e384a");
+    const fl = .6 + Math.sin(t / 90) * .2 + Math.random() * .2; light(x - 5, y - 11, 10, 11, mix("#ff7a2e", "#ffe28a", clamp(cpu / 100 + fl * .3, 0, 1)));
+    if (!reduced && Math.random() < 0.08 + cpu / 100 * 0.9) particles.push({ x: x + 9 + Math.random() * 2, y: y - 37, vx: (Math.random() - .5) * .2, vy: -.35 - cpu / 200, life: 40 + cpu / 2, c: cpu > 70 ? "#ff5d2e" : "#ffb347", s: 2, fire: true }); },
+  hall(b, t) { const { x, y } = b;
+    R(x - 22, y - 24, 44, 24, "#efe2c6"); for (let i = -18; i <= 18; i += 9) R(x + i - 1, y - 22, 3, 22, "#d8c6a2");
+    roof(x - 25, y - 38, 50, 14, "#c0456a"); const n = (state.events || []).filter(e => sameDay(e.start)).length; R(x - 3, y - 33, 6, 4, n ? "#ffb36b" : "#bbb");
+    R(x - 4, y - 12, 8, 12, "#4a3a2a"); const night = dayFactor < .4; win(x - 15, y - 16, 5, 6, night); win(x + 10, y - 16, 5, 6, night);
+    R(x + 26, y - 16, 12, 10, "#7a5a3a"); R(x + 27, y - 6, 1, 6, "#5a3d22"); R(x + 36, y - 6, 1, 6, "#5a3d22");
+    const tk = (state.tasks || []).length; for (let i = 0; i < Math.min(tk, 6); i++) R(x + 27 + (i % 3) * 3, y - 15 + Math.floor(i / 3) * 4, 2, 3, "#fff7ea"); },
+  mill(b, t) { const { x, y } = b, n = activeAutos();
+    for (let i = 0; i < 30; i++) { const w = 10 - i * .15; R(x - w, y - i, w * 2, 1, i % 6 === 0 ? "#cbb48a" : "#e3cfa6"); }
+    R(x - 3, y - 9, 6, 9, "#4a3a2a"); roof(x - 8, y - 36, 16, 6, "#7a2e5a");
+    const hub = [x, y - 32], ang = reduced ? 0.3 : t / (n ? 900 / Math.min(n, 4) : 1e9);
+    for (let k = 0; k < 4; k++) { const a = ang + k * Math.PI / 2; const lit = k < n;
+      for (let i = 2; i < 18; i++) { const px = hub[0] + Math.cos(a) * i, py = hub[1] + Math.sin(a) * i; if (lit && i > 6) light(px, py, 2, 2, "#5eecd2"); else R(px, py, 2, 2, "#cfc6e6"); } }
+    disc(hub[0], hub[1], 2, "#5a3d22"); },
+  water(b, t) { const { x, y } = b, mem = state.status?.mem?.pct ?? 0, swap = state.status?.swap?.pct ?? 0;
+    R(x - 11, y - 28, 2, 28, "#6a6f98"); R(x + 7, y - 28, 2, 28, "#6a6f98"); for (let i = 0; i < 3; i++) R(x - 10, y - 8 - i * 8, 18, 1, "#5a5f88");
+    R(x - 13, y - 48, 24, 20, "#3d4678"); const fh = Math.round(18 * mem / 100), wob = reduced ? 0 : Math.round(Math.sin(t / 300));
+    R(x - 12, y - 29 - fh, 22, fh, mem >= 88 ? "#ff6b8b" : mem >= 70 ? "#4f9de0" : "#4fe0d0"); R(x - 12, y - 29 - fh + wob, 22, 1, "#d6fff8");
+    roof(x - 14, y - 56, 26, 8, "#2f3663");
+    R(x + 12, y - 12, 9, 12, "#6b4a2b"); const sh = Math.round(10 * swap / 100); R(x + 13, y - 1 - sh, 7, sh, swap > 25 ? "#ffb347" : "#9ecf6a"); },
+  ware(b, t) { const { x, y } = b, disk = state.status?.disk?.pct ?? 0;
+    R(x - 20, y - 26, 40, 26, "#8a6a5a"); roof(x - 22, y - 38, 44, 12, "#5b3d4a"); R(x - 15, y - 21, 30, 21, "#24180f");
+    const filled = Math.round(disk / 100 * 12);
+    for (let i = 0; i < 12; i++) { const cx = x - 14 + (i % 4) * 7, cy = y - 6 - Math.floor(i / 4) * 6; if (i < filled) { R(cx, cy, 6, 5, i >= 10 ? "#ff8a5c" : "#d9a45b"); R(cx, cy + 2, 6, 1, "#a87a3a"); } } },
+};
+const nyDayOf = iso => /^\d{4}-\d{2}-\d{2}$/.test(String(iso)) ? String(iso) : new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(iso));
+const sameDay = iso => !!iso && nyDayOf(iso) === nyDate(0);
+
+function drawSky(t) {
+  const { h, m } = nyParts(); const hr = h + m / 60;
+  dayFactor = clamp(Math.sin((hr - 6) / 12 * Math.PI) * 1.4 + .15, 0, 1);
+  const dusk = clamp(1 - Math.abs(dayFactor - .35) * 3, 0, 1);
+  const top = mix("#0a0824", "#4f8fe0", dayFactor), mid = mix(mix("#2a1a5a", "#a8d8f8", dayFactor), "#ff8a6b", dusk * .7), bot = mix(mix("#3a2470", "#e6f4ff", dayFactor), "#ffc48a", dusk * .6);
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, top); g.addColorStop(.6, mid); g.addColorStop(1, bot); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (const [sx, sy, tw] of stars) { const a = (1 - dayFactor) * (.5 + .5 * Math.sin(t / 700 + tw * 9)); if (a > .05) { ctx.globalAlpha = a; R(sx, sy, 1, 1, "#fff"); } }
+  ctx.globalAlpha = 1;
+  const sunA = (hr - 6) / 12 * Math.PI;
+  if (hr > 5.5 && hr < 18.5) disc(200 - Math.cos(sunA) * 175, 120 - Math.sin(sunA) * 105, 8, "#ffe28a");
+  else { const ma = ((hr + 6) % 24) / 12 * Math.PI; disc(200 - Math.cos(ma) * 175, 120 - Math.sin(ma) * 100, 6, "#f0ecff"); disc(200 - Math.cos(ma) * 175 + 3, 120 - Math.sin(ma) * 100 - 2, 5, top); }
+  const load = state.status?.load?.[0] ?? 0.1, storm = (state.status?.cpu?.pct ?? 0) > 80 || (state.status?.mem?.pct ?? 0) > 92;
+  const speed = reduced ? 0 : 0.03 + load * 0.4;
+  for (const c of clouds) { c.x += speed; if (c.x > W + 30) { c.x = -c.w - 10; c.y = 8 + Math.random() * 50; }
+    const col = storm ? "#4a4f73" : mix("#3c3880", "#ffffff", dayFactor * .9 + .1); ctx.globalAlpha = .85;
+    R(c.x, c.y, c.w, 5, col); R(c.x + 4, c.y - 3, c.w * .5, 3, col); R(c.x + c.w * .35, c.y - 5, c.w * .35, 3, col); ctx.globalAlpha = 1; }
+  return storm;
+}
+function drawIsland(t) {
+  const grass = mix("#2e5a4a", "#6cc46a", dayFactor * .8 + .2), grass2 = mix("#26503f", "#5aae58", dayFactor * .8 + .2);
+  // rocky underside
+  for (let i = 0; i < 60; i++) { const yy = 150 + i, w = 168 * Math.pow(1 - i / 60, 1.4); if (w < 1) break; R(200 - w + Math.sin(i * .7) * 4, yy, w * 2, 1, i % 7 === 0 ? "#3a2c4a" : mix("#4a3a5e", "#7a6070", dayFactor * .6)); }
+  for (let i = 0; i < 10; i++) R(140 + i * 14, 196 + (i * 13 % 18), 3, 6 + (i * 7 % 10), "#3a2c4a");
+  // waterfall
+  for (let i = 0; i < 70; i++) { const yy = 150 + i; const sh = (Math.floor((t / 60 + i) % 6) < 3) ? "#cfefff" : "#8fd0f0"; R(356 + Math.sin(i * .3) * .5, yy, 5, 1, sh); }
+  // top
+  ellipseFill(200, 146, 172, 56, "#c9a77a");
+  ellipseFill(200, 140, 166, 52, grass);
+  ctx.globalAlpha = .35; ellipseFill(200, 150, 112, 26, "#d8c08a"); ctx.globalAlpha = 1;
+  ellipseFill(200, 150, 104, 21, grass2);
+  // pond feeding the waterfall
+  ellipseFill(352, 146, 12, 4, "#5ec8f0");
+}
+function drawLowClouds(t) {
+  for (const c of lowClouds) { if (!reduced) c.x += 0.05; if (c.x > W + 40) c.x = -c.w - 20;
+    ctx.globalAlpha = .9; const col = mix("#4a3a80", "#ffffff", dayFactor * .85 + .1);
+    disc(c.x, c.y, Math.round(c.w / 4), col); disc(c.x + c.w / 3, c.y - 4, Math.round(c.w / 3.4), col); disc(c.x + c.w / 1.6, c.y, Math.round(c.w / 4), col); ctx.globalAlpha = 1; }
+}
+function drawBalloons(t) {
+  const wk = Date.now() - 7 * 864e5; const n = Math.min((state.status?.logins || []).filter(l => new Date(l.when).getTime() > wk).length, 3);
+  for (let i = 0; i < n; i++) { const bx = 30 + i * 22 + (reduced ? 0 : Math.sin(t / 1400 + i) * 3), by = 60 + i * 10 + (reduced ? 0 : Math.sin(t / 900 + i * 2) * 3);
+    disc(bx, by, 6, ["#ff6b8b", "#ffb36b", "#5eecd2"][i]); R(bx - 1, by - 5, 2, 10, "rgba(255,255,255,.25)"); R(bx - 3, by + 9, 6, 4, "#7a5a3a"); R(bx - 3, by + 6, 1, 3, "#ccc"); R(bx + 2, by + 6, 1, 3, "#ccc"); }
+}
+function drawVillager(v, t) { const st = Math.floor(t / 180 + v.x) % 2; R(v.x - 1, v.y - 6, 3, 3, "#f1c7a1"); R(v.x - 1, v.y - 3, 3, 3, v.c); R(v.x - 1 + st, v.y, 1, 1, "#222"); R(v.x + 1 - st, v.y, 1, 1, "#222"); }
+const COLORS = ["#ff8f6b", "#7fd3ff", "#ffd36b", "#c59bff", "#8ff0b5", "#ff9fd0"];
+function randIsland() { for (let i = 0; i < 40; i++) { const x = 50 + Math.random() * 300, y = 105 + Math.random() * 80; if (onIsland(x, y)) return [x, y]; } return [200, 180]; }
+const villagers = Array.from({ length: 8 }, () => { const [x, y] = randIsland(), [tx, ty] = randIsland(); return { x, y, tx, ty, c: COLORS[Math.floor(Math.random() * 6)], sp: .12 + Math.random() * .12, wait: 0 }; });
+function stepVillager(v) { if (reduced) return; if (v.wait > 0) { v.wait--; return; } const dx = v.tx - v.x, dy = v.ty - v.y, d = Math.hypot(dx, dy); if (d < 1) { [v.tx, v.ty] = randIsland(); v.wait = 60 + Math.random() * 200; return; } v.x += dx / d * v.sp; v.y += dy / d * v.sp; }
+const TREES = [[22, 140], [70, 128], [128, 124], [186, 122], [246, 124], [312, 128], [374, 140], [70, 186], [168, 190], [228, 192], [330, 186]];
+function drawTree(x, y) { R(x - 1, y - 6, 2, 6, "#6b4a2b"); disc(x, y - 9, 5, "#2f8a5a"); R(x - 2, y - 12, 2, 2, "#6cd59a"); }
+
+const SRC2B = { dashboard: "obs", calendar: "hall", tasks: "hall", claude: "workshop", mcp: "workshop", hermes: "aviary", cron: "clock", briefs: "workshop", brightspace: "school", setup: "obs", system: "clock" };
+function spawnCourier(entry, fromId, toId) {
+  const from = byId[fromId || SRC2B[(entry.source || "").toLowerCase()] || "workshop"], to = byId[toId || "hall"];
+  if (from === to) return;
+  const el = document.createElement("div"); el.className = "bubble"; el.innerHTML = `<b>${esc(entry.source || "server")}</b>${esc((entry.msg || "").slice(0, 70))}`;
+  overlay.appendChild(el); couriers.push({ sx: from.x, sy: from.y + 2, tx: to.x, ty: to.y + 2, x: from.x, y: from.y, t: 0, el });
+}
+function stepCouriers(t) {
+  for (let i = couriers.length - 1; i >= 0; i--) { const c = couriers[i]; c.t += reduced ? 0.02 : 0.004; const k = clamp(c.t, 0, 1);
+    c.x = lerp(c.sx, c.tx, k); c.y = lerp(c.sy, c.ty, k) - Math.sin(k * Math.PI) * 8; const st = Math.floor(t / 120) % 2;
+    R(c.x - 1, c.y - 6, 3, 3, "#f1c7a1"); R(c.x - 1, c.y - 3, 3, 3, "#ffb36b"); R(c.x + 2, c.y - 4, 3, 2, "#fff7ea"); R(c.x - 1 + st, c.y, 1, 1, "#222");
+    c.el.style.left = (c.x / W * 100) + "%"; c.el.style.top = ((c.y - 8) / H * 100) + "%"; if (c.t > 1.35) { c.el.remove(); couriers.splice(i, 1); } }
+}
+function celebrate(bId, colors = ["#ffb36b", "#ff6b8b", "#5eecd2", "#8ff0b5", "#c59bff"]) {
+  const b = byId[bId]; for (let i = 0; i < 46; i++) { const a = Math.random() * Math.PI * 2, s = .4 + Math.random() * 1.1; particles.push({ x: b.x, y: b.y - b.h - 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s - .4, g: .025, life: 50 + Math.random() * 30, c: colors[i % colors.length], s: 2, fire: true }); }
+}
+let chatBusy = false;
+function frame(t) {
+  lights = [];
+  const storm = drawSky(t); drawLowClouds(t); drawIsland(t); drawBalloons(t);
+  const things = [];
+  TREES.forEach(([x, y]) => things.push({ y, d: () => drawTree(x, y) }));
+  B.forEach(b => things.push({ y: b.y, d: () => { DRAW[b.id](b, t); downFx(b, t); } }));
+  villagers.forEach(v => { stepVillager(v); things.push({ y: v.y, d: () => drawVillager(v, t) }); });
+  things.sort((a, b) => a.y - b.y).forEach(o => o.d());
+  for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.vy += p.g || 0; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) { particles.splice(i, 1); continue; }
+    ctx.globalAlpha = clamp(p.life / 40, 0, 1); if (p.fire) light(p.x, p.y, p.s, p.s, p.c); else R(p.x, p.y, p.s, p.s, p.c); }
+  ctx.globalAlpha = 1; stepCouriers(t);
+  const sb = byId[selected]; if (sb) { const bob = reduced ? 0 : Math.round(Math.sin(t / 200) * 2); roof(sb.x - 3, sb.y - sb.h - 22 + bob, 7, 4, "#ffb36b"); }
+  const dark = (1 - dayFactor) * .45 + (storm ? .15 : 0);
+  if (dark > 0) { ctx.fillStyle = `rgba(8,6,30,${dark})`; ctx.fillRect(0, 0, W, H); }
+  if (storm) { ctx.fillStyle = "rgba(170,190,255,.5)"; for (const r of rain) { if (!reduced) { r[0] -= .6; r[1] += 4; if (r[1] > H) { r[1] = -5; r[0] = Math.random() * (W + 40); } } ctx.fillRect(r[0], r[1], 1, 3); } }
+  for (const [x, y, w, h, c] of lights) { if (dayFactor < .6) { ctx.fillStyle = "rgba(255,190,110,.13)"; ctx.fillRect(Math.round(x - 3), Math.round(y - 3), Math.round(w + 6), Math.round(h + 6)); } R(x, y, w, h, c); }
+}
+let last = 0;
+function loop(t) { if (!reduced || t - last > 250) { frame(t); last = t; } requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+/* ---------------- interaction ---------------- */
+function toWorld(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+function hit(x, y) { return [...B].sort((a, b) => b.y - a.y).find(b => x >= b.x - b.w / 2 && x <= b.x + b.w / 2 && y >= b.y - b.h && y <= b.y + 4); }
+cv.addEventListener("click", e => { const [x, y] = toWorld(e); const b = hit(x, y); select(b ? b.id : "island"); });
+cv.addEventListener("mousemove", e => { const [x, y] = toWorld(e); cv.style.cursor = hit(x, y) ? "pointer" : "default"; });
+const pins = {};
+B.forEach(b => {
+  const el = document.createElement("button"); el.className = "pin"; el.type = "button";
+  el.style.left = (b.x / W * 100) + "%"; el.style.top = ((b.y - b.h - 3) / H * 100) + "%";
+  el.innerHTML = `<span class="dot"></span><span class="lbl">${esc(b.short)}</span>`; el.setAttribute("aria-label", b.name);
+  el.addEventListener("click", () => select(b.id)); overlay.appendChild(el); pins[b.id] = el;
+});
+function select(id) { selected = id; Object.entries(pins).forEach(([k, el]) => el.setAttribute("aria-pressed", String(k === id))); renderInspect(); }
+function toast(text) { overlay.querySelectorAll(".toast").forEach(t => t.remove()); const el = document.createElement("div"); el.className = "toast"; el.textContent = text; overlay.appendChild(el); setTimeout(() => el.remove(), 2600); }
+
+/* ---------------- levels ---------------- */
+function itemLevel(b) {
+  const s = state.status; if (b.id === "school") { const k = bsState().kind; return k === "ok" ? "good" : k === "error" ? "bad" : (k === "code" || k === "approve" || k === "never") ? "warn" : ""; }
+  if (b.id === "mill") return state.autos ? (state.autos.some(a => a.last_run?.status?.includes("FAILED")) ? "warn" : "good") : "";
+  if (b.id === "hall") return state.events ? "good" : "";
+  if (!s) return "";
+  if (b.svc) { const v = svcState(b.svc); return v == null ? "" : v === "up" ? "good" : "bad"; }
+  if (b.id === "forge") return pctClass(s.cpu.pct, 70, 90);
+  if (b.id === "water") return pctClass(s.mem.pct, 75, 90);
+  if (b.id === "ware") return pctClass(s.disk.pct, 75, 90);
+  return "good";
+}
+const LVL = { good: "Working", warn: "Needs a look", bad: "Problem", "": "Checking…" };
+function renderInspect() {
+  const [title, text] = ABOUT[selected] || ABOUT.island; const b = byId[selected];
+  const lvl = b ? itemLevel(b) : (state.status ? (state.status.services.every(v => v.status === "up") ? "good" : "bad") : "");
+  let extra = "";
+  const s = state.status;
+  if (s && b?.id === "forge") extra = `Working at ${s.cpu.pct.toFixed(0)}%.`;
+  if (s && b?.id === "water") extra = `${s.mem.used_mb} of ${s.mem.total_mb} MB in use. Overflow: ${s.swap.pct.toFixed(0)}%.`;
+  if (s && b?.id === "ware") extra = `${s.disk.used_gb} of ${s.disk.total_gb} GB used, ${(s.disk.total_gb - s.disk.used_gb).toFixed(0)} GB free.`;
+  if (b?.id === "mill" && state.autos) extra = `${activeAutos()} automation${activeAutos() === 1 ? "" : "s"} switched on.`;
+  if (s && b?.id === "door") { const l = s.logins?.[0]; if (l) extra = `Last login ${ago(new Date(l.when).getTime())}.`; }
+  $("inspect").innerHTML = `<h3>${esc(title)}</h3><span class="state"><span class="dot ${lvl}"></span>${LVL[lvl]}</span><p>${esc(text)} ${esc(extra)}</p>`;
+}
+
+/* ---------------- render: status ---------------- */
+const SVC_NAMES = { "kiaan-dashboard": "Your dashboard website", caddy: "Front gate (web traffic)", ssh: "Login door (SSH)", fail2ban: "Security guard", cron: "Timer (server schedules)", "kiaan-mcp": "Claude link", "hermes-gateway": "WhatsApp bot" };
+function setMeter(id, pct, text, cls) { $("v-" + id).textContent = text; const m = $("m-" + id); m.className = "meter " + (cls || ""); m.firstElementChild.style.width = clamp(pct || 0, 0, 100) + "%"; }
+function word(p, lo, hi, a, b, c) { return p < lo ? a : p < hi ? b : c; }
+function renderStatus() {
+  const s = state.status;
+  if (!s) { renderSummary(); renderInspect(); return; }
+  setMeter("cpu", s.cpu.pct, `${word(s.cpu.pct, 30, 75, "Relaxed", "Busy", "Working hard")} · ${s.cpu.pct.toFixed(0)}%`, pctClass(s.cpu.pct, 70, 90));
+  setMeter("mem", s.mem.pct, `${s.mem.pct.toFixed(0)}% used`, pctClass(s.mem.pct, 75, 90));
+  setMeter("disk", s.disk.pct, `${s.disk.pct.toFixed(0)}% full`, pctClass(s.disk.pct, 75, 90));
+  const up = s.services.filter(v => v.status === "up").length;
+  $("srvStatus").innerHTML = `<span class="dot ${up === s.services.length ? "good" : "bad"}"></span><div><b>${up === s.services.length ? "All parts running" : `${s.services.length - up} part${s.services.length - up > 1 ? "s" : ""} stopped`}</b><span>Online for ${Math.floor(s.uptime_s / 86400)} days ${Math.floor(s.uptime_s % 86400 / 3600)} h without a restart</span></div>`;
+  $("svcList").innerHTML = s.services.map(v => `<div class="svc"><span class="dot ${v.status === "up" ? "good" : "bad"}"></span><span>${esc(SVC_NAMES[v.name] || v.name)} <small>${esc(v.name)}</small></span><span style="font-size:12px;color:var(--muted)">${v.status === "up" ? "running" : "stopped"}</span></div>`).join("");
+  const d = s.digitalocean || {};
+  if (s.links?.console) $("termBtn").href = s.links.console;
+  const cron = s.cron || [];
+  $("srvKv").innerHTML = [["Address", s.ip], ["Location", d.region ? d.region.toUpperCase() + " (New York)" : "–"], ["Size", d.size ? `${d.vcpus} CPU · ${Math.round(d.memory_mb / 1024)} GB memory · ${d.disk_gb} GB disk` : "–"], ["System", d.image ? "Ubuntu " + d.image : "–"], ["Cost", d.price_monthly ? `$${d.price_monthly}/month · $${d.month_to_date_usage} so far this month` : "–"], ["Server timers", cron.length ? cron.length + " set up" : "None yet"], ["Last login", s.logins?.[0] ? `${s.logins[0].user} · ${ago(new Date(s.logins[0].when).getTime())}` : "–"]].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  B.forEach(b => pins[b.id].querySelector(".dot").className = "dot " + itemLevel(b));
+  renderSummary(); renderInspect();
+}
+function issues() {
+  const out = [], s = state.status;
+  if (s) { s.services.filter(v => v.status !== "up").forEach(v => out.push(`${SVC_NAMES[v.name] || v.name} stopped`)); if (s.mem.pct >= 90) out.push("Memory almost full"); if (s.disk.pct >= 90) out.push("Storage almost full"); }
+  const k = bsState().kind; if (k === "code" || k === "approve") out.push("Brightspace needs your code"); if (k === "error") out.push("Brightspace sync failed");
+  (state.autos || []).filter(a => a.enabled && /FAILED/.test(a.last_run?.status || "")).forEach(a => out.push(`Automation "${a.name}" failed`));
+  return out;
+}
+function renderSummary() {
+  const chip = $("statusChip"), txt = $("statusText");
+  if (demo) { chip.className = "status-chip"; chip.querySelector(".dot").className = "dot warn"; txt.textContent = "Sample data"; return; }
+  if (!state.status) { if (meta.status.code) { chip.querySelector(".dot").className = "dot bad"; txt.textContent = "Can't reach your server"; } return; }
+  const is = issues();
+  chip.className = "status-chip live"; chip.querySelector(".dot").className = "dot " + (is.length ? "warn" : "good");
+  txt.textContent = is.length ? `${is.length} thing${is.length > 1 ? "s" : ""} need${is.length > 1 ? "" : "s"} a look: ${is[0]}` : "Everything's running smoothly";
+  $("sub").textContent = `Live · checked ${meta.status.at ? ago(meta.status.at) : "just now"}`;
+  B.forEach(b => pins[b.id].querySelector(".dot").className = "dot " + itemLevel(b));
+}
+
+/* ---------------- render: calendar / next up ---------------- */
+function renderEvents() {
+  const ev = state.events;
+  if (!ev) { $("calList").innerHTML = `<li class="empty">${esc(meta.events.err || "Loading your calendar…")}</li>`; return; }
+  const now = Date.now(), today = nyDate(0), tom = nyDate(1);
+  const dayOf = e => e.all_day ? String(e.start).slice(0, 10) : nyDayOf(e.start);
+  const rel = ev.filter(e => { const d = dayOf(e); return d === today || d === tom || (e.all_day && e.start <= today && e.end > today); });
+  rel.sort((a, b) => (a.all_day ? 0 : 1) - (b.all_day ? 0 : 1) || String(a.start).localeCompare(String(b.start)));
+  const nToday = rel.filter(e => dayOf(e) === today).length;
+  $("calMeta").textContent = `${nToday} today`;
+  let lastDay = "";
+  $("calList").innerHTML = rel.length ? rel.map(e => {
+    const d = e.all_day && e.start <= today ? today : dayOf(e); let head = "";
+    if (d !== lastDay) { lastDay = d; head = `<li style="background:none;border:0;padding:4px 2px 0;display:block"><span class="tag">${d === today ? "Today" : "Tomorrow"}</span></li>`; }
+    const on = !e.all_day && new Date(e.start) <= now && new Date(e.end) > now;
+    const when = e.all_day ? "All day" : fmtTime(e.start);
+    return head + `<li class="${on ? "now" : ""}"><span class="tag">${esc((e.calendar || "").trim())}</span><span class="t">${esc(e.title)}${e.location ? `<span class="s">📍 ${esc(e.location)}</span>` : ""}${on ? `<span class="s" style="color:var(--sun)">Happening now</span>` : ""}</span><span class="when">${esc(when)}</span></li>`;
+  }).join("") : `<li class="empty">Nothing on today or tomorrow.</li>`;
+  const next = ev.filter(e => !e.all_day && new Date(e.start) > now).sort((a, b) => new Date(a.start) - new Date(b.start))[0];
+  $("v-next").textContent = next ? next.title : "Nothing coming up";
+  $("v-next2").textContent = next ? `${fmtTime(next.start)} · ${inTime(new Date(next.start) - now)}` : "";
+}
+function renderCalendars() {
+  const sel = $("eCal"), keep = sel.value, list = state.calendars?.length ? state.calendars.map(c => c.name) : ["Personal "];
+  sel.innerHTML = list.map(n => `<option value="${esc(n)}">${esc(n.trim())}</option>`).join("");
+  sel.value = list.includes(keep) ? keep : (list.find(n => n.trim() === "Personal") || list[0]);
+}
+
+/* ---------------- render: tasks ---------------- */
+const taskId = x => x.id ?? x.task_id ?? x.uid ?? x._id ?? null;
+const busy = new Set();
+function renderTasks() {
+  const tk = state.tasks;
+  if (!tk) { $("taskList").innerHTML = `<li class="empty">${esc(meta.tasks.err || "Loading…")}</li>`; return; }
+  $("taskMeta").textContent = tk.length ? `${tk.length} open` : "";
+  const order = { high: 0, normal: 1, low: 2 };
+  const sorted = [...tk].sort((a, b) => (order[a.priority] ?? 1) - (order[b.priority] ?? 1) || String(a.due || "9").localeCompare(String(b.due || "9")));
+  $("taskList").innerHTML = sorted.length ? sorted.map(x => {
+    const id = taskId(x), b = id != null && busy.has("t:" + id);
+    const due = x.due ? fmtNY(String(x.due).length <= 10 ? x.due + "T12:00:00" : x.due, { weekday: "short", month: "short", day: "numeric" }) : "";
+    const btns = id != null ? `<span class="row-btns"><button class="btn small" type="button" data-act="done" data-id="${esc(id)}" ${b ? "disabled" : ""}>${b ? "…" : "Done"}</button><button class="btn ghost small" type="button" data-act="del" data-id="${esc(id)}" ${b ? "disabled" : ""}>✕</button></span>` : "";
+    return `<li><span class="tag ${x.priority === "high" ? "high" : ""}">${esc(x.priority === "high" ? "Important" : x.project || "To-do")}</span><span class="t">${esc(x.title || x.text || "Untitled")}${due ? `<span class="s">Due ${esc(due)}</span>` : ""}</span>${btns}</li>`;
+  }).join("") : `<li class="empty">All clear. Nothing on your list.</li>`;
+}
+
+/* ---------------- render: activity ---------------- */
+const SRC_NAMES = { dashboard: "Dashboard", calendar: "Calendar", briefs: "Saved reads", claude: "Claude", hermes: "WhatsApp bot", mcp: "Claude link", setup: "Setup", system: "Server", brightspace: "Brightspace", "brightspace-mfa": "Brightspace code", "cloud-game-test": "Test" };
+function plainMsg(e) {
+  let m = e.msg || "";
+  let x;
+  if ((x = m.match(/^created event '(.+)' in (.+)$/))) return `Added "${x[1]}" to ${x[2].trim()}`;
+  if ((x = m.match(/^saved brief '(.+)' for (.+)$/))) return `Saved the ${x[1].replace(/-/g, " ")} for ${x[2]}`;
+  if (m === "dashboard started") return "Dashboard started up";
+  if (/brightspace-mfa/i.test(e.source)) return "Sent a sign-in code to Brightspace sync";
+  return m;
+}
+function renderActivity() {
+  const a = state.activity;
+  if (!a) { $("actList").innerHTML = `<li class="empty">${esc(meta.activity.err || "Loading…")}</li>`; return; }
+  const groups = [];
+  for (const e of a) {
+    const g = groups[groups.length - 1];
+    const cal = e.source === "calendar" && /^created event/.test(e.msg);
+    const brief = e.source === "briefs";
+    if (g && g.source === e.source && (cal || brief) && g.kind === (cal ? "cal" : "brief") && Math.abs(new Date(g.items[g.items.length - 1].ts) - new Date(e.ts)) < 15 * 6e4) { g.items.push(e); continue; }
+    groups.push({ source: e.source, kind: cal ? "cal" : brief ? "brief" : "one", items: [e] });
+  }
+  $("actList").innerHTML = groups.slice(0, 25).map(g => {
+    const e = g.items[0], n = g.items.length;
+    const text = n > 1 ? (g.kind === "cal" ? `Added ${n} events to your calendar` : `Saved ${n} reads`) : plainMsg(e);
+    const sub = n > 1 ? g.items.slice(0, 3).map(i => (plainMsg(i).match(/"(.+)"/) || [])[1] || plainMsg(i)).join(", ") + (n > 3 ? "…" : "") : "";
+    return `<li><span class="tag">${esc(SRC_NAMES[e.source] || e.source)}</span><span class="t" style="font-weight:600">${esc(text)}${sub ? `<span class="s">${esc(sub)}</span>` : ""}</span><span class="when">${esc(ago(new Date(e.ts).getTime()))}</span></li>`;
+  }).join("") || `<li class="empty">Nothing yet.</li>`;
+}
+
+/* ---------------- render: Brightspace ---------------- */
+function renderBrightspace() {
+  const st = bsState(), es = bsEntries();
+  const last = es[0], lastOk = es.find(e => e.level !== "error" && !/fail|error|NEEDS_CODE|APPROVE_NUMBER/i.test(e.msg || ""));
+  const runs = es.filter(e => /run|sync|scrape|imported|complete/i.test(e.msg || ""));
+  let gap = "";
+  if (runs.length >= 2) { const diffs = runs.slice(0, 6).map((e, i, arr) => i ? new Date(arr[i - 1].ts) - new Date(e.ts) : 0).slice(1); const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length; gap = avg > 0 ? `About every ${avg < 36e5 * 1.5 ? Math.round(avg / 6e4) + " minutes" : Math.round(avg / 36e5) + " hours"}` : ""; }
+  const S = {
+    loading: ["", "Checking…", ""],
+    never: ["warn", "Not running on its own yet", "There's no record of a sync on your server. Right now it only runs when you press Sync on your dashboard."],
+    ok: ["good", "Working", last ? `Last sync ${ago(new Date(last.ts).getTime())}` : ""],
+    error: ["bad", "Last sync failed", last?.msg || ""],
+    code: ["warn", "Waiting for your code", "Microsoft wants a code from your Authenticator app."],
+    approve: ["warn", "Approve the sign-in", "Open Microsoft Authenticator on your phone and enter the number below."],
+    waiting: ["warn", "Code sent, finishing sign-in…", "Hang tight, this takes a minute."],
+  }[st.kind];
+  $("bsStatus").innerHTML = `<span class="dot ${S[0]}"></span><div><b>${esc(S[1])}</b><span>${esc(S[2])}</span></div>`;
+  $("bsKv").innerHTML = state.activity ? [["Last sync", last ? `${fmtNY(last.ts, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : "No record yet"], ["Last good sync", lastOk ? ago(new Date(lastOk.ts).getTime()) : "No record yet"], ["How often", gap || (st.kind === "never" ? "Only when you press Sync" : "Not enough history yet")], ["Last result", last ? plainMsg(last) : "–"]].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("") : "";
+  const box = $("bsCode");
+  if (st.kind === "code") {
+    box.className = "code-box";
+    box.innerHTML = `<b>Type the 6-digit code from Microsoft Authenticator</b><form class="f" id="bsForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="bsInput" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{6,8}" placeholder="000000" aria-label="Authenticator code" required><button class="btn" type="submit" id="bsSend">Send code</button></form><p class="formmsg" id="bsMsg"></p><span class="explain">Codes expire fast, so send it within 30 seconds.</span>`;
+    $("bsForm").onsubmit = sendBsCode;
+  } else if (st.kind === "approve") {
+    box.className = "code-box";
+    box.innerHTML = `<b>Microsoft is asking you to approve the sign-in</b><span class="num">${esc(st.num)}</span><span class="explain">Open Microsoft Authenticator and type this number. Nothing to send here.</span>`;
+  } else {
+    box.className = "code-box off";
+    box.innerHTML = `<b>Sign-in code box</b><span class="explain">When Brightspace sync needs your Microsoft Authenticator code, this box lights up and you can type the code here. Nothing needed right now.</span>`;
+  }
+}
+async function sendBsCode(ev) {
+  ev.preventDefault(); const code = $("bsInput").value.trim(); if (!/^\d{6,8}$/.test(code)) { setMsg("bsMsg", "Codes are 6 digits.", "err"); return; }
+  $("bsSend").disabled = true; setMsg("bsMsg", "Sending…");
+  try { await act("activity_note", { source: "brightspace-mfa", message: "CODE " + code }); setMsg("bsMsg", "Sent. Brightspace sync will use it now.", "ok"); toast("Code sent!"); refresh("activity_log"); }
+  catch (e) { setMsg("bsMsg", writeErr(e), "err"); $("bsSend").disabled = false; }
+}
+
+/* ---------------- render: automations ---------------- */
+function renderAutos() {
+  const a = state.autos;
+  if (!a) { $("autoList").innerHTML = `<li class="empty">${esc(autoErr || "Loading your automations…")}</li>`; return; }
+  $("autoMeta").textContent = `${activeAutos()} on · ${a.length} total`;
+  $("autoList").innerHTML = a.length ? a.map(x => {
+    const b = busy.has("a:" + x.id), lr = x.last_run;
+    const lrText = !lr ? "Hasn't run yet" : /SUCCEEDED/.test(lr.status) ? `Last run worked · ${ago(new Date(lr.finished_at || lr.fired_at).getTime())}` : /FAILED/.test(lr.status) ? `Last run failed · ${ago(new Date(lr.fired_at).getTime())}` : /PENDING|RUNNING/.test(lr.status) ? "Running now…" : lr.status;
+    const nextText = x.enabled && x.next_run_at ? `Next ${inTime(new Date(x.next_run_at) - Date.now())}` : x.enabled ? "" : "Paused";
+    const lvl = !x.enabled ? "" : /FAILED/.test(lr?.status || "") ? "bad" : "good";
+    const sched = x.run_once_at ? `Once on ${fmtNY(x.run_once_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : cronText(x.cron_expression);
+    return `<li><span class="dot ${lvl}" title="${x.enabled ? "On" : "Paused"}"></span><span class="t">${esc(x.name)}<span class="s">${esc(sched)} · ${esc(nextText)}</span><span class="s">${esc(lrText)}</span></span><span class="row-btns">
+      <button class="btn ghost small" type="button" data-auto="run" data-id="${esc(x.id)}" ${b ? "disabled" : ""}>Run now</button>
+      <button class="btn ghost small" type="button" data-auto="${x.enabled ? "pause" : "resume"}" data-id="${esc(x.id)}" ${b ? "disabled" : ""}>${x.enabled ? "Pause" : "Turn on"}</button>
+      <button class="btn ghost small" type="button" data-auto="del" data-id="${esc(x.id)}" ${b ? "disabled" : ""}>✕</button></span></li>`;
+  }).join("") : `<li class="empty">No automations yet. Make one below, or ask Cloud.</li>`;
+}
+let autoErr = "";
+async function loadAutos() {
+  if (demo) return;
+  try {
+    let all = [], cursor;
+    for (let i = 0; i < 3; i++) {
+      const r = await mcp.callTool(REMOTE, "list_triggers", cursor ? { limit: 50, cursor } : { limit: 50 });
+      const p = unwrap(r.payload);
+      all = all.concat(p?.data || []); if (!p?.has_more || !p.next_cursor) break; cursor = p.next_cursor;
+    }
+    state.autos = all.map(x => ({ id: x.id, name: x.name, enabled: x.enabled, cron_expression: x.cron_expression, run_once_at: x.run_once_at, next_run_at: x.next_run_at, last_run: x.last_run, ended_reason: x.ended_reason }));
+    autoErr = "";
+  } catch (e) { autoErr = connErr(e, "Claude Code Remote"); state.autos = state.autos || null; }
+  renderAutos(); renderSummary();
+}
+$("autoList").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-auto]"); if (!btn || btn.disabled) return;
+  const kind = btn.dataset.auto, id = btn.dataset.id, x = state.autos.find(a => a.id === id);
+  if (kind === "del" && !btn.classList.contains("danger")) { btn.classList.add("danger"); btn.textContent = "Delete?"; setTimeout(() => { btn.classList.remove("danger"); btn.textContent = "✕"; }, 4000); return; }
+  busy.add("a:" + id); renderAutos();
+  try {
+    if (demo) { if (kind === "pause" || kind === "resume") x.enabled = kind === "resume"; if (kind === "del") state.autos = state.autos.filter(a => a.id !== id); }
+    else if (kind === "run") await mcp.callTool(REMOTE, "fire_trigger", { trigger_id: id });
+    else if (kind === "pause" || kind === "resume") await mcp.callTool(REMOTE, "update_trigger", { trigger_id: id, enabled: kind === "resume" });
+    else if (kind === "del") await mcp.callTool(REMOTE, "delete_trigger", { trigger_id: id });
+    toast(kind === "run" ? `Started "${x.name}"` : kind === "del" ? "Automation deleted" : kind === "pause" ? "Paused" : "Turned on");
+    if (kind === "run") celebrate("mill", ["#5eecd2", "#fff7ea"]);
+    setMsg("aMsg", "");
+  } catch (err) { setMsg("aMsg", writeErr(err), "err"); $("autoAdd").open = true; }
+  finally { busy.delete("a:" + id); await loadAutos(); }
+});
+function freqUI() {
+  const f = $("aFreq").value;
+  $("aDayL").hidden = f !== "weekly"; $("aDateL").hidden = f !== "once"; $("aHoursL").hidden = f !== "hours"; $("aTimeL").hidden = f === "hours";
+}
+$("aFreq").addEventListener("change", freqUI); $("aDate").value = nyDate(1);
+const AUTO_CONTEXT = `\n\n---\nThis is an unattended scheduled job for Kiaan, created from his Kiaan Cloud Island page. His time zone is America/New_York. Use the kiaan-cloud connector tools (mcp__kiaan-cloud__*) for his server, his Apple/iCloud calendar (calendar_events, calendar_create_event; calendar names can have a trailing space, e.g. "Personal "), his to-do list (tasks_*) and the activity log (activity_note). Do not ask questions; do the job, then reply with a 2-line summary.`;
+function buildSchedule(freq, time, day, date, hours, name) {
+  if (freq === "once") { const [h, m] = (time || "08:00").split(":").map(Number); const iso = new Date(`${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00${nyOffset(date)}`); if (isNaN(iso) || iso < new Date()) throw { code: "bad_input", message: "Pick a date and time in the future." }; return { run_once_at: iso.toISOString() }; }
+  if (freq === "hours") return { cron_expression: `0 */${hours} * * *` };
+  let [h, m] = (time || "08:00").split(":").map(Number); [h, m] = jitter(h, m, name);
+  const dow = freq === "weekdays" ? "1-5" : freq === "weekly" ? String(day) : "*";
+  return { cron_expression: `CRON_TZ=${TZ} ${m} ${h} * * ${dow}` };
+}
+let envId = null;
+async function getEnv() {
+  if (envId) return envId;
+  const r = await mcp.callTool(REMOTE, "list_environments", { limit: 20 }); const envs = unwrap(r.payload)?.environments || [];
+  const pick = envs.find(e => e.kind === "anthropic_cloud" && /^default$/i.test(e.name)) || envs.find(e => e.kind === "anthropic_cloud" && e.state === "active");
+  if (!pick) throw { code: "no_env", message: "No cloud environment found to run automations in." };
+  return (envId = pick.environment_id);
+}
+async function createAutomation({ name, instructions, schedule, push = true }) {
+  if (demo) { const id = "demo" + Date.now(); state.autos = [...(state.autos || []), { id, name, enabled: true, ...schedule, next_run_at: null }]; renderAutos(); return { id }; }
+  const environment_id = await getEnv();
+  const input = { name, prompt: instructions.trim() + AUTO_CONTEXT, initiation: "human_request", create_new_session_on_fire: true, environment_id, connectors: ["kiaan-cloud"], notifications: push ? { push: true } : {}, ...schedule };
+  const r = await mcp.callTool(REMOTE, "create_trigger", input);
+  loadAutos(); return unwrap(r.payload);
+}
+$("autoForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const name = $("aName").value.trim(), what = $("aWhat").value.trim(); if (!name || !what) return;
+  const btn = $("aSubmit"); btn.disabled = true; setMsg("aMsg", "Creating…");
+  try {
+    const schedule = buildSchedule($("aFreq").value, $("aTime").value, $("aDay").value, $("aDate").value, $("aHours").value, name);
+    await createAutomation({ name, instructions: what, schedule, push: $("aPush").checked });
+    setMsg("aMsg", `Created "${name}". ${schedule.cron_expression ? cronText(schedule.cron_expression) : "Runs once"}.`, "ok");
+    $("aName").value = ""; $("aWhat").value = ""; toast("Automation created!"); celebrate("mill", ["#5eecd2", "#ffb36b", "#fff7ea"]);
+  } catch (e) { setMsg("aMsg", writeErr(e), "err"); }
+  finally { btn.disabled = false; }
+});
+
+/* ---------------- render: briefs ---------------- */
+function renderBriefs() {
+  const b = state.briefs; const el = $("briefDays");
+  if (!b) { el.innerHTML = `<span class="empty">Loading…</span>`; return; }
+  const byDate = {};
+  b.forEach(f => { const m = String(f).match(/^(\d{4}-\d{2}-\d{2})_(.+)\.md$/); if (m) (byDate[m[1]] = byDate[m[1]] || []).push(m[2]); });
+  const dates = Object.keys(byDate).sort().reverse().slice(0, 4);
+  const nice = n => ({ "ai-brief": "AI brief", "ai-brief-tools": "Tools", "ai-brief-predictions": "Predictions", "ai-brief-covered": "Covered", "ai-brief-learnings": "Learnings", morning: "Morning" }[n] || n.replace(/-/g, " "));
+  el.innerHTML = dates.length ? dates.map(d => `<div class="brief-day"><b>${esc(fmtNY(d + "T12:00:00", { month: "short", day: "numeric" }))}</b>${byDate[d].sort().map(n => `<button class="chip" type="button" data-brief="${esc(n)}" data-date="${esc(d)}">${esc(nice(n))}</button>`).join("")}</div>`).join("") : `<span class="empty">No saved reads yet.</span>`;
+}
+$("briefDays").addEventListener("click", async e => {
+  const b = e.target.closest("[data-brief]"); if (!b) return; const rd = $("reader"); rd.hidden = false; rd.innerHTML = `<span class="thinking">Opening…</span>`;
+  try { const r = demo ? { payload: { result: "# Sample\nThis is a sample brief." } } : await mcp.callTool(SERVER, "brief_get", { name: b.dataset.brief, date: b.dataset.date }, { cache: { staleTime: 36e5, gcTime: 864e5 } }); rd.innerHTML = md(unwrap(r.payload)); }
+  catch (err) { rd.textContent = connErr(err, "kiaan-cloud"); }
+});
+
+/* ---------------- write helpers ---------------- */
+function setMsg(id, text, kind) { const el = $(id); if (!el) return; el.textContent = text; el.className = "formmsg " + (kind || ""); }
+function checkOk(r) { const p = unwrap(r?.payload); if (p && typeof p === "object" && p.ok === false) throw { code: "tool_error", message: p.error || "the server said no" }; return p; }
+async function act(tool, input) { if (demo) return { ok: true }; return checkOk(await mcp.callTool(SERVER, tool, input)); }
+async function refresh(...tools) { if (demo) return; try { for (const t of tools) await mcp.invalidate(SERVER, t); } catch {} }
+function connErr(e, server) {
+  switch (e?.code) {
+    case "needs_reauth": return `Reconnect ${server} in claude.ai Settings → Connectors.`;
+    case "server_not_connected": return `Add the ${server} connector in claude.ai Settings → Connectors.`;
+    case "selection_required": return `Choose which ${server} connector to use when claude.ai asks.`;
+    case "approval_required": return `This page needs your OK to use ${server}. Reload and choose Allow.`;
+    case "not_in_manifest": return `${server} is switched off for this page. Turn it on from the page's Permissions menu.`;
+    case "blocked_by_policy": return "Your organization blocks this.";
+    case "server_unavailable": return `${server} didn't answer. It will try again shortly.`;
+    case "tool_error": return `${server} reported a problem: ${e.message || "unknown"}`;
+    case "not_granted": case "capability_disabled": case "capability_removed": return "Live data isn't available in this view.";
+    default: return `Couldn't reach ${server} (${e?.code || "error"}).`;
+  }
+}
+function writeErr(e) {
+  if (e?.code === "bad_input" || e?.code === "no_env") return e.message;
+  if (e?.code === "server_unavailable" || e?.code === "upstream_error" || e?.code === "cancelled") return "No clear answer. It may have worked, so check after the list refreshes before trying again.";
+  return connErr(e, "the server");
+}
+
+/* tasks */
+$("taskForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const title = $("tTitle").value.trim(); if (!title) return;
+  const input = { title, priority: $("tPri").value }; if ($("tDue").value) input.due = $("tDue").value;
+  $("tSubmit").disabled = true; setMsg("tMsg", "Adding…");
+  try { await act("tasks_add", input); setMsg("tMsg", `Added "${title}".`, "ok"); $("tTitle").value = ""; $("tDue").value = ""; toast("To-do added!"); spawnCourier({ source: "to-do", msg: title }, "workshop", "hall");
+    if (demo) { state.tasks = [...state.tasks, { id: "s" + Date.now(), ...input }]; renderTasks(); } else refresh("tasks_list", "activity_log"); }
+  catch (e) { setMsg("tMsg", writeErr(e), "err"); } finally { $("tSubmit").disabled = false; }
+});
+$("taskList").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-act]"); if (!btn || btn.disabled) return; const id = btn.dataset.id, kind = btn.dataset.act;
+  if (kind === "del" && !btn.classList.contains("danger")) { btn.classList.add("danger"); btn.textContent = "Delete?"; setTimeout(() => { btn.classList.remove("danger"); btn.textContent = "✕"; }, 4000); return; }
+  busy.add("t:" + id); renderTasks();
+  try { await act(kind === "done" ? "tasks_complete" : "tasks_delete", { task_id: id }); if (kind === "done") { toast("Nice, done!"); celebrate("hall"); } if (demo) state.tasks = state.tasks.filter(x => String(taskId(x)) !== id); else refresh("tasks_list"); setMsg("tMsg", ""); }
+  catch (err) { setMsg("tMsg", writeErr(err), "err"); $("todoCard").querySelector("details").open = true; }
+  finally { busy.delete("t:" + id); renderTasks(); }
+});
+/* events */
+$("eDate").value = nyDate(0);
+$("eAllDay").addEventListener("change", e => { $("eStart").disabled = $("eEnd").disabled = e.target.checked; });
+$("eventForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const title = $("eTitle").value.trim(), date = $("eDate").value; if (!title || !date) return;
+  const input = { title, calendar: $("eCal").value, all_day: $("eAllDay").checked };
+  if (input.all_day) input.start = date; else { const s = $("eStart").value || "09:00", en = $("eEnd").value; input.start = `${date}T${s}:00`; if (en && en > s) input.end = `${date}T${en}:00`; }
+  $("eSubmit").disabled = true; setMsg("eMsg", "Adding…");
+  try { await act("calendar_create_event", input); setMsg("eMsg", `Added "${title}" to ${input.calendar.trim()}. It'll show on your iPhone in a moment.`, "ok"); $("eTitle").value = ""; toast("Added to your calendar!"); celebrate("hall", ["#7fd3ff", "#fff7ea", "#ffb36b"]);
+    if (demo) { state.events = [...state.events, { uid: "s" + Date.now(), title, all_day: input.all_day, start: input.all_day ? date : `${date}T${$("eStart").value}:00${nyOffset(date)}`, end: input.end || input.start, calendar: input.calendar }]; renderEvents(); } else refresh("calendar_events", "activity_log"); }
+  catch (e) { setMsg("eMsg", writeErr(e), "err"); } finally { $("eSubmit").disabled = false; }
+});
+$("copySsh").addEventListener("click", async () => { try { await navigator.clipboard.writeText("ssh kiaan-cloud"); $("copySsh").textContent = "Copied"; } catch { const r = document.createRange(); r.selectNodeContents($("sshCmd")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } });
+
+/* ---------------- chat ---------------- */
+let turns = [];
+try { turns = JSON.parse(localStorage.getItem("kci3-chat") || "[]").slice(-16); } catch {}
+const saveTurns = () => { try { localStorage.setItem("kci3-chat", JSON.stringify(turns.slice(-16))); } catch {} };
+function addMsg(role, html, acts) {
+  const el = document.createElement("div"); el.className = "msg " + (role === "user" ? "me" : "bot"); el.innerHTML = html;
+  if (acts) { const a = document.createElement("div"); a.className = "acts"; el.appendChild(a); }
+  $("chatLog").appendChild(el); $("chatLog").scrollTop = $("chatLog").scrollHeight; return el;
+}
+function renderChatHistory() {
+  $("chatLog").innerHTML = "";
+  if (!turns.length) addMsg("bot", md("Hi Kiaan! I'm hooked up to your server, Apple Calendar and to-do list. Ask me to add something, check on the server, or set up an automation."));
+  turns.forEach(t => addMsg(t.role, t.role === "user" ? esc(t.content) : md(t.content)));
+}
+function chipFor(bubble, text, err) { const a = bubble.querySelector(".acts"); if (!a) return; const c = document.createElement("span"); c.className = "act-chip" + (err ? " err" : ""); c.textContent = text; a.appendChild(c); }
+function compactEvents(list) { return (list || []).map(e => ({ title: e.title, start: e.start, end: e.end, all_day: e.all_day, calendar: (e.calendar || "").trim(), location: e.location || undefined, notes: e.notes ? String(e.notes).slice(0, 140) : undefined })); }
+function chatTools(bubble) {
+  const run = async (label, fn) => { try { const r = await fn(); chipFor(bubble, "✓ " + label); return r; } catch (e) { chipFor(bubble, "✕ " + label, true); throw new Error(e?.message || writeErr(e)); } };
+  return [
+    { name: "get_calendar", description: "Read Kiaan's Apple/iCloud calendar events from today for N days (default 2). Returns a list of {title,start,end,all_day,calendar,location,notes}.", inputSchema: { type: "object", properties: { days: { type: "integer", minimum: 1, maximum: 14 } } },
+      execute: async ({ days }) => run("Read calendar", async () => { if (demo) return compactEvents(state.events); const n = clamp(Number(days) || 2, 1, 14); const r = await mcp.callTool(SERVER, "calendar_events", { start: "today", end: `${nyDate(n)}T00:00:00` }); return compactEvents(unwrap(r.payload)).slice(0, 60); }) },
+    { name: "add_calendar_event", description: "Add an event to Kiaan's Apple Calendar. start/end are local Boston times like 2026-10-30T14:00:00 (or a date for all-day). calendar must be one of the exact calendar names given in the instructions.", inputSchema: { type: "object", properties: { title: { type: "string" }, start: { type: "string" }, end: { type: "string" }, all_day: { type: "boolean" }, calendar: { type: "string" }, location: { type: "string" }, notes: { type: "string" } }, required: ["title", "start"] },
+      execute: async i => run(`Added "${i.title}" to calendar`, async () => { const input = { title: String(i.title), start: String(i.start) }; ["end", "calendar", "location", "notes"].forEach(k => i[k] && (input[k] = String(i[k]))); if (i.all_day) input.all_day = true; const r = await act("calendar_create_event", input); refresh("calendar_events", "activity_log"); celebrate("hall", ["#7fd3ff", "#fff7ea"]); return r || { ok: true }; }) },
+    { name: "get_todos", description: "List Kiaan's open to-dos. Returns [{id,title,due,priority,project}].", execute: async () => run("Read to-dos", async () => demo ? state.tasks : (unwrap((await mcp.callTool(SERVER, "tasks_list", { status: "open" })).payload) || [])) },
+    { name: "add_todo", description: "Add a to-do. due is a date like 2026-11-02. priority: high | normal | low.", inputSchema: { type: "object", properties: { title: { type: "string" }, due: { type: "string" }, priority: { type: "string", enum: ["high", "normal", "low"] }, project: { type: "string" }, notes: { type: "string" } }, required: ["title"] },
+      execute: async i => run(`Added to-do "${i.title}"`, async () => { const input = { title: String(i.title) }; ["due", "priority", "project", "notes"].forEach(k => i[k] && (input[k] = String(i[k]))); const r = await act("tasks_add", input); if (demo) { state.tasks = [...state.tasks, { id: "s" + Date.now(), ...input }]; renderTasks(); } else refresh("tasks_list", "activity_log"); return r || { ok: true }; }) },
+    { name: "complete_todo", description: "Mark a to-do done by its id (get ids from get_todos).", inputSchema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
+      execute: async i => run("Marked to-do done", async () => { const r = await act("tasks_complete", { task_id: String(i.id) }); refresh("tasks_list"); celebrate("hall"); return r || { ok: true }; }) },
+    { name: "server_health", description: "Check the server: running parts, CPU, memory, storage, uptime, cost. Returns plain data.", execute: async () => run("Checked server", async () => { const s = state.status; if (!s) throw new Error("No server data yet"); return { services: s.services.map(v => ({ name: SVC_NAMES[v.name] || v.name, running: v.status === "up" })), cpu_pct: s.cpu.pct, memory_pct: s.mem.pct, swap_pct: s.swap.pct, disk_pct: s.disk.pct, disk_free_gb: +(s.disk.total_gb - s.disk.used_gb).toFixed(1), uptime_days: Math.floor(s.uptime_s / 86400), monthly_cost: s.digitalocean?.price_monthly, brightspace: bsState().kind, issues: issues() }; }) },
+    { name: "list_automations", description: "List Kiaan's scheduled automations with id, name, schedule (plain English), on/off and last run result.", execute: async () => run("Read automations", async () => (state.autos || []).map(a => ({ id: a.id, name: a.name, on: a.enabled, schedule: a.run_once_at ? "once " + a.run_once_at : cronText(a.cron_expression), last_run: a.last_run?.status || "never" }))) },
+    { name: "create_automation", description: "Create a scheduled automation that Claude runs on its own. frequency: daily | weekdays | weekly | hours | once. time is HH:MM (24h, Boston). weekday 0-6 (0=Sunday) for weekly. every_hours for hours. date YYYY-MM-DD for once. instructions: what Claude should do each time, written as a full instruction.", inputSchema: { type: "object", properties: { name: { type: "string" }, instructions: { type: "string" }, frequency: { type: "string", enum: ["daily", "weekdays", "weekly", "hours", "once"] }, time: { type: "string" }, weekday: { type: "integer" }, every_hours: { type: "integer" }, date: { type: "string" } }, required: ["name", "instructions", "frequency"] },
+      execute: async i => run(`Created automation "${i.name}"`, async () => { const name = String(i.name).slice(0, 80); const sched = buildSchedule(String(i.frequency), String(i.time || "08:00"), Number(i.weekday ?? 1), String(i.date || nyDate(1)), clamp(Number(i.every_hours) || 6, 1, 24), name); await createAutomation({ name, instructions: String(i.instructions), schedule: sched }); celebrate("mill", ["#5eecd2", "#fff7ea"]); return { ok: true, schedule: sched.cron_expression ? cronText(sched.cron_expression) : "once at " + sched.run_once_at }; }) },
+    { name: "search_web", description: "Look something up on the live web (news, prices, opening hours, facts). Returns an answer with sources.", inputSchema: { type: "object", properties: { question: { type: "string" } }, required: ["question"] },
+      execute: async i => run("Searched the web", async () => { if (demo) return "Sample mode: no web search."; const r = await mcp.callTool(SERVER, "ask_perplexity", { question: String(i.question), depth: "fast" }); const p = unwrap(r.payload); return typeof p === "string" ? p.slice(0, 6000) : JSON.stringify(p).slice(0, 6000); }) },
+  ];
+}
+function rules() {
+  const cals = (state.calendars || []).map(c => JSON.stringify(c.name)).join(", ") || '"Personal "';
+  return `You are Cloud, the friendly assistant inside Kiaan's "Kiaan Cloud Island" page. Kiaan is a first-year student at Bentley University (Waltham, near Boston). Right now it is ${new Date().toLocaleString("en-US", { timeZone: TZ, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })} Boston time (today is ${nyDate(0)}).
+
+You can use tools to read and change his real Apple Calendar, to-do list and scheduled automations, check his server, and search the web.
+Rules:
+- Talk like a helpful friend: short, plain, no jargon. Use a short list only when listing several things.
+- When he asks you to add or schedule something, just do it with the tool, then confirm what you did in one line (what, when, where). Fill in sensible defaults (1 hour long, "Personal " calendar) instead of asking, unless the request is truly unclear.
+- Calendar names (use EXACTLY, including any trailing space): ${cals}.
+- Times are Boston local time. Write tool times like 2026-10-30T14:00:00.
+- You cannot delete calendar events or run commands on the server. If he wants to SSH or type server commands, tell him to tap "Open server terminal" in the Server room box (or run "ssh kiaan-cloud" on his Mac).
+- For automations: write the instructions as a complete, standalone task for a future Claude run. Confirm the schedule in plain words after creating.
+- Never invent results; if a tool fails, say what failed in plain words.`;
+}
+let chatCtl = null;
+async function sendChat(text) {
+  text = text.trim(); if (!text || chatBusy) return;
+  if (!sample) { addMsg("bot", "The assistant isn't available in this view. Open this page in Claude to chat."); return; }
+  turns.push({ role: "user", content: text }); saveTurns(); addMsg("user", esc(text));
+  const bubble = addMsg("bot", `<span class="thinking">Thinking…</span>`, true); const body = document.createElement("div"); bubble.prepend(body); bubble.querySelector(".thinking").remove(); body.innerHTML = `<span class="thinking">Thinking…</span>`;
+  chatBusy = true; $("chatSend").textContent = "Stop"; $("chatInput").value = ""; chatCtl = new AbortController();
+  try {
+    const { text: out, truncated } = await sample([{ role: "user", content: rules() }, ...turns.slice(-12)], { tools: chatTools(bubble), signal: chatCtl.signal, modelTier: "default", onText: ({ text }) => { body.innerHTML = md(text); $("chatLog").scrollTop = $("chatLog").scrollHeight; } });
+    body.innerHTML = md(out) + (truncated ? `<p class="thinking">(Cut short. Ask for less at a time.)</p>` : "");
+    turns.push({ role: "assistant", content: out }); saveTurns();
+  } catch (e) {
+    const msg = { cancelled: "Stopped.", not_granted: "You'll need to allow this page to use Claude for the chat to work.", sampling_disabled: "Claude isn't available on this account.", rate_limited: "Too many messages at once. Try again in a minute.", tools_unavailable: "This view can't run the assistant's actions.", refused: "I can't help with that one." }[e?.code] || "Something went wrong. Try again.";
+    body.innerHTML = (e?.text ? md(e.text) : "") + `<p class="thinking">${esc(msg)}</p>`;
+    if (e?.code === "not_granted" || e?.code === "sampling_disabled") { $("chatForm").hidden = true; $("chatChips").hidden = true; }
+  } finally { chatBusy = false; $("chatSend").textContent = "Send"; chatCtl = null; }
+}
+$("chatForm").addEventListener("submit", e => { e.preventDefault(); if (chatBusy) { chatCtl?.abort(); return; } sendChat($("chatInput").value); });
+$("chatInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chatForm").requestSubmit(); } });
+$("chatChips").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) sendChat(c.textContent); });
+
+/* ---------------- live data ---------------- */
+const RENDER = { status: renderStatus, activity: () => { renderActivity(); renderBrightspace(); renderSummary(); spawnFromActivity(); }, tasks: renderTasks, events: renderEvents };
+let seen = null;
+function spawnFromActivity() {
+  const a = state.activity; if (!a) return; const key = e => e.ts + "|" + e.msg;
+  if (seen === null) { seen = new Set(a.map(key)); a.slice(0, 2).reverse().forEach((e, i) => setTimeout(() => spawnCourier(e), 900 + i * 2600)); return; }
+  a.forEach(e => { if (!seen.has(key(e))) { seen.add(key(e)); spawnCourier(e); } });
+}
+const DENY = new Set(["needs_reauth", "server_not_connected", "blocked_by_policy", "approval_required", "not_in_manifest", "selection_required", "server_not_found", "not_granted", "capability_disabled", "capability_removed"]);
+function onData(key, result) { state[key] = unwrap(result.payload ?? null); meta[key] = { at: result.cache?.storedAt ?? Date.now() }; RENDER[key](); updateBanner(); }
+function onErr(key, e) { meta[key] = { ...meta[key], code: e.code, err: connErr(e, "kiaan-cloud") }; if (DENY.has(e.code)) { state[key] = null; RENDER[key](); } updateBanner(); }
+function updateBanner() {
+  const b = $("banner");
+  if (demo) { b.className = "banner"; b.innerHTML = "<span>Showing sample numbers. Open this page in Claude, signed in with the kiaan-cloud connector added, to see your server live.</span>"; b.hidden = false; return; }
+  const errs = Object.values(meta).filter(m => m.code);
+  if (!errs.length) { b.hidden = true; renderSummary(); return; }
+  const texts = [...new Set(errs.map(e => e.err))];
+  b.className = "banner" + (errs.some(e => DENY.has(e.code)) ? " bad" : ""); b.innerHTML = `<span>${esc(texts.join(" "))}</span>`; b.hidden = false; renderSummary();
+}
+function startLive() {
+  const w = (key, tool, input, every) => mcp.watchTool(SERVER, tool, input, ev => ev.type === "data" ? onData(key, ev.result) : onErr(key, ev.error), { refetchInterval: every });
+  w("status", "server_status", null, 30000);
+  w("activity", "activity_log", { limit: 80 }, 30000);
+  w("tasks", "tasks_list", { status: "open" }, 60000);
+  w("events", "calendar_events", { start: "today", end: `${nyDate(2)}T00:00:00` }, 120000);
+  mcp.watchTool(SERVER, "calendar_list_calendars", null, ev => { if (ev.type === "data") { const c = unwrap(ev.result.payload); if (Array.isArray(c)) { state.calendars = c; renderCalendars(); } } }, { cache: { staleTime: 36e5, gcTime: 864e5 } });
+  mcp.watchTool(SERVER, "brief_list", null, ev => { if (ev.type === "data") { const c = unwrap(ev.result.payload); if (Array.isArray(c)) { state.briefs = c; renderBriefs(); } } }, { refetchInterval: 600000 });
+  loadAutos(); setInterval(loadAutos, 180000);
+}
+function startDemo() {
+  demo = true; $("demoTag").hidden = false;
+  const iso = ms => new Date(Date.now() - ms).toISOString(), at = (h, m) => `${nyDate(0)}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00${nyOffset(nyDate(0))}`;
+  state.status = { ip: "203.0.113.10", uptime_s: 3 * 86400, load: [.2, .2, .1], cpu: { pct: 14 }, mem: { pct: 46, used_mb: 900, total_mb: 1967 }, swap: { pct: 0, used_mb: 0, total_mb: 2047 }, disk: { pct: 21, used_gb: 9.8, total_gb: 47.4 },
+    services: ["kiaan-dashboard", "caddy", "ssh", "fail2ban", "cron", "kiaan-mcp", "hermes-gateway"].map(n => ({ name: n, status: "up" })), logins: [{ user: "sample", when: iso(864e5) }], cron: [],
+    digitalocean: { region: "sample", size: "s-1vcpu-2gb", vcpus: 1, memory_mb: 2048, disk_gb: 50, image: "24.04 (LTS) x64", price_monthly: 12, month_to_date_usage: "3.00" } };
+  meta.status = { at: Date.now() };
+  state.activity = [{ ts: iso(6e4), source: "dashboard", msg: "dashboard started" }, { ts: iso(36e5), source: "calendar", msg: "created event 'Sample study block' in Personal " }];
+  state.tasks = [{ id: "s1", title: "Sample to-do", priority: "high", due: nyDate(2) }];
+  state.events = [{ uid: "e1", title: "Sample class", start: at(15, 30), end: at(16, 50), all_day: false, calendar: "Sample" }, { uid: "e2", title: "Sample gym session", start: at(20, 0), end: at(21, 0), all_day: false, calendar: "Sample" }];
+  state.calendars = [{ name: "Sample" }]; state.briefs = [`${nyDate(0)}_sample-brief.md`];
+  state.autos = [{ id: "a1", name: "Sample morning brief", enabled: true, cron_expression: "CRON_TZ=America/New_York 23 7 * * *", next_run_at: new Date(Date.now() + 5 * 36e5).toISOString(), last_run: { status: "SUCCEEDED", finished_at: iso(864e5) } }];
+  renderStatus(); renderActivity(); renderBrightspace(); renderTasks(); renderEvents(); renderCalendars(); renderBriefs(); renderAutos(); updateBanner();
+}
+
+/* clock + boot */
+setInterval(() => { const { h, m } = nyParts(); $("clock").textContent = `Boston ${hm12(h, m)}`; if (state.events) renderEvents(); if (!demo && meta.status.at) $("sub").textContent = `Live · checked ${ago(meta.status.at)}`; }, 15000);
+{ const { h, m } = nyParts(); $("clock").textContent = `Boston ${hm12(h, m)}`; }
+select("island"); renderChatHistory(); renderBrightspace(); renderAutos(); renderBriefs(); renderCalendars(); freqUI();
+(async () => {
+  const C = window.claude && typeof window.claude.use === "function" ? window.claude : null;
+  try { [mcp, sample] = C ? await Promise.all([C.use("mcp"), C.use("sample")]) : [null, null]; } catch { mcp = null; }
+  if (!sample) { $("chatForm").hidden = true; $("chatChips").hidden = true; }
+  if (!mcp) { startDemo(); return; }
+  startLive();
+})();
+})();
+</script>
