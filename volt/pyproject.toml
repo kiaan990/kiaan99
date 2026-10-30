@@ -1,0 +1,47 @@
+[project]
+name = "volt"
+version = "0.1.0"
+description = "Volt Phase 0: NYC rave ticket market watcher (data only, no buying)"
+requires-python = ">=3.12"
+dependencies = [
+  "sqlalchemy>=2.0",
+  "pydantic-settings>=2.3",
+  "httpx>=0.27",
+  "playwright>=1.47",
+  "apscheduler>=3.10,<4",
+  "typer>=0.12",
+  "rich>=13.7",
+  "python-telegram-bot>=21.0",
+  "rapidfuzz>=3.9",
+  "pyyaml>=6.0",
+]
+
+[project.scripts]
+volt = "volt.cli:app"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "types-PyYAML"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/volt"]
+
+[tool.ruff]
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+mypy_path = "src"
+packages = ["volt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

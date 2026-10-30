@@ -1,0 +1,16 @@
+# calendar_peak component. Dates are local (America/New_York) event dates.
+# An event starting after midnight but before 06:00 counts as the previous night.
+peak_25:
+  - {date: 2026-10-31, label: Halloween (Saturday)}
+  - {date: 2026-12-31, label: New Year's Eve}
+peak_18:
+  - {date: 2026-11-25, label: Thanksgiving Eve}
+  - {date: 2026-11-26, label: Thanksgiving}
+  - {date: 2026-11-27, label: Thanksgiving Friday}
+  - {date: 2027-01-01, label: New Year's Day}
+  - {date: 2027-07-04, label: July 4th}
+# Season open/close dates go here as you learn them, e.g.
+#  - {date: 2027-05-22, label: Pacha outdoor season open}
+ordinary_weekend_points: 8   # any other Friday/Saturday
+other_points: 0
+night_rollover_hour: 6

@@ -1,0 +1,50 @@
+# Brand tiers. Anything not listed is Tier 3.
+# Matching: case-insensitive, punctuation-insensitive whole-phrase match of any alias
+# against event title, promoter and lineup. See docs/RUNBOOK.md to add a brand.
+# title_prefix_only: the name is an ordinary word, so a title only counts if it STARTS with the alias
+# ("Afterlife NYC: ..." yes, "Disco Afterlife" no). Promoter/lineup matches always count.
+tier1:
+  - name: Circoloco
+    aliases: [circoloco, circo loco]
+  - name: Keinemusik
+    aliases: [keinemusik]
+  - name: Teksupport
+    aliases: [teksupport]
+  - name: Time Warp
+    aliases: [time warp, timewarp]
+  - name: Afterlife
+    aliases: [afterlife, tale of us]
+    title_prefix_only: true
+  - name: Anyma
+    aliases: [anyma]
+  - name: Boiler Room
+    aliases: [boiler room]
+  - name: Black Coffee
+    aliases: [black coffee]
+  - name: Solomun
+    aliases: [solomun, solomun +1]
+tier2:
+  - name: elrow
+    aliases: [elrow, el row]
+  - name: Cityfox
+    aliases: [cityfox, the cityfox experience]
+  - name: Sara Landry
+    aliases: [sara landry]
+  - name: Gray Area
+    aliases: [gray area, grey area]
+    title_prefix_only: true
+  - name: Zamna
+    aliases: [zamna]
+  - name: BangOn!NYC
+    aliases: [bangon, bang on nyc, bangon!nyc, bangon nyc]
+  - name: John Summit
+    aliases: [john summit]
+  - name: Fred again..
+    aliases: [fred again, fred again..]
+  - name: Fisher
+    aliases: [fisher]
+    title_prefix_only: true
+  - name: Peggy Gou
+    aliases: [peggy gou]
+  - name: Michael Bibi
+    aliases: [michael bibi]

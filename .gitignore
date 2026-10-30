@@ -52,3 +52,18 @@ dev.db
 # Playwright browser cache
 /playwright-report/
 /test-results/
+
+# volt
+volt/.env
+volt/volt.db*
+volt/.browser_profiles/
+volt/.cache/
+volt/debug/
+volt/raw/
+volt/exports/
+volt/logs/
+volt/.venv/
+volt/**/__pycache__/
+volt/.pytest_cache/
+volt/.mypy_cache/
+volt/.ruff_cache/

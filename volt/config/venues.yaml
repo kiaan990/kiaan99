@@ -1,0 +1,57 @@
+# capacity drives gate 2 (3,000-6,500). flip_ok=false fails gate 2 regardless.
+# Pacha: two rows on purpose, because the two configurations have very different capacities
+# and CrowdVolt/Dice list them under different names (see docs/DECISIONS.md D-008).
+venues:
+  - name: Pacha New York
+    aliases: [pacha new york, pacha nyc, pacha ny, pacha, pacha new york outdoor]
+    capacity: 6000
+    platform: DICE
+    flip_ok: true
+    note: outdoor configuration
+  - name: Brooklyn Pacha
+    aliases: [brooklyn pacha, pacha brooklyn, pacha indoor]
+    capacity: 2776
+    platform: DICE
+    flip_ok: true
+    note: indoor configuration
+  - name: Knockdown Center
+    aliases: [knockdown center, knockdown centre, knockdown]
+    capacity: 3200
+    platform: DICE/RA
+    flip_ok: true
+  - name: Brooklyn Storehouse
+    aliases: [brooklyn storehouse, storehouse, brooklyn navy yard storehouse]
+    capacity: 5000
+    platform: DICE
+    flip_ok: true
+    note: closing Nov 1 2026
+  - name: Under the K Bridge
+    aliases: [under the k bridge, under the k, utk, under the kosciuszko bridge]
+    capacity: 6000
+    platform: AXS
+    flip_ok: true
+  - name: Elsewhere
+    aliases: [elsewhere, elsewhere rooftop, elsewhere hall, elsewhere zone one]
+    capacity: 1500
+    platform: Eventbrite
+    flip_ok: true
+  - name: Basement
+    aliases: [basement, basement ny, basement nyc]
+    capacity: 500
+    platform: RA
+    flip_ok: false
+  - name: Nowadays
+    aliases: [nowadays]
+    capacity: 500
+    platform: RA/DICE
+    flip_ok: true
+  - name: Good Room
+    aliases: [good room]
+    capacity: 500
+    platform: RA/DICE
+    flip_ok: true
+  - name: Public Records
+    aliases: [public records]
+    capacity: 500
+    platform: RA/DICE
+    flip_ok: true

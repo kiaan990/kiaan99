@@ -1,0 +1,17 @@
+threshold: 70
+gates:
+  wallet_types: [DICE, POSH]
+  capacity_min: 3000
+  capacity_max: 6500
+  allowed_brand_tiers: [1, 2]
+  sold_out_min_age_days: 5
+  max_lowest_available_tier_index: 2   # 1-based: tier 1 or tier 2 must still be on sale
+  days_to_event_min: 3
+  days_to_event_max: 28
+components:
+  calendar_peak: {max: 25}
+  tier_velocity: {window_days: 7, two_or_more: 20, one: 12, zero: 0}
+  brand_tier: {tier1: 20, tier2: 10, tier3: 0}
+  cv_book: {strong: 15, near_face: 7, near_face_ratio: 0.8, weak: 3}
+  scarcity_event: {flagged: 10}
+  competing_supply: {dice_waitlist_on: -5, same_date_tier1: -5}

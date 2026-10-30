@@ -1,0 +1,1121 @@
+{
+ "data": {
+  "eventListings": {
+   "data": [
+    {
+     "id": "12522261",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2522261",
+      "title": "Halloween Nonstop: DJ Stingray, Convextion, Rene Wise, Juliana Huxtable, DJ Koolt + more",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T22:00:00.000",
+      "endTime": "2026-11-01T15:00:00.000",
+      "interestedCount": 3811,
+      "isTicketed": true,
+      "contentUrl": "/events/2522261",
+      "content": "Mischievous spirits descend as the planets align to bring you a Halloween Nonstop that goes full-tilt freak mode all weekend long.\n\nThe veil is lifted on Friday when local staple COTTON leads us down wormholes of electro-tech witchcraft, followed by shapeshifting rhythmic sorcery from XOXA\u2019s Tammy Lakkis and a hypnotic live set of otherworldly electronics from veteran psychonaut Convextion.\n\nOn Saturday morning, IMOGEN conjures the sun with hard acid and electro, and the one and only masked Detroit legend DJ Stingray keeps the cauldron piping hot and fast-bubbling. Incomparable sonic sorceress Juliana Huxtable\u2019s ever-shifting invocations carry us into the afternoon, followed by a whirlpool of ethereal, driving delights from Sweden\u2019s Philippa Pacho.\n\nDarkness falls once again as London's Rene Wise dishes up rolling, kaleidoscopic techno, followed by webs of pumping, sticky grooves from local hypnotist LYDO. And the late night hours are enchanted with heady, low-end expertise and pulsating, percussive flair by Berlin\u2019s \u0101bnam\u0101 and Nowadays own, DJ G.\n\nOn Sunday morning, we enter the home stretch with Brazil's prince of party-rocking and Nowadays resident, RHR, taking over at 6am before DJ Koolt arrives from Uruguay with a sizzling acid techno bath. Vladimir Ivkovic brings things to a close with his signature strain of genre-agnostic, hypnotic psychedelia.\n\n///\n\nEntry is at the discretion of our door staff. Halloween is a time for creativity, irreverence and self-expression, but costumes involving racist caricatures, hateful imagery or degrading stereotypes are not welcome at Nowadays.\n\nOnline purchases are limited to four tickets maximum per person. If tickets are sold out here, we always hold a good amount at the door. We will do our best to admit those without tickets but entrance is not guaranteed.\n\nNonstop tickets are divided by entry time. You must arrive during the hours listed on your ticket. For example, if you buy a \"10PM\u20134AM\" ticket, you must get here between 10pm and 4am.\n\nAfter you've arrived during your designated time window, you can stay as long as you'd like, so long as you abide by our safer space policy (more on that below). You're also welcome to come and go as you please. Re-entry is based on capacity and is not guaranteed.\n\nNonstop attendees can attend Mister Sunday in the backyard starting at 3 pm without buying a separate ticket, and Nonstop re-entry is honored during Mister Sunday.\n\nViolence, non-consensual touching, racist, homophobic, transphobic, sexist, ageist or other discriminatory language, and leering are not allowed within our walls or in our back yard. If someone says or does something to make you feel uncomfortable while you\u2019re here, let us know.\n\n///\n\nAccessibility:\n\nThe wheelchair entrance to our indoor space is in the driveway, which is the access point most commonly used to enter Nowadays. During parties the driveway gate is locked, so please ask staff at the street entrance for assistance with entry.\n\nAll of our bathrooms are gender-neutral. There is one accessible stall indoors. Just ask any Nowadays staff member for the key, and they can show you the way. During parties, seating is available both on and off the dance floor. While we don\u2019t have a dedicated quiet space indoors during parties, the booths next to coat check are a little quieter, and the deck and back yard a little quieter than that. Most nighttime parties include the use of strobe lights and water based haze.",
+      "venue": {
+       "id": "105873",
+       "name": "Nowadays",
+       "contentUrl": "/clubs/105873",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "150013",
+        "name": "cotton"
+       },
+       {
+        "id": "90504",
+        "name": "Tammy Lakkis"
+       },
+       {
+        "id": "5294",
+        "name": "Convextion"
+       },
+       {
+        "id": "78511",
+        "name": "IMOGEN"
+       },
+       {
+        "id": "11077",
+        "name": "DJ Stingray 313"
+       },
+       {
+        "id": "67358",
+        "name": "Juliana Huxtable"
+       },
+       {
+        "id": "98165",
+        "name": "Philippa Pacho"
+       },
+       {
+        "id": "77651",
+        "name": "Rene Wise"
+       },
+       {
+        "id": "83860",
+        "name": "LYDO"
+       },
+       {
+        "id": "98411",
+        "name": "\u0101bnam\u0101"
+       },
+       {
+        "id": "105668",
+        "name": "DJ G."
+       },
+       {
+        "id": "90252",
+        "name": "RHR"
+       },
+       {
+        "id": "44513",
+        "name": "DJ Koolt"
+       },
+       {
+        "id": "69165",
+        "name": "Vladimir Ivkovic"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "75430",
+        "name": "Nowadays"
+       }
+      ],
+      "promotionalLinks": [
+       {
+        "title": "Nowadays",
+        "url": "https://www.nowadays.nyc"
+       },
+       {
+        "title": "Instagram",
+        "url": "https://www.instagram.com/nowadaysnyc/"
+       }
+      ],
+      "tickets": [
+       {
+        "id": "1415583",
+        "title": "Oct 30 / Fri Night / Entry before 11PM",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1415584",
+        "title": "Oct 30 / Fri Night 10PM - 5AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415585",
+        "title": "Oct 30 / Fri Night 10PM - 5AM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 59.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415586",
+        "title": "Oct 31 / Early Sat 5AM - 10AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1415587",
+        "title": "Oct 31 / Early Sat 5AM - 10AM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415588",
+        "title": "Oct 31 / Daytime Sat 10AM - 3PM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415589",
+        "title": "Oct 31 / Daytime Sat 10AM - 3PM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 59.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415590",
+        "title": "Oct 31 / Evening Sat 3PM - 10PM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415591",
+        "title": "Oct 31 / Evening Sat 3PM - 10PM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 59.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415592",
+        "title": "Oct 31 / Sat Night 10PM - 5AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415593",
+        "title": "Oct 31 / Sat Night 10PM - 5AM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 64.6,
+        "isAddOn": false
+       },
+       {
+        "id": "1415594",
+        "title": "Nov 1 / Early Sun 5AM - 10AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 43.05,
+        "isAddOn": false
+       },
+       {
+        "id": "1415595",
+        "title": "Nov 1 / Early Sun 5AM - 10AM / Final Release",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1415596",
+        "title": "Nov 1 / Daytime Sun 10AM - 3PM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 32.3,
+        "isAddOn": false
+       },
+       {
+        "id": "1415597",
+        "title": "Nov 1 / Daytime Sun 10AM - 3PM / Final Release",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1466469",
+        "title": "Oct 31 / Daytime Saturday 12pm - 6pm",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-10-27T19:30:00.000Z",
+        "priceRetail": 64.6,
+        "isAddOn": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "12507236",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2507236",
+      "title": "CircoLoco New York",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T22:00:00.000",
+      "endTime": "2026-10-31T06:00:00.000",
+      "interestedCount": 362,
+      "isTicketed": false,
+      "contentUrl": "/events/2507236",
+      "content": "",
+      "venue": {
+       "id": "238338",
+       "name": "Brooklyn Storehouse",
+       "contentUrl": "/clubs/238338",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "6388",
+        "name": "&ME"
+       },
+       {
+        "id": "153346",
+        "name": "Beltran"
+       },
+       {
+        "id": "75839",
+        "name": "Carlita"
+       },
+       {
+        "id": "12067",
+        "name": "Konstantin"
+       },
+       {
+        "id": "4298",
+        "name": "Map.ache"
+       },
+       {
+        "id": "111294",
+        "name": "Mochakk"
+       },
+       {
+        "id": "5011",
+        "name": "Rampa"
+       },
+       {
+        "id": "1013",
+        "name": "Seth Troxler"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "113",
+        "name": "CircoLoco"
+       },
+       {
+        "id": "14688",
+        "name": "Teksupport"
+       }
+      ],
+      "promotionalLinks": [
+       {
+        "title": "SIGN UP NOW",
+        "url": "https://circolocoibiza.com/event/newyork"
+       }
+      ],
+      "tickets": []
+     }
+    },
+    {
+     "id": "22522261",
+     "listingDate": "2026-10-31T00:00:00.000",
+     "event": {
+      "id": "2522261",
+      "title": "Halloween Nonstop: DJ Stingray, Convextion, Rene Wise, Juliana Huxtable, DJ Koolt + more",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T22:00:00.000",
+      "endTime": "2026-11-01T15:00:00.000",
+      "interestedCount": 3811,
+      "isTicketed": true,
+      "contentUrl": "/events/2522261",
+      "content": "Mischievous spirits descend as the planets align to bring you a Halloween Nonstop that goes full-tilt freak mode all weekend long.\n\nThe veil is lifted on Friday when local staple COTTON leads us down wormholes of electro-tech witchcraft, followed by shapeshifting rhythmic sorcery from XOXA\u2019s Tammy Lakkis and a hypnotic live set of otherworldly electronics from veteran psychonaut Convextion.\n\nOn Saturday morning, IMOGEN conjures the sun with hard acid and electro, and the one and only masked Detroit legend DJ Stingray keeps the cauldron piping hot and fast-bubbling. Incomparable sonic sorceress Juliana Huxtable\u2019s ever-shifting invocations carry us into the afternoon, followed by a whirlpool of ethereal, driving delights from Sweden\u2019s Philippa Pacho.\n\nDarkness falls once again as London's Rene Wise dishes up rolling, kaleidoscopic techno, followed by webs of pumping, sticky grooves from local hypnotist LYDO. And the late night hours are enchanted with heady, low-end expertise and pulsating, percussive flair by Berlin\u2019s \u0101bnam\u0101 and Nowadays own, DJ G.\n\nOn Sunday morning, we enter the home stretch with Brazil's prince of party-rocking and Nowadays resident, RHR, taking over at 6am before DJ Koolt arrives from Uruguay with a sizzling acid techno bath. Vladimir Ivkovic brings things to a close with his signature strain of genre-agnostic, hypnotic psychedelia.\n\n///\n\nEntry is at the discretion of our door staff. Halloween is a time for creativity, irreverence and self-expression, but costumes involving racist caricatures, hateful imagery or degrading stereotypes are not welcome at Nowadays.\n\nOnline purchases are limited to four tickets maximum per person. If tickets are sold out here, we always hold a good amount at the door. We will do our best to admit those without tickets but entrance is not guaranteed.\n\nNonstop tickets are divided by entry time. You must arrive during the hours listed on your ticket. For example, if you buy a \"10PM\u20134AM\" ticket, you must get here between 10pm and 4am.\n\nAfter you've arrived during your designated time window, you can stay as long as you'd like, so long as you abide by our safer space policy (more on that below). You're also welcome to come and go as you please. Re-entry is based on capacity and is not guaranteed.\n\nNonstop attendees can attend Mister Sunday in the backyard starting at 3 pm without buying a separate ticket, and Nonstop re-entry is honored during Mister Sunday.\n\nViolence, non-consensual touching, racist, homophobic, transphobic, sexist, ageist or other discriminatory language, and leering are not allowed within our walls or in our back yard. If someone says or does something to make you feel uncomfortable while you\u2019re here, let us know.\n\n///\n\nAccessibility:\n\nThe wheelchair entrance to our indoor space is in the driveway, which is the access point most commonly used to enter Nowadays. During parties the driveway gate is locked, so please ask staff at the street entrance for assistance with entry.\n\nAll of our bathrooms are gender-neutral. There is one accessible stall indoors. Just ask any Nowadays staff member for the key, and they can show you the way. During parties, seating is available both on and off the dance floor. While we don\u2019t have a dedicated quiet space indoors during parties, the booths next to coat check are a little quieter, and the deck and back yard a little quieter than that. Most nighttime parties include the use of strobe lights and water based haze.",
+      "venue": {
+       "id": "105873",
+       "name": "Nowadays",
+       "contentUrl": "/clubs/105873",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "150013",
+        "name": "cotton"
+       },
+       {
+        "id": "90504",
+        "name": "Tammy Lakkis"
+       },
+       {
+        "id": "5294",
+        "name": "Convextion"
+       },
+       {
+        "id": "78511",
+        "name": "IMOGEN"
+       },
+       {
+        "id": "11077",
+        "name": "DJ Stingray 313"
+       },
+       {
+        "id": "67358",
+        "name": "Juliana Huxtable"
+       },
+       {
+        "id": "98165",
+        "name": "Philippa Pacho"
+       },
+       {
+        "id": "77651",
+        "name": "Rene Wise"
+       },
+       {
+        "id": "83860",
+        "name": "LYDO"
+       },
+       {
+        "id": "98411",
+        "name": "\u0101bnam\u0101"
+       },
+       {
+        "id": "105668",
+        "name": "DJ G."
+       },
+       {
+        "id": "90252",
+        "name": "RHR"
+       },
+       {
+        "id": "44513",
+        "name": "DJ Koolt"
+       },
+       {
+        "id": "69165",
+        "name": "Vladimir Ivkovic"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "75430",
+        "name": "Nowadays"
+       }
+      ],
+      "promotionalLinks": [
+       {
+        "title": "Nowadays",
+        "url": "https://www.nowadays.nyc"
+       },
+       {
+        "title": "Instagram",
+        "url": "https://www.instagram.com/nowadaysnyc/"
+       }
+      ],
+      "tickets": [
+       {
+        "id": "1415583",
+        "title": "Oct 30 / Fri Night / Entry before 11PM",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1415584",
+        "title": "Oct 30 / Fri Night 10PM - 5AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415585",
+        "title": "Oct 30 / Fri Night 10PM - 5AM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 59.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415586",
+        "title": "Oct 31 / Early Sat 5AM - 10AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1415587",
+        "title": "Oct 31 / Early Sat 5AM - 10AM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415588",
+        "title": "Oct 31 / Daytime Sat 10AM - 3PM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415589",
+        "title": "Oct 31 / Daytime Sat 10AM - 3PM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 59.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415590",
+        "title": "Oct 31 / Evening Sat 3PM - 10PM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415591",
+        "title": "Oct 31 / Evening Sat 3PM - 10PM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 59.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415592",
+        "title": "Oct 31 / Sat Night 10PM - 5AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 53.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1415593",
+        "title": "Oct 31 / Sat Night 10PM - 5AM / Final Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 64.6,
+        "isAddOn": false
+       },
+       {
+        "id": "1415594",
+        "title": "Nov 1 / Early Sun 5AM - 10AM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 43.05,
+        "isAddOn": false
+       },
+       {
+        "id": "1415595",
+        "title": "Nov 1 / Early Sun 5AM - 10AM / Final Release",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1415596",
+        "title": "Nov 1 / Daytime Sun 10AM - 3PM / First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 32.3,
+        "isAddOn": false
+       },
+       {
+        "id": "1415597",
+        "title": "Nov 1 / Daytime Sun 10AM - 3PM / Final Release",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-28T21:00:00.000Z",
+        "priceRetail": 48.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1466469",
+        "title": "Oct 31 / Daytime Saturday 12pm - 6pm",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-10-27T19:30:00.000Z",
+        "priceRetail": 64.6,
+        "isAddOn": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "12507244",
+     "listingDate": "2026-10-31T00:00:00.000",
+     "event": {
+      "id": "2507244",
+      "title": "CircoLoco New York",
+      "date": "2026-10-31T00:00:00.000",
+      "startTime": "2026-10-31T22:00:00.000",
+      "endTime": "2026-11-01T06:00:00.000",
+      "interestedCount": 292,
+      "isTicketed": false,
+      "contentUrl": "/events/2507244",
+      "content": "",
+      "venue": {
+       "id": "238338",
+       "name": "Brooklyn Storehouse",
+       "contentUrl": "/clubs/238338",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "109988",
+        "name": "Aline Umber"
+       },
+       {
+        "id": "60409",
+        "name": "ANOTR"
+       },
+       {
+        "id": "758",
+        "name": "Dixon"
+       },
+       {
+        "id": "118815",
+        "name": "Jamback"
+       },
+       {
+        "id": "38599",
+        "name": "Jimi Jules"
+       },
+       {
+        "id": "129681",
+        "name": "Krol"
+       },
+       {
+        "id": "83736",
+        "name": "Rossi"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "113",
+        "name": "CircoLoco"
+       },
+       {
+        "id": "14688",
+        "name": "Teksupport"
+       }
+      ],
+      "promotionalLinks": [
+       {
+        "title": "SIGN UP NOW",
+        "url": "https://circolocoibiza.com/event/newyork"
+       }
+      ],
+      "tickets": []
+     }
+    },
+    {
+     "id": "12557139",
+     "listingDate": "2026-11-01T00:00:00.000",
+     "event": {
+      "id": "2557139",
+      "title": "CircoLoco New York (Sunday)",
+      "date": "2026-11-01T00:00:00.000",
+      "startTime": "2026-11-01T14:00:00.000",
+      "endTime": "2026-11-02T01:00:00.000",
+      "interestedCount": 41,
+      "isTicketed": true,
+      "contentUrl": "/events/2557139",
+      "content": "Nov 1:\nBrooklyn Storehouse\n\nCircoloco Night 3  \n\nBedouin\nChlo\u00e9 Caillet\nDean Turnley\nDixon\nJimi Jules\nMiguelle & Tons\nProspa\nRossi.  \n\n12pm - 12am\n\n21+\n\nTable Reservations:\nWhatsApp: +1 (718) 614-2563\nEmail: info@tcepresents.com",
+      "venue": {
+       "id": "238338",
+       "name": "Brooklyn Storehouse",
+       "contentUrl": "/clubs/238338",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "45088",
+        "name": "Bedouin"
+       },
+       {
+        "id": "85915",
+        "name": "Chlo\u00e9 Caillet"
+       },
+       {
+        "id": "182573",
+        "name": "Dean Turnley"
+       },
+       {
+        "id": "758",
+        "name": "Dixon"
+       },
+       {
+        "id": "38599",
+        "name": "Jimi Jules"
+       },
+       {
+        "id": "90643",
+        "name": "Prospa"
+       },
+       {
+        "id": "83736",
+        "name": "Rossi"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "113",
+        "name": "CircoLoco"
+       },
+       {
+        "id": "14688",
+        "name": "Teksupport"
+       }
+      ],
+      "promotionalLinks": [],
+      "tickets": [
+       {
+        "id": "1451658",
+        "title": "General admission",
+        "validType": "VALID",
+        "onSaleFrom": "2026-10-08T16:30:00.000Z",
+        "priceRetail": 172.4,
+        "isAddOn": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "12523921",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2523921",
+      "title": "BOUND Blackout: Laure Croft / SKIN / Katie Rex / Kim Anh / Dj Warning / likeholywine / nonsuit",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T22:30:00.000",
+      "endTime": "2026-10-31T07:00:00.000",
+      "interestedCount": 3665,
+      "isTicketed": true,
+      "contentUrl": "/events/2523921",
+      "content": "FETISH ATTIRE MANDATORY\n\nLaure Croft, the Tune Raider herself, makes her BASEMENT debut for BOUND. The Dutch-born, Berlin-based artist lives by one rule alone: \u201ckeep it sexy.\u201d Since 2024, she\u2019s been at the helm of her SEXYRECS label, which has already assembled a remarkable roster. Her vinyl-heavy sets strike an essential balance: scorching techno, coursing, atmospheric grooves, decisive power all come into play. Running on pure selections and honed technique with no excess of flash, Croft oozes the kind of confidence in the booth that makes it impossible not to lock in. Skin also arrives in the room for the first time. This one is special - Skin made her name as the lead singer for the iconic rock-electronic group Skunk Anansie, whose work across the \u201890s blended elements of heavy, confrontational punk and grunge with industrial and electronica. As a solo artist, she has channeled that intensity into her techno sets, bringing the same galvanizing power that has made her such a figurehead. BOUND founder Katie Rex completes the lineup, driving the night home with a dose of pure hardgroove and thundering, noise-caked techno. \n\nSan Francisco\u2019s Squish joins for their second STUDIO takeover. The party series has grown into one of the key hubs of queer nightlife in a city that is already historic for its deep history of LGBT+ art, culture and political activism. Extending that lineage, Squish has invited some of the most thrilling artists from around the globe to the Bay Area for community-forward events whose impact reverberates far beyond their hometown. Kim Anh headlines the night. The STUDIO mainstay has spent years developing her own unique interpretation of dance music. Rooted in the glimmering vistas and charged glamor of the \u201880s, Anh has crafted a body of work that finds timelessness in hyperspecificity. DJ Warning returns from LA following this June\u2019s debut at the club. This May, he released \u201cFist Pumpers United,\u201d a three track EP that pulls no punches. At the center of the batch sits \u201cMove Your Body,\u201d a track that reworks Marshall Jefferson\u2019s anthemic classic of the same name. Warning\u2019s statement rings through loud and clear. Even as he invokes a pillar of the genre, he makes it own. Squish co-founders likeholywine and Nonsuit complete the lineup with one of their signature b2bs. likeholywine drills right down to the core with heavy, pumping house, no questions asked, while Nonsuit adds a touch of depth and dubby reverberance. \n\n\u25a0 No photos or videos\n\u25a0 Ticket purchase does not guarantee entrance\n\u25a0 No phone use on the dancefloor\n\u25a0 The dance floor is for dancing, not conversation\n\u25a0 No glowing/flashing clothes or items\n\u25a0 Respect other people's space, no shuffling\n\u25a0 Consent is mandatory\n\u25a0 Zero tolerance for racism, homophobia, transphobia, sexism, ableism or any form of discrimination\n\u25a0 Take care of each other, alert our staff if somebody isn't feeling well\n\u25a0 Violating the house rules will result in removal\n\nPLEASE REVIEW HOUSE POLICIES AT LINK BELOW",
+      "venue": {
+       "id": "165976",
+       "name": "BASEMENT",
+       "contentUrl": "/clubs/165976",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "103810",
+        "name": "Laure Croft"
+       },
+       {
+        "id": "102985",
+        "name": "SKIN"
+       },
+       {
+        "id": "67907",
+        "name": "Katie Rex"
+       },
+       {
+        "id": "23894",
+        "name": "Kim Anh"
+       },
+       {
+        "id": "117629",
+        "name": "Dj Warning"
+       },
+       {
+        "id": "105147",
+        "name": "likeholywine"
+       },
+       {
+        "id": "73884",
+        "name": "nonsuit"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "76521",
+        "name": "BOUND"
+       },
+       {
+        "id": "87766",
+        "name": "basement ny"
+       },
+       {
+        "id": "90054",
+        "name": "SQUISH"
+       }
+      ],
+      "promotionalLinks": [
+       {
+        "title": "HOUSE RULES ",
+        "url": "https://basementny.net/house-rules"
+       }
+      ],
+      "tickets": [
+       {
+        "id": "1415494",
+        "title": "Early Bird",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T19:30:00.000Z",
+        "priceRetail": 16.65,
+        "isAddOn": false
+       },
+       {
+        "id": "1415550",
+        "title": "First Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T19:30:00.000Z",
+        "priceRetail": 22.2,
+        "isAddOn": false
+       },
+       {
+        "id": "1415551",
+        "title": "Second Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T19:30:00.000Z",
+        "priceRetail": 27.8,
+        "isAddOn": false
+       },
+       {
+        "id": "1419189",
+        "title": "Third Release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-28T19:30:00.000Z",
+        "priceRetail": 33.35,
+        "isAddOn": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "12520913",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2520913",
+      "title": "MERGE HALLOWEEN",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T23:00:00.000",
+      "endTime": "2026-10-31T13:00:00.000",
+      "interestedCount": 1889,
+      "isTicketed": true,
+      "contentUrl": "/events/2520913",
+      "content": "MERGEBUMPS: The Halloween Party\n\nArtwork by David Padilla\nLighting by Studio GUMGUM\nSound by subBass Soundsystems\n\n---\n\nTimetable:\u00a0\n11-1: Annie Lew\n1-3: Yonti\n3-4: Fadi Mohem (live)\n4-6: Robert Hood\n6-10: Ignez\n10-1: Phase Fatale b2b Ne/Re/A\n\n---\n\nAn email with event details/location will be sent to ticketholders at 9pm on 10/30!\n\nWe'll have a robust team working to ensure the vibes and our guests are safe and comfortable. Admittance is at the discretion of our door staff. Tickets do NOT guarantee entry, and removal for violation of any of our policies below do not constitute a refund.\n\n---\n\nMerge is a Brooklyn-based, queer party that aims to cultivate sonic liminoid experiences through techno music. We will work together to incubate the collective queer body, and experience its transformation under the influence of techno. We seek release, mutual understanding, deeper access to the personal, interconnected, and ethereal. We honor the sound through dance, self expression, and hyper-immersion.\n\n---\n\nWe have zero tolerance for physical, verbal, or sexual harassment. This includes non-consensual touching, violence, discriminatory language, or any behaviors that have a negative impact on the experience or the physical safety of other guests. If a problem or concern arises, guests are encouraged to locate a staff member for assistance. While on the dance floor, we encourage guests to keep conversations to a minimum and phones in their pockets.\n\nCome correct and ready to sweat!",
+      "venue": {
+       "id": "201659",
+       "name": "TBA - Brooklyn",
+       "contentUrl": null,
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "954",
+        "name": "Robert Hood"
+       },
+       {
+        "id": "70323",
+        "name": "Fadi Mohem"
+       },
+       {
+        "id": "70860",
+        "name": "Ignez"
+       },
+       {
+        "id": "51198",
+        "name": "Phase Fatale"
+       },
+       {
+        "id": "68783",
+        "name": "Ne/Re/A"
+       },
+       {
+        "id": "86481",
+        "name": "Yonti"
+       },
+       {
+        "id": "109939",
+        "name": "Annie Lew"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "101265",
+        "name": "MERGE"
+       }
+      ],
+      "promotionalLinks": [],
+      "tickets": [
+       {
+        "id": "1412113",
+        "title": "Early bird",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-25T15:00:00.000Z",
+        "priceRetail": 56.45,
+        "isAddOn": false
+       },
+       {
+        "id": "1412114",
+        "title": "1st release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-25T15:00:00.000Z",
+        "priceRetail": 62,
+        "isAddOn": false
+       },
+       {
+        "id": "1412115",
+        "title": "2nd release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-25T15:00:00.000Z",
+        "priceRetail": 67.5,
+        "isAddOn": false
+       },
+       {
+        "id": "1412117",
+        "title": "3rd release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-08-25T15:00:00.000Z",
+        "priceRetail": 73.05,
+        "isAddOn": false
+       },
+       {
+        "id": "1412119",
+        "title": "Final release",
+        "validType": "VALID",
+        "onSaleFrom": "2026-08-25T15:00:00.000Z",
+        "priceRetail": 79.7,
+        "isAddOn": false
+       },
+       {
+        "id": "1459808",
+        "title": "Entry After 6am",
+        "validType": "VALID",
+        "onSaleFrom": "2026-10-19T14:00:00.000Z",
+        "priceRetail": 45.4,
+        "isAddOn": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "12526569",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2526569",
+      "title": "WHOREPOCALYPSE w/ Zutzut, 2AT, RICO RICA, DJ Rankng, Sterling Juan Diaz, Litney + more",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T23:00:00.000",
+      "endTime": "2026-10-31T04:00:00.000",
+      "interestedCount": 1135,
+      "isTicketed": true,
+      "contentUrl": "/events/2526569",
+      "content": "Whorechata's WHOREPOCALYPSE returns bigger than ever, taking over two rooms for the first time and featuring the best from the underground communities reshaping Latin club culture across the U.S., Mexico, Colombia and beyond. \n\nExpect a cross-border lineup of artists taking it into harder, darker, and sexier territory. Making their Whorechata debut, Zutzut (CDMX) has been a pioneering force blending Latin rhythms with electronic club beats for more than a decade. Joining him will be 2AT (Bogot\u00e1), DJ Ranking (CDMX), Rico Rica (Barranquilla) and Iris Estefan\u00eda (CDMX). The second room pays homage to the scenes closer to home, with Sterling Juan Diaz (NYC) and Litney (Toronto) joining Whorechata residents Roman Sensation and OYYSTER for a collision of high-energy Latin techno, dembow, bubbling and more.\n\nThe WHOREPOCALYPSE is a space that centers queer and trans Latinx, people of color and their allies. Produced in collaboration with LEAK NYC.",
+      "venue": {
+       "id": "198467",
+       "name": "The Meadows",
+       "contentUrl": "/clubs/198467",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "124094",
+        "name": "RICO RICA"
+       },
+       {
+        "id": "111831",
+        "name": "2AT"
+       },
+       {
+        "id": "105838",
+        "name": "Sterling Juan Diaz"
+       },
+       {
+        "id": "120452",
+        "name": "Litney"
+       },
+       {
+        "id": "130596",
+        "name": "Iris Estefan\u00eda"
+       },
+       {
+        "id": "128080",
+        "name": "Roman Sensation"
+       },
+       {
+        "id": "171407",
+        "name": "OYYSTER"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "107529",
+        "name": "Whorechata NYC"
+       }
+      ],
+      "promotionalLinks": [],
+      "tickets": [
+       {
+        "id": "1429490",
+        "title": "XTRA EARLY BIRD",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-09-01T19:00:00.000Z",
+        "priceRetail": 0,
+        "isAddOn": false
+       },
+       {
+        "id": "1429491",
+        "title": "1st release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-09-01T19:00:00.000Z",
+        "priceRetail": 17.25,
+        "isAddOn": false
+       },
+       {
+        "id": "1430377",
+        "title": "2nd release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-09-01T19:00:00.000Z",
+        "priceRetail": 23,
+        "isAddOn": false
+       },
+       {
+        "id": "1430379",
+        "title": "3rd release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-09-01T19:00:00.000Z",
+        "priceRetail": 28.75,
+        "isAddOn": false
+       },
+       {
+        "id": "1433063",
+        "title": "General admission",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-09-01T19:00:00.000Z",
+        "priceRetail": 34.5,
+        "isAddOn": false
+       },
+       {
+        "id": "1433064",
+        "title": "Final release",
+        "validType": "SOLDOUT",
+        "onSaleFrom": "2026-09-01T19:00:00.000Z",
+        "priceRetail": 40,
+        "isAddOn": false
+       }
+      ]
+     }
+    },
+    {
+     "id": "12551305",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2551305",
+      "title": "Kinder Circus Halloween",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T22:00:00.000",
+      "endTime": "2026-10-31T04:00:00.000",
+      "interestedCount": 153,
+      "isTicketed": true,
+      "contentUrl": "/events/2551305",
+      "content": "On Friday, October 30th, we invite you to gather in Brooklyn and dance the night away with other human-like creatures like yourself.\n\nFor one night, the ordinary world disappears. Find and lose yourself in an extraordinaire halloween experience filled with house music, strange characters, freaky beings and explore the ritual of dance.\n\nCostumes mandatory. Most original and creative costumes will be rewarded with a prize on the spot!\n\nCome curious. Come strange. Come ready to dance.\n\nKINDER CIRCUS HALLOWEEN\nFriday, October 30th, 2026 \n10pm - 4am\n21+\n\nno refunds\n\nThe Ornate Studio \n650 Sackett St, Brooklyn, NY 11217\n\nFor table reservations or guest-list inquiries: kindercircusnyc@gmail.com",
+      "venue": {
+       "id": "261557",
+       "name": "The Ornate Studio",
+       "contentUrl": "/clubs/261557",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "58623",
+        "name": "Jordi Iven"
+       },
+       {
+        "id": "162043",
+        "name": "Sebastien Das"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "83020",
+        "name": "Kinder Circus"
+       },
+       {
+        "id": "100447",
+        "name": "Truly Yours NYC"
+       }
+      ],
+      "promotionalLinks": [],
+      "tickets": []
+     }
+    },
+    {
+     "id": "12562879",
+     "listingDate": "2026-10-30T00:00:00.000",
+     "event": {
+      "id": "2562879",
+      "title": "Good Friday",
+      "date": "2026-10-30T00:00:00.000",
+      "startTime": "2026-10-30T22:00:00.000",
+      "endTime": "2026-10-31T04:00:00.000",
+      "interestedCount": 157,
+      "isTicketed": false,
+      "contentUrl": "/events/2562879",
+      "content": "Mitch Ferrino & House in Order present   Good Friday   A communal House party thats built on good sound + good vibes + no vip.  We welcome everyone to join us - once a month - for a night where you can trust the DJ. They will deliver. We guarantee cause we picked 'em. The people around you, what's rad is that they actually came to dance - absolutely no tolerance for ego or hate in our house. No pretense. Just intention, rhythm, and living in the moment.\n\nyour DJs for the night (a-z)\n\nDawson                    \nDropo\nFrankie Sharp          \nMascari                      \nMitch Ferrino            \nSPRFRK\n\nHallo-Qween,\nthis Halloween you'll\nfind two floors to explore\nsix DJs selected with intention \nguiding you through the night fueled by...... House Music \n\nLast thing,  before you scroll to the ticket link below to secure your entry. \nThere will be a Costume Contest! So dig through those wardrobes and \nbreak out your best Halloween look for a chance to win -- $1000  \n\n10 \u2013 late\n355 W. 41st St. New York, NY 10036\n\nPURCHASE TICKETS\nWeb users - scroll down -->   promotional link-->    click \"tickets\"   \n\nApp users: you must go to shotgun live presents website and search \u201cGood Friday\u201d to find us.\n\n\nA limited number of tickets will be sold at the door once online sales are finished.\n\n\n",
+      "venue": {
+       "id": "208917",
+       "name": "Red Eye NY",
+       "contentUrl": "/clubs/208917",
+       "area": {
+        "id": "8",
+        "name": "New York City"
+       }
+      },
+      "artists": [
+       {
+        "id": "93635",
+        "name": "DJ Dawson"
+       },
+       {
+        "id": "137044",
+        "name": "DROPO"
+       },
+       {
+        "id": "149962",
+        "name": "Mitch Ferrino"
+       },
+       {
+        "id": "114882",
+        "name": "SPRFRK"
+       }
+      ],
+      "promoters": [
+       {
+        "id": "136411",
+        "name": "House In Order Presents"
+       }
+      ],
+      "promotionalLinks": [
+       {
+        "title": "tickets",
+        "url": "https://shotgun.live/events/goodfriday-oct-30?utm_source=ra"
+       },
+       {
+        "title": "insta",
+        "url": "https://www.instagram.com/goodfridaynyc/"
+       }
+      ],
+      "tickets": []
+     }
+    }
+   ],
+   "totalResults": 10
+  }
+ }
+}

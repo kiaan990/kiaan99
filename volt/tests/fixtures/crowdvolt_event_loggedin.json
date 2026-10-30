@@ -1,0 +1,12 @@
+{
+  "_comment": "SYNTHETIC FIXTURE. Shape of what the crawler archives per page (raw/crowdvolt/*.json): visible text of the Buy tab, of the Sell tab, and JSON responses captured from the network. Field names in network_json are guesses; the parser matches many spellings.",
+  "url": "https://www.crowdvolt.com/event/circoloco-halloween-saturday-new-york-oct-31-brooklyn-storehouse",
+  "text_buy": "Circoloco Halloween (Saturday)\nSat, October 31 • 10:00PM • Brooklyn Storehouse\nBuilding 293, Assembly Rd, New York, NY 11205\nTickets from $200\nLowest Ask $200\nHighest Bid $185\nLast Sale $240\nAll-in price $221.50\nDICE wallet · tickets are transferred via DICE\nTicket limit: 4\n37 looking to go\n12 looking to sell\nBuy\nSell\nTickets available\nZachary\nGeneral Admission\n1 Ticket\n$200ea\nNick\nGeneral Admission\n1-2 Tickets\n$215ea\nAlex\nGeneral Admission\n1-5 Tickets\n$260ea\n",
+  "text_sell": "Circoloco Halloween (Saturday)\nInterested buyers\nMaya\nGeneral Admission\n2 Tickets\n$185ea\nJon\nGeneral Admission\n1 Ticket\n$150ea\n",
+  "network_json": [
+    {"event": {"id": 9911, "name": "Circoloco Halloween (Saturday)", "wallet_type": "DICE", "max_tickets": 4,
+      "lowest_ask_cents": 19900, "highest_bid_cents": 18600, "last_sale_price": 245.0,
+      "listings": [{"price_cents": 19900, "quantity": 2}, {"price_cents": 21500, "quantity": 1}],
+      "bids": [{"price": 186, "quantity": 2}, {"price": 150, "quantity": 1}]}}
+  ]
+}

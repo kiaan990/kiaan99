@@ -1,0 +1,52 @@
+crowdvolt:
+  base_url: https://www.crowdvolt.com
+  sitemap: https://www.crowdvolt.com/sitemap.xml
+  # Listing pages tried first for NYC discovery; sitemap is the fallback.
+  listing_paths: [/city/new-york, /new-york, "/events?city=new-york"]
+  # Priority seeds: always crawled first (Halloween weekend 2026, data disappears after the event).
+  seed_urls:
+    - https://www.crowdvolt.com/event/circoloco-halloween-saturday-new-york-oct-31-brooklyn-storehouse
+    - https://www.crowdvolt.com/event/circoloco-halloween-friday-new-york-oct-30-brooklyn-storehouse
+    - https://www.crowdvolt.com/event/teksupport-circoloco-halloween-sunday-brooklyn-storehouse-new-york-brooklyn-november-1-2026
+    - https://www.crowdvolt.com/event/kaytranada-pacha-fri-oct-30-new-york
+    - https://www.crowdvolt.com/event/purple-disco-machine-october-31-new-york-pacha
+  # CrowdVolt venue pages scanned for event links (NYC venues we care about).
+  venue_paths: [/venue/brooklyn-storehouse, /venue/pacha-new-york, /venue/brooklyn-pacha, /venue/knockdown-center,
+                /venue/under-the-k-bridge, /venue/elsewhere, /venue/nowadays, /venue/public-records,
+                /venue/good-room, /venue/industry-city, /venue/basement]
+  # Sitemap URL filter (slug keywords). The page address is verified after fetch anyway.
+  nyc_url_keywords: [new-york, nyc, brooklyn, queens, manhattan, "-ny-", "-ny", "11205", "11211", "11237", "11222",
+                     "11249", "10001", storehouse, pacha, knockdown, nowadays, public-records, elsewhere, good-room,
+                     industry-city, under-the-k, terminal-5, basement, avant-gardner, superior-ingredients,
+                     house-of-yes, silo, marquee, williamsburg, navy-yard, bushwick, ridgewood, signal]
+  nyc_exclude_keywords: [navy-pier, chicago, illinois, miami, florida, los-angeles, california, san-francisco,
+                         austin, denver, red-rocks, las-vegas, colorado, texas, rawhide]
+  days_ahead: 60
+  wallet_types: [DICE, POSH, EVENTBRITE, TICKETMASTER, AXS, RA, SEETICKETS, TIXR, SHOTGUN]
+  page_settle_ms: 6000
+  headless: true
+ra:
+  graphql_url: https://ra.co/graphql
+  referer: https://ra.co/events/us/newyork
+  area_id: 8          # New York City
+  days_ahead: 60
+  page_size: 50
+  operation_name: GET_EVENT_LISTINGS
+  # sha256 of the pinned query text in crawlers/ra.py; the crawler refuses to run if they differ,
+  # so a query change is always deliberate. Update with: volt ra-query-hash
+  query_sha256: d8cc35e480184a106ce06369ab3b194fc57837847d5109e41b8e496409a69940
+dice:
+  base_url: https://dice.fm
+  days_ahead: 60
+  browse_paths:
+    - /browse/new_york-5bbf4db0f06331478e9b2c59
+    - /browse/new_york-5bbf4db0f06331478e9b2c59/music/dj
+    - /browse/new_york-5bbf4db0f06331478e9b2c59/music/party
+  # Dice venue pages list every upcoming event at the venue. More are learned automatically from
+  # event pages at configured venues (stored in .cache/dice_venue_paths.json).
+  venue_paths:
+    - /venue/brooklyn-storehouse-ronv
+  # Event pages always fetched (Halloween 2026 targets); their venue pages are then learned.
+  seed_event_urls:
+    - https://dice.fm/event/3or7px-kaytranada-30th-oct-pacha-new-york-new-york-city-tickets
+    - https://dice.fm/event/v3xyyg-purple-disco-machine-31st-oct-pacha-new-york-new-york-city-tickets
