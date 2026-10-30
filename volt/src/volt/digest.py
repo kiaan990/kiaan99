@@ -37,9 +37,16 @@ def allowed_update(update: Any, allowed: list[int]) -> bool:
 def crawl_health(session: Session, now: datetime) -> list[dict[str, Any]]:
     out = []
     for site in SITES:
+
         def rows(a: datetime, b: datetime, site: str = site) -> int:
-            return int(session.scalar(select(func.coalesce(func.sum(CrawlRun.rows_written), 0)).where(
-                CrawlRun.site == site, CrawlRun.started_at >= a, CrawlRun.started_at < b)) or 0)
+            return int(
+                session.scalar(
+                    select(func.coalesce(func.sum(CrawlRun.rows_written), 0)).where(
+                        CrawlRun.site == site, CrawlRun.started_at >= a, CrawlRun.started_at < b
+                    )
+                )
+                or 0
+            )
 
         last24 = rows(now - timedelta(days=1), now)
         prior = [rows(now - timedelta(days=d + 1), now - timedelta(days=d)) for d in range(1, 8)]
@@ -65,7 +72,9 @@ def build_digest(session: Session, now: datetime | None = None) -> str:
         cv = latest_cv(session, e.id)
         assert e.starts_at is not None
         parts = [
-            e.title[:60], e.starts_at.astimezone(NY).strftime("%a %b %d"), v.name if v else (e.venue_name_raw or "?"),
+            e.title[:60],
+            e.starts_at.astimezone(NY).strftime("%a %b %d"),
+            v.name if v else (e.venue_name_raw or "?"),
             f"{s.score:.0f}{' ✅' if s.gates_passed else ''}",
             f"tier {money(low['price_cents']) if low else '—'}",
             f"CV bid/ask {money(cv.highest_bid_cents) if cv else '—'}/{money(cv.lowest_ask_cents) if cv else '—'}",
@@ -81,8 +90,10 @@ def build_digest(session: Session, now: datetime | None = None) -> str:
     for t in trades:
         e2 = session.get(Event, t.event_id)
         cv = latest_cv(session, t.event_id)
-        lines.append(f"• {e2.title[:50] if e2 else t.event_id} · {t.qty}× {money(t.buy_price_cents)} · "
-                     f"sell {t.target_sell_at.astimezone(NY):%b %d} · CV ask {money(cv.lowest_ask_cents) if cv else '—'}")
+        lines.append(
+            f"• {e2.title[:50] if e2 else t.event_id} · {t.qty}× {money(t.buy_price_cents)} · "
+            f"sell {t.target_sell_at.astimezone(NY):%b %d} · CV ask {money(cv.lowest_ask_cents) if cv else '—'}"
+        )
     lines += ["", "Crawl health (rows 24h vs 7-day median)"]
     for h in crawl_health(session, now):
         lines.append(f"• {h['site']}: {h['last24']} vs {h['median7']:.0f}{'  ⚠️ LOW' if h['flag'] else ''}")
@@ -101,7 +112,7 @@ def send(text: str) -> str:
 
         async with Bot(token) as bot:
             for cid in s.telegram_allowed_chat_ids:
-                for chunk in [text[i:i + 3900] for i in range(0, len(text), 3900)]:
+                for chunk in [text[i : i + 3900] for i in range(0, len(text), 3900)]:
                     await bot.send_message(chat_id=cid, text=chunk, disable_web_page_preview=True)
 
     asyncio.run(_go())

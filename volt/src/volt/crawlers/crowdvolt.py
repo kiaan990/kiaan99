@@ -40,20 +40,48 @@ log = logging.getLogger("volt.crowdvolt")
 SITE = "crowdvolt"
 NY = ZoneInfo("America/New_York")
 
-MONTHS = {m: i for i, m in enumerate(
-    ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
-     "november", "december"], start=1)}
+MONTHS = {
+    m: i
+    for i, m in enumerate(
+        [
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
+        ],
+        start=1,
+    )
+}
 MONTHS.update({k[:3]: v for k, v in list(MONTHS.items())})
 MONTHS["sept"] = 9
 
 WALLETS = {
-    "dice": "DICE", "posh": "POSH", "eventbrite": "EVENTBRITE", "ticketmaster": "TM", "axs": "AXS",
-    "tixr": "TIXR", "shotgun": "SHOTGUN", "seetickets": "SEETICKETS", "see tickets": "SEETICKETS",
-    "resident advisor": "RA", "ra": "RA", "etix": "ETIX", "venue pilot": "VENUEPILOT",
+    "dice": "DICE",
+    "posh": "POSH",
+    "eventbrite": "EVENTBRITE",
+    "ticketmaster": "TM",
+    "axs": "AXS",
+    "tixr": "TIXR",
+    "shotgun": "SHOTGUN",
+    "seetickets": "SEETICKETS",
+    "see tickets": "SEETICKETS",
+    "resident advisor": "RA",
+    "ra": "RA",
+    "etix": "ETIX",
+    "venue pilot": "VENUEPILOT",
 }
 
 
 # ============================================================== parsing
+
 
 @dataclass
 class CvParsed:
@@ -82,9 +110,11 @@ class CvParsed:
 
     @property
     def parse_ok(self) -> bool:
-        return bool(self.title) and any(
-            v is not None for v in (self.lowest_ask_cents, self.highest_bid_cents, self.floor_cents)
-        ) or bool(self.asks or self.bids)
+        return (
+            bool(self.title)
+            and any(v is not None for v in (self.lowest_ask_cents, self.highest_bid_cents, self.floor_cents))
+            or bool(self.asks or self.bids)
+        )
 
     def set(self, name: str, value: Any, layer: str) -> None:
         if value is None or value == "" or value == []:
@@ -130,36 +160,78 @@ def _int(v: Any) -> int | None:
 
 SCALAR_KEYS: dict[str, tuple[str, str]] = {
     # normalized key -> (field, kind)
-    "lowestask": ("lowest_ask_cents", "money"), "lowestaskprice": ("lowest_ask_cents", "money"),
-    "lowestaskcents": ("lowest_ask_cents", "money"), "minask": ("lowest_ask_cents", "money"),
-    "lowestprice": ("lowest_ask_cents", "money"), "floorprice": ("lowest_ask_cents", "money"),
+    "lowestask": ("lowest_ask_cents", "money"),
+    "lowestaskprice": ("lowest_ask_cents", "money"),
+    "lowestaskcents": ("lowest_ask_cents", "money"),
+    "minask": ("lowest_ask_cents", "money"),
+    "lowestprice": ("lowest_ask_cents", "money"),
+    "floorprice": ("lowest_ask_cents", "money"),
     "lowestlistingprice": ("lowest_ask_cents", "money"),
-    "highestbid": ("highest_bid_cents", "money"), "highestbidprice": ("highest_bid_cents", "money"),
-    "highestbidcents": ("highest_bid_cents", "money"), "maxbid": ("highest_bid_cents", "money"),
+    "highestbid": ("highest_bid_cents", "money"),
+    "highestbidprice": ("highest_bid_cents", "money"),
+    "highestbidcents": ("highest_bid_cents", "money"),
+    "maxbid": ("highest_bid_cents", "money"),
     "topbid": ("highest_bid_cents", "money"),
-    "lastsale": ("last_sale_cents", "money"), "lastsaleprice": ("last_sale_cents", "money"),
-    "lastsalecents": ("last_sale_cents", "money"), "lastsoldprice": ("last_sale_cents", "money"),
+    "lastsale": ("last_sale_cents", "money"),
+    "lastsaleprice": ("last_sale_cents", "money"),
+    "lastsalecents": ("last_sale_cents", "money"),
+    "lastsoldprice": ("last_sale_cents", "money"),
     "lasttradeprice": ("last_sale_cents", "money"),
-    "allinprice": ("all_in_lowest_cents", "money"), "lowestallin": ("all_in_lowest_cents", "money"),
-    "allinlowest": ("all_in_lowest_cents", "money"), "lowestallinprice": ("all_in_lowest_cents", "money"),
+    "allinprice": ("all_in_lowest_cents", "money"),
+    "lowestallin": ("all_in_lowest_cents", "money"),
+    "allinlowest": ("all_in_lowest_cents", "money"),
+    "lowestallinprice": ("all_in_lowest_cents", "money"),
     "allinlowestcents": ("all_in_lowest_cents", "money"),
-    "ticketlimit": ("ticket_limit", "int"), "maxtickets": ("ticket_limit", "int"),
-    "purchaselimit": ("ticket_limit", "int"), "maxticketsperorder": ("ticket_limit", "int"),
-    "lookingtogo": ("looking_to_go", "int"), "lookingtogocount": ("looking_to_go", "int"),
+    "ticketlimit": ("ticket_limit", "int"),
+    "maxtickets": ("ticket_limit", "int"),
+    "purchaselimit": ("ticket_limit", "int"),
+    "maxticketsperorder": ("ticket_limit", "int"),
+    "lookingtogo": ("looking_to_go", "int"),
+    "lookingtogocount": ("looking_to_go", "int"),
     "interestedcount": ("looking_to_go", "int"),
-    "lookingtosell": ("looking_to_sell", "int"), "lookingtosellcount": ("looking_to_sell", "int"),
-    "wallet": ("wallet_type", "wallet"), "wallettype": ("wallet_type", "wallet"),
-    "ticketprovider": ("wallet_type", "wallet"), "ticketingplatform": ("wallet_type", "wallet"),
-    "ticketplatform": ("wallet_type", "wallet"), "transfermethod": ("wallet_type", "wallet"),
-    "ticketsource": ("wallet_type", "wallet"), "ticketingprovider": ("wallet_type", "wallet"),
-    "asklistingcount": ("ask_count", "int"), "askcount": ("ask_count", "int"),
+    "lookingtosell": ("looking_to_sell", "int"),
+    "lookingtosellcount": ("looking_to_sell", "int"),
+    "wallet": ("wallet_type", "wallet"),
+    "wallettype": ("wallet_type", "wallet"),
+    "ticketprovider": ("wallet_type", "wallet"),
+    "ticketingplatform": ("wallet_type", "wallet"),
+    "ticketplatform": ("wallet_type", "wallet"),
+    "transfermethod": ("wallet_type", "wallet"),
+    "ticketsource": ("wallet_type", "wallet"),
+    "ticketingprovider": ("wallet_type", "wallet"),
+    "asklistingcount": ("ask_count", "int"),
+    "askcount": ("ask_count", "int"),
     "bidcount": ("bid_count", "int"),
 }
 
-PRICE_ITEM_KEYS = ("price_cents", "amount_cents", "unit_price_cents", "price", "amount", "unit_price",
-                   "price_per_ticket", "priceEach", "price_each", "ask", "bid", "ask_price", "bid_price", "value")
-QTY_ITEM_KEYS = ("quantity", "qty", "count", "num_tickets", "ticket_count", "quantity_available", "max_quantity",
-                 "tickets", "numTickets", "quantityAvailable")
+PRICE_ITEM_KEYS = (
+    "price_cents",
+    "amount_cents",
+    "unit_price_cents",
+    "price",
+    "amount",
+    "unit_price",
+    "price_per_ticket",
+    "priceEach",
+    "price_each",
+    "ask",
+    "bid",
+    "ask_price",
+    "bid_price",
+    "value",
+)
+QTY_ITEM_KEYS = (
+    "quantity",
+    "qty",
+    "count",
+    "num_tickets",
+    "ticket_count",
+    "quantity_available",
+    "max_quantity",
+    "tickets",
+    "numTickets",
+    "quantityAvailable",
+)
 
 
 def normalize_wallet(v: Any) -> str | None:
@@ -243,7 +315,7 @@ def embedded_json(html: str) -> list[Any]:
             out.append(json.loads(m.group(1)))
         except ValueError:
             pass
-    for m in re.finditer(r'<script[^>]*application/ld\+json[^>]*>(.*?)</script>', html, re.S):
+    for m in re.finditer(r"<script[^>]*application/ld\+json[^>]*>(.*?)</script>", html, re.S):
         try:
             out.append(json.loads(m.group(1)))
         except ValueError:
@@ -407,8 +479,14 @@ def detect_block(html: str) -> bool:
     return ("just a moment" in head or "attention required" in head) and "cloudflare" in html.lower()
 
 
-def parse_event_page(url: str, html: str, text_buy: str = "", text_sell: str = "",
-                     network_json: list[Any] | None = None, now: datetime | None = None) -> CvParsed:
+def parse_event_page(
+    url: str,
+    html: str,
+    text_buy: str = "",
+    text_sell: str = "",
+    network_json: list[Any] | None = None,
+    now: datetime | None = None,
+) -> CvParsed:
     now = now or utcnow()
     p = CvParsed(url=url)
     if detect_block(html):
@@ -443,7 +521,8 @@ def parse_event_page(url: str, html: str, text_buy: str = "", text_sell: str = "
             p.set("lineup", [x.get("name") for x in perf if isinstance(x, dict) and x.get("name")], "ldjson")
 
     m = re.search(r'<meta[^>]+property="og:title"[^>]+content="([^"]+)"', html) or re.search(
-        r'<meta[^>]+content="([^"]+)"[^>]+property="og:title"', html)
+        r'<meta[^>]+content="([^"]+)"[^>]+property="og:title"', html
+    )
     if m:
         p.set("title", _clean_title(_unescape(m.group(1))), "og")
     m = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
@@ -467,7 +546,7 @@ def parse_event_page(url: str, html: str, text_buy: str = "", text_sell: str = "
     if p.venue_name is None:
         dm = DATE_RE.search(text_all)
         if dm:
-            rest = text_all[dm.end():].split("\n", 1)[0]
+            rest = text_all[dm.end() :].split("\n", 1)[0]
             vm2 = re.match(r"\s*[•·|]\s*([^•·|\n]{3,60})", rest)
             if vm2:
                 p.set("venue_name", vm2.group(1).strip(), "text")
@@ -537,6 +616,7 @@ def _is_nyc(address: str | None, url: str) -> bool | None:
 
 # ============================================================== cadence
 
+
 def cadence_hours(starts_at: datetime | None, now: datetime) -> float | None:
     """§1.3: daily >14 d out, every 6 h at 3-14 d, hourly inside 72 h, stop after the event ends.
 
@@ -563,6 +643,7 @@ def is_due(starts_at: datetime | None, last_captured: datetime | None, now: date
 
 
 # ============================================================== discovery
+
 
 def url_is_candidate(url: str, cfg: dict[str, Any], now: datetime) -> bool:
     u = url.lower()
@@ -610,6 +691,7 @@ class _StateFile:
 
 # ============================================================== browser
 
+
 def profile_dir() -> Path:
     d = get_settings().browser_profiles_dir / SITE
     d.mkdir(parents=True, exist_ok=True)
@@ -624,8 +706,13 @@ def login() -> None:
 
     s = get_settings()
     with sync_playwright() as pw:
-        ctx = pw.chromium.launch_persistent_context(str(profile_dir()), headless=False, user_agent=s.user_agent,
-                                                    viewport={"width": 1280, "height": 900})
+        ctx = pw.chromium.launch_persistent_context(
+            str(profile_dir()),
+            executable_path=s.chromium_executable,
+            headless=False,
+            user_agent=s.user_agent,
+            viewport={"width": 1280, "height": 900},
+        )
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
         page.goto(site_config()[SITE]["base_url"], wait_until="domcontentloaded")
         input("Log in to CrowdVolt in the browser window, then press Enter here to save the session... ")
@@ -650,7 +737,7 @@ class CrowdVoltBrowser:
         self.s = ctx.settings
         self.cfg = site_config()[SITE]
         self.pol = Politeness(SITE, self.s, ignore_robots=self.s.crowdvolt_ignore_robots)
-        self.headless = self.cfg.get("headless", True) if headless is None else headless
+        self.headless = self.s.crowdvolt_headless if headless is None else headless
         self._pw: Any = None
         self.browser_ctx: Any = None
 
@@ -659,8 +746,14 @@ class CrowdVoltBrowser:
 
         self._pw = sync_playwright().start()
         self.browser_ctx = self._pw.chromium.launch_persistent_context(
-            str(profile_dir()), headless=self.headless, user_agent=self.s.user_agent,
-            viewport={"width": 1280, "height": 1600}, locale="en-US", timezone_id="America/New_York")
+            str(profile_dir()),
+            executable_path=self.s.chromium_executable,
+            headless=self.headless,
+            user_agent=self.s.user_agent,
+            viewport={"width": 1280, "height": 1600},
+            locale="en-US",
+            timezone_id="America/New_York",
+        )
         return self
 
     def __exit__(self, *exc: Any) -> None:
@@ -738,14 +831,17 @@ class CrowdVoltBrowser:
 
 # ============================================================== crawl
 
+
 def _last_cv_capture(session: Session, event_id: int) -> datetime | None:
     return session.scalar(select(func.max(CvEventSnapshot.captured_at)).where(CvEventSnapshot.event_id == event_id))
 
 
-def plan_urls(session: Session, discovered: list[str], cfg: dict[str, Any], now: datetime, force: bool,
-              non_nyc: set[str]) -> list[str]:
-    known: dict[str, EventSource] = {s.url: s for s in session.scalars(select(EventSource).where(EventSource.site == SITE))
-                                     if s.url}
+def plan_urls(
+    session: Session, discovered: list[str], cfg: dict[str, Any], now: datetime, force: bool, non_nyc: set[str]
+) -> list[str]:
+    known: dict[str, EventSource] = {
+        s.url: s for s in session.scalars(select(EventSource).where(EventSource.site == SITE)) if s.url
+    }
     seeds = [u for u in cfg.get("seed_urls", [])]
     due: list[tuple[int, datetime, str]] = []
     for url in dict.fromkeys(seeds + discovered + list(known)):
@@ -776,17 +872,25 @@ def discover(br: CrowdVoltBrowser, cfg: dict[str, Any], now: datetime, force: bo
         return list(st.get("urls", []))
     base = cfg["base_url"]
     urls: list[str] = []
+    blocks = 0
     for path in cfg.get("listing_paths", []) + cfg.get("venue_paths", []):
         try:
             cap = br.load(base + path, want_sell_tab=False)
-            br.ctx.archive(cap.url, cap.html, "html")
-            found = links_in(cap.html, base)
-            urls += found
-            log.info("discovery %s → %d event links", path, len(found))
-        except RateLimited:
+        except (RateLimited, RobotsDisallowed):
             raise
         except Exception as e:  # noqa: BLE001
             log.info("discovery page %s failed: %s", path, e)
+            continue
+        if detect_block(cap.html):
+            blocks += 1
+            br.ctx.error(f"discovery blocked by Cloudflare at {path}")
+            if blocks >= 2:
+                break
+            continue
+        br.ctx.archive(cap.url, cap.html, "html")
+        found = links_in(cap.html, base)
+        urls += found
+        log.info("discovery %s → %d event links", path, len(found))
     try:
         xml = br.fetch_text(cfg["sitemap"])
         br.ctx.archive(cfg["sitemap"], xml, "xml")
@@ -798,19 +902,28 @@ def discover(br: CrowdVoltBrowser, cfg: dict[str, Any], now: datetime, force: bo
     except Exception as e:  # noqa: BLE001
         br.ctx.error(f"sitemap fetch failed: {e}")
     urls = list(dict.fromkeys(urls))
-    state.save({"at": time.time(), "urls": urls})
+    if urls:  # never cache an empty (e.g. blocked) discovery for 20 h
+        state.save({"at": time.time(), "urls": urls})
     return urls
 
 
-def write_snapshot(session: Session, ctx: CrawlContext | None, parsed: CvParsed, run_id: int | None = None,
-                   now: datetime | None = None) -> Event | None:
+def write_snapshot(
+    session: Session, ctx: CrawlContext | None, parsed: CvParsed, run_id: int | None = None, now: datetime | None = None
+) -> Event | None:
     now = now or utcnow()
     if not parsed.title:
         return None
     ext = parsed.url.rstrip("/").rsplit("/", 1)[-1]
     ev, _src, _ = upsert_event_from_source(
-        session, site=SITE, external_id=ext, url=parsed.url, title=parsed.title, starts_at=parsed.starts_at,
-        venue_name=parsed.venue_name, lineup=parsed.lineup or None)
+        session,
+        site=SITE,
+        external_id=ext,
+        url=parsed.url,
+        title=parsed.title,
+        starts_at=parsed.starts_at,
+        venue_name=parsed.venue_name,
+        lineup=parsed.lineup or None,
+    )
     if parsed.wallet_type:
         ev.cv_wallet_type = parsed.wallet_type
         ev.cv_listable = True
@@ -824,12 +937,22 @@ def write_snapshot(session: Session, ctx: CrawlContext | None, parsed: CvParsed,
             row.crawl_run_id = run_id
             session.add(row)
 
-    add(CvEventSnapshot(
-        event_id=ev.id, lowest_ask_cents=parsed.lowest_ask_cents, all_in_lowest_cents=parsed.all_in_lowest_cents,
-        highest_bid_cents=parsed.highest_bid_cents, ask_count=parsed.ask_count, bid_count=parsed.bid_count,
-        looking_to_go=parsed.looking_to_go, looking_to_sell=parsed.looking_to_sell,
-        last_sale_cents=parsed.last_sale_cents, ticket_limit=parsed.ticket_limit, parse_ok=parsed.parse_ok,
-        captured_at=now))
+    add(
+        CvEventSnapshot(
+            event_id=ev.id,
+            lowest_ask_cents=parsed.lowest_ask_cents,
+            all_in_lowest_cents=parsed.all_in_lowest_cents,
+            highest_bid_cents=parsed.highest_bid_cents,
+            ask_count=parsed.ask_count,
+            bid_count=parsed.bid_count,
+            looking_to_go=parsed.looking_to_go,
+            looking_to_sell=parsed.looking_to_sell,
+            last_sale_cents=parsed.last_sale_cents,
+            ticket_limit=parsed.ticket_limit,
+            parse_ok=parsed.parse_ok,
+            captured_at=now,
+        )
+    )
     for pr, q in parsed.asks:
         add(CvBookSnapshot(event_id=ev.id, side=Side.ASK, price_cents=pr, quantity=q, captured_at=now))
     for pr, q in parsed.bids:
@@ -837,8 +960,13 @@ def write_snapshot(session: Session, ctx: CrawlContext | None, parsed: CvParsed,
     return ev
 
 
-def crawl(force: bool = False, debug_dump: bool = False, max_pages: int | None = None,
-          urls: list[str] | None = None, headless: bool | None = None) -> dict[str, Any]:
+def crawl(
+    force: bool = False,
+    debug_dump: bool = False,
+    max_pages: int | None = None,
+    urls: list[str] | None = None,
+    headless: bool | None = None,
+) -> dict[str, Any]:
     cfg = site_config()[SITE]
     now = utcnow()
     stats = {"pages": 0, "snapshots": 0, "parse_failures": 0, "blocked": 0, "skipped_non_nyc": 0}
@@ -847,7 +975,7 @@ def crawl(force: bool = False, debug_dump: bool = False, max_pages: int | None =
     with crawl_run(SITE, force=force, debug_dump=debug_dump) as ctx, CrowdVoltBrowser(ctx, headless) as br:
         try:
             discovered = urls if urls is not None else discover(br, cfg, now, force)
-        except RateLimited as e:
+        except (RateLimited, RobotsDisallowed) as e:
             ctx.error(str(e))
             return stats
         todo = urls if urls is not None else plan_urls(ctx.session, discovered, cfg, now, force, non_nyc)
@@ -872,9 +1000,20 @@ def crawl(force: bool = False, debug_dump: bool = False, max_pages: int | None =
             stats["pages"] += 1
             br.pol.cache.put(url, "", {"status": cap.status})
             html_path = ctx.archive(url, cap.html, "html")
-            ctx.archive(url, json.dumps({"url": url, "status": cap.status, "network_json": cap.network_json,
-                                         "text_buy": cap.text_buy, "text_sell": cap.text_sell}), "json",
-                        stem=html_path.with_suffix(""))
+            ctx.archive(
+                url,
+                json.dumps(
+                    {
+                        "url": url,
+                        "status": cap.status,
+                        "network_json": cap.network_json,
+                        "text_buy": cap.text_buy,
+                        "text_sell": cap.text_sell,
+                    }
+                ),
+                "json",
+                stem=html_path.with_suffix(""),
+            )
             parsed = parse_event_page(url, cap.html, cap.text_buy, cap.text_sell, cap.network_json, now=utcnow())
             if parsed.blocked:
                 stats["blocked"] += 1
@@ -893,8 +1032,9 @@ def crawl(force: bool = False, debug_dump: bool = False, max_pages: int | None =
                 continue
             if not parsed.parse_ok:
                 stats["parse_failures"] += 1
-                ctx.dump_debug(url, cap.html, cap.screenshot,
-                               f"parse failed; fields={parsed.sources}\n\n{cap.text_buy[:5000]}")
+                ctx.dump_debug(
+                    url, cap.html, cap.screenshot, f"parse failed; fields={parsed.sources}\n\n{cap.text_buy[:5000]}"
+                )
                 ctx.error(f"parse incomplete for {url} (raw page archived; snapshot written with parse_ok=0)")
             ev = write_snapshot(ctx.session, ctx, parsed)
             if ev is not None:
@@ -930,8 +1070,14 @@ def reparse_raw(run_id: int | None = None) -> int:
             data = json.loads(Path(rc.path).read_text())
             html_path = Path(rc.path).with_suffix(".html")
             html = html_path.read_text() if html_path.exists() else ""
-            parsed = parse_event_page(data["url"], html, data.get("text_buy", ""), data.get("text_sell", ""),
-                                      data.get("network_json"), now=rc.captured_at)
+            parsed = parse_event_page(
+                data["url"],
+                html,
+                data.get("text_buy", ""),
+                data.get("text_sell", ""),
+                data.get("network_json"),
+                now=rc.captured_at,
+            )
             if parsed.title and not parsed.blocked and parsed.is_nyc is not False:
                 write_snapshot(ctx.session, ctx, parsed, now=rc.captured_at)
                 n += 1

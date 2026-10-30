@@ -27,9 +27,12 @@ def _flagged_ids(session: Session, threshold: float) -> set[int]:
 def _pre_event_score(session: Session, ev: Event) -> Score | None:
     """Last score taken at or before T-2 (what the model knew when it would have had to act)."""
     assert ev.starts_at is not None
-    return session.scalar(select(Score).where(Score.event_id == ev.id,
-                                              Score.scored_at <= ev.starts_at - timedelta(days=2))
-                          .order_by(Score.scored_at.desc()).limit(1))
+    return session.scalar(
+        select(Score)
+        .where(Score.event_id == ev.id, Score.scored_at <= ev.starts_at - timedelta(days=2))
+        .order_by(Score.scored_at.desc())
+        .limit(1)
+    )
 
 
 def evaluate(session: Session) -> dict[str, Any]:
@@ -50,11 +53,16 @@ def evaluate(session: Session) -> dict[str, Any]:
     flagged = _flagged_ids(session, thr)
     outcomes = list(session.execute(select(Event, Outcome).join(Outcome, Outcome.event_id == Event.id)))
     res["resolved_events"] = len(outcomes)
-    res["missed_winners"] = [e.title for e, o in outcomes
-                             if o.clearing_multiple is not None and o.clearing_multiple >= WIN_MULTIPLE
-                             and e.id not in flagged]
-    res["flagged_dumped"] = [e.title for e, o in outcomes
-                             if e.id in flagged and o.clearing_multiple is not None and o.clearing_multiple < 1.0]
+    res["missed_winners"] = [
+        e.title
+        for e, o in outcomes
+        if o.clearing_multiple is not None and o.clearing_multiple >= WIN_MULTIPLE and e.id not in flagged
+    ]
+    res["flagged_dumped"] = [
+        e.title
+        for e, o in outcomes
+        if e.id in flagged and o.clearing_multiple is not None and o.clearing_multiple < 1.0
+    ]
     sep: dict[str, Any] = {}
     pairs: list[tuple[dict[str, Any], float]] = []
     for e, o in outcomes:
@@ -71,8 +79,12 @@ def evaluate(session: Session) -> dict[str, Any]:
         vals.sort(key=lambda x: x[0])
         q = max(1, len(vals) // 4)
         bottom, top = [m for _, m in vals[:q]], [m for _, m in vals[-q:]]
-        sep[comp] = {"top_q_mean": statistics.mean(top), "bottom_q_mean": statistics.mean(bottom),
-                     "separation": statistics.mean(top) - statistics.mean(bottom), "n": len(vals)}
+        sep[comp] = {
+            "top_q_mean": statistics.mean(top),
+            "bottom_q_mean": statistics.mean(bottom),
+            "separation": statistics.mean(top) - statistics.mean(bottom),
+            "n": len(vals),
+        }
     res["component_separation"] = sep
     return res
 

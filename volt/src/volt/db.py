@@ -134,9 +134,8 @@ class Event(Base):
     lineup: Mapped[list[str]] = mapped_column(JSON, default=list)
     primary_provider: Mapped[Provider | None] = mapped_column(Enum(Provider, native_enum=False))
     face_value_cents: Mapped[int | None] = mapped_column(Integer)
-    status: Mapped[EventStatus] = mapped_column(
-        Enum(EventStatus, native_enum=False), default=EventStatus.ANNOUNCED
-    )
+    face_source: Mapped[str | None] = mapped_column(String(16))  # MANUAL > RA > DICE
+    status: Mapped[EventStatus] = mapped_column(Enum(EventStatus, native_enum=False), default=EventStatus.ANNOUNCED)
     first_sold_out_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     announced_at: Mapped[datetime | None] = mapped_column(UTCDateTime)  # from Dice when available
     added_date_flag: Mapped[bool] = mapped_column(Boolean, default=False)

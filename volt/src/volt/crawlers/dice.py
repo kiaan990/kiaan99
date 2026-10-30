@@ -30,8 +30,12 @@ log = logging.getLogger("volt.dice")
 SITE = "dice"
 
 STATUS_MAP = {
-    "on-sale": EventStatus.ON_SALE, "sold-out": EventStatus.SOLD_OUT, "cancelled": EventStatus.CANCELLED,
-    "off-sale": EventStatus.ON_SALE, "announced": EventStatus.ANNOUNCED, "pre-sale": EventStatus.ANNOUNCED,
+    "on-sale": EventStatus.ON_SALE,
+    "sold-out": EventStatus.SOLD_OUT,
+    "cancelled": EventStatus.CANCELLED,
+    "off-sale": EventStatus.ON_SALE,
+    "announced": EventStatus.ANNOUNCED,
+    "pre-sale": EventStatus.ANNOUNCED,
     "past": EventStatus.PAST,
 }
 
@@ -115,7 +119,7 @@ def parse_event_page(html: str) -> dict[str, Any] | None:
     rec = _event_record(ev)
     lineup = [a.get("name") for a in (ev.get("summary_lineup") or {}).get("top_artists") or [] if a.get("name")]
     ld = None
-    for m in re.finditer(r'<script[^>]*application/ld\+json[^>]*>(.*?)</script>', html, re.S):
+    for m in re.finditer(r"<script[^>]*application/ld\+json[^>]*>(.*?)</script>", html, re.S):
         try:
             j = json.loads(m.group(1))
         except ValueError:
@@ -129,16 +133,19 @@ def parse_event_page(html: str) -> dict[str, Any] | None:
         if not lineup:
             lineup = [p.get("name") for p in ld.get("performer") or [] if isinstance(p, dict) and p.get("name")]
     offers = (ld or {}).get("offers") or {}
-    rec.update({
-        "waiting_list_enabled": ev.get("waiting_list_enabled"),
-        "max_tickets": ev.get("max_tickets"),
-        "lineup": lineup,
-        "promoter": re.sub(r"^presented by\s*", "", ev.get("presented_by") or "", flags=re.I).strip(" .") or None,
-        "venue_url": venue_url,
-        "url": f"https://dice.fm/event/{ev.get('perm_name')}" if ev.get("perm_name") else None,
-        "ld_low": offers.get("lowPrice"), "ld_high": offers.get("highPrice"),
-        "transfer_enabled": None,  # not exposed on the public page
-    })
+    rec.update(
+        {
+            "waiting_list_enabled": ev.get("waiting_list_enabled"),
+            "max_tickets": ev.get("max_tickets"),
+            "lineup": lineup,
+            "promoter": re.sub(r"^presented by\s*", "", ev.get("presented_by") or "", flags=re.I).strip(" .") or None,
+            "venue_url": venue_url,
+            "url": f"https://dice.fm/event/{ev.get('perm_name')}" if ev.get("perm_name") else None,
+            "ld_low": offers.get("lowPrice"),
+            "ld_high": offers.get("highPrice"),
+            "transfer_enabled": None,  # not exposed on the public page
+        }
+    )
     return rec
 
 
@@ -152,8 +159,14 @@ def _price_cents(v: Any) -> int | None:
         return None
 
 
-def record_observation(session: Session, ctx: CrawlContext | None, ev: Event, rec: dict[str, Any],
-                       now: datetime, include_page_signals: bool) -> None:
+def record_observation(
+    session: Session,
+    ctx: CrawlContext | None,
+    ev: Event,
+    rec: dict[str, Any],
+    now: datetime,
+    include_page_signals: bool,
+) -> None:
     def add(row: Any) -> None:
         if ctx:
             ctx.add(row)
@@ -165,22 +178,50 @@ def record_observation(session: Session, ctx: CrawlContext | None, ev: Event, re
     add(SignalSnapshot(event_id=ev.id, signal_name="dice_sold_out", value=1.0 if sold_out else 0.0, captured_at=now))
     if include_page_signals:
         wl = rec.get("waiting_list_enabled")
-        add(SignalSnapshot(event_id=ev.id, signal_name="dice_waitlist_on",
-                           value=None if wl is None else (1.0 if wl else 0.0), captured_at=now))
+        add(
+            SignalSnapshot(
+                event_id=ev.id,
+                signal_name="dice_waitlist_on",
+                value=None if wl is None else (1.0 if wl else 0.0),
+                captured_at=now,
+            )
+        )
         add(SignalSnapshot(event_id=ev.id, signal_name="dice_transfer_enabled", value=None, captured_at=now))
         if rec.get("max_tickets"):
-            add(SignalSnapshot(event_id=ev.id, signal_name="dice_max_tickets", value=float(rec["max_tickets"]),
-                               captured_at=now))
+            add(
+                SignalSnapshot(
+                    event_id=ev.id, signal_name="dice_max_tickets", value=float(rec["max_tickets"]), captured_at=now
+                )
+            )
     from_c = _price_cents(rec.get("price_from"))
     amt_c = _price_cents(rec.get("price_amount"))
     if sold_out:
-        add(TierSnapshot(event_id=ev.id, provider="DICE", tier_name="all tiers (sold out)", tier_index=None,
-                         price_cents=amt_c, available=False, captured_at=now))
+        add(
+            TierSnapshot(
+                event_id=ev.id,
+                provider="DICE",
+                tier_name="all tiers (sold out)",
+                tier_index=None,
+                price_cents=amt_c,
+                available=False,
+                captured_at=now,
+            )
+        )
     elif from_c is not None or amt_c is not None:
-        add(TierSnapshot(event_id=ev.id, provider="DICE", tier_name="lowest available", tier_index=None,
-                         price_cents=from_c if from_c is not None else amt_c, available=True, captured_at=now))
-    if ev.face_value_cents is None:
+        add(
+            TierSnapshot(
+                event_id=ev.id,
+                provider="DICE",
+                tier_name="lowest available",
+                tier_index=None,
+                price_cents=from_c if from_c is not None else amt_c,
+                available=True,
+                captured_at=now,
+            )
+        )
+    if ev.face_value_cents is None and (from_c is not None or amt_c is not None):
         ev.face_value_cents = from_c if from_c is not None else amt_c
+        ev.face_source = "DICE"
     new_status = STATUS_MAP.get(status)
     if new_status is not None and ev.status != EventStatus.PAST:
         ev.status = new_status
@@ -255,21 +296,29 @@ def crawl(force: bool = False, debug_dump: bool = False) -> dict[str, Any]:
                 if not _relevant(sess, r):
                     continue
                 ev, src, _ = upsert_event_from_source(
-                    sess, site=SITE, external_id=r["id"], url=f"https://dice.fm/event/{r['id']}",
-                    title=r["name"], starts_at=r["starts_at"], venue_name=r["venue"], provider=Provider.DICE)
+                    sess,
+                    site=SITE,
+                    external_id=r["id"],
+                    url=f"https://dice.fm/event/{r['id']}",
+                    title=r["name"],
+                    starts_at=r["starts_at"],
+                    venue_name=r["venue"],
+                    provider=Provider.DICE,
+                )
                 page_targets[r["id"]] = src.url or f"https://dice.fm/event/{r['id']}"
                 # Listing rows are superseded by the event-page observation below (same crawl).
             ctx.commit()
 
             for u in cfg.get("seed_event_urls", []):
                 page_targets.setdefault(u, u)
-            # 3) event pages: tracked Dice events, events CrowdVolt says are DICE-wallet, Dice links from RA
+            # 3) event pages: every tracked Dice event + Dice links found on RA. (Dice search is blocked, so a
+            #    CrowdVolt DICE-wallet event is reached through its venue page or an RA link.)
             for src in sess.scalars(select(EventSource).where(EventSource.site.in_(["dice", "dice_link"]))):
-                ev = sess.get(Event, src.event_id)
-                if ev and ev.starts_at and now - timedelta(hours=12) <= ev.starts_at <= horizon and src.url:
+                tev = sess.get(Event, src.event_id)
+                if tev and tev.starts_at and now - timedelta(hours=12) <= tev.starts_at <= horizon and src.url:
                     key = src.external_id if src.site == "dice" else src.url
                     page_targets.setdefault(key, src.url)
-            for key, url in page_targets.items():
+            for url in page_targets.values():
                 try:
                     html = http.get(url, force=force)
                 except RateLimited as e:
@@ -290,9 +339,17 @@ def crawl(force: bool = False, debug_dump: bool = False) -> dict[str, Any]:
                     continue
                 stats["event_pages"] += 1
                 ev, _src, _ = upsert_event_from_source(
-                    sess, site=SITE, external_id=rec["id"], url=rec["url"] or url, title=rec["name"],
-                    starts_at=rec["starts_at"], venue_name=rec["venue"], promoter=rec["promoter"],
-                    lineup=rec["lineup"], provider=Provider.DICE)
+                    sess,
+                    site=SITE,
+                    external_id=rec["id"],
+                    url=rec["url"] or url,
+                    title=rec["name"],
+                    starts_at=rec["starts_at"],
+                    venue_name=rec["venue"],
+                    promoter=rec["promoter"],
+                    lineup=rec["lineup"],
+                    provider=Provider.DICE,
+                )
                 if not cached:
                     record_observation(sess, ctx, ev, rec, now, include_page_signals=True)
                     stats["observations"] += 1
@@ -318,8 +375,13 @@ def detect_added_dates(window_days: int = 4, min_gap_days: int = 7) -> int:
 
     n = 0
     with session_scope() as sess:
-        evs = list(sess.scalars(select(Event).where(Event.merged_into_id.is_(None), Event.starts_at.is_not(None),
-                                                    Event.venue_id.is_not(None))))
+        evs = list(
+            sess.scalars(
+                select(Event).where(
+                    Event.merged_into_id.is_(None), Event.starts_at.is_not(None), Event.venue_id.is_not(None)
+                )
+            )
+        )
         for e in evs:
             if e.added_date_flag or e.announced_at is None or e.starts_at is None:
                 continue
@@ -327,7 +389,8 @@ def detect_added_dates(window_days: int = 4, min_gap_days: int = 7) -> int:
                 if o.id == e.id or o.venue_id != e.venue_id or o.starts_at is None or o.announced_at is None:
                     continue
                 same_brand = (e.brand_id is not None and e.brand_id == o.brand_id) or (
-                    norm(e.promoter) and norm(e.promoter) == norm(o.promoter))
+                    norm(e.promoter) and norm(e.promoter) == norm(o.promoter)
+                )
                 if not same_brand or abs(o.starts_at - e.starts_at) > timedelta(days=window_days):
                     continue
                 if o.status == EventStatus.SOLD_OUT and e.announced_at - o.announced_at >= timedelta(days=min_gap_days):

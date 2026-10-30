@@ -24,7 +24,6 @@ crowdvolt:
   days_ahead: 60
   wallet_types: [DICE, POSH, EVENTBRITE, TICKETMASTER, AXS, RA, SEETICKETS, TIXR, SHOTGUN]
   page_settle_ms: 6000
-  headless: true
 ra:
   graphql_url: https://ra.co/graphql
   referer: https://ra.co/events/us/newyork

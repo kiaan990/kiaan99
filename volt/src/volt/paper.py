@@ -32,10 +32,16 @@ def open_trades(session: Session, results: list[ScoreResult], now: datetime | No
         low = r.lowest_tier or lowest_available_tier(session, r.event_id)
         if ev is None or ev.starts_at is None or low is None or low["price_cents"] is None:
             continue
-        t = PaperTrade(event_id=ev.id, opened_at=now, buy_tier_name=f"{low['provider']}: {low['name']}",
-                       buy_price_cents=int(low["price_cents"]), qty=s.paper_qty,
-                       target_sell_at=ev.starts_at - timedelta(days=2), fee_pct=s.paper_fee_pct,
-                       status=TradeStatus.OPEN)
+        t = PaperTrade(
+            event_id=ev.id,
+            opened_at=now,
+            buy_tier_name=f"{low['provider']}: {low['name']}",
+            buy_price_cents=int(low["price_cents"]),
+            qty=s.paper_qty,
+            target_sell_at=ev.starts_at - timedelta(days=2),
+            fee_pct=s.paper_fee_pct,
+            status=TradeStatus.OPEN,
+        )
         session.add(t)
         opened.append(t)
     session.flush()
@@ -45,14 +51,30 @@ def open_trades(session: Session, results: list[ScoreResult], now: datetime | No
 def asks_around(session: Session, event_id: int, at: datetime, half: timedelta = CLOSE_HALF_WINDOW) -> list[int]:
     """Every CrowdVolt ask price seen in [at-half, at+half]; falls back to snapshot lowest asks."""
     lo, hi = at - half, at + half
-    prices = [p for (p,) in session.execute(select(CvBookSnapshot.price_cents).where(
-        CvBookSnapshot.event_id == event_id, CvBookSnapshot.side == Side.ASK,
-        CvBookSnapshot.captured_at >= lo, CvBookSnapshot.captured_at <= hi,
-        CvBookSnapshot.price_cents.is_not(None)))]
+    prices = [
+        p
+        for (p,) in session.execute(
+            select(CvBookSnapshot.price_cents).where(
+                CvBookSnapshot.event_id == event_id,
+                CvBookSnapshot.side == Side.ASK,
+                CvBookSnapshot.captured_at >= lo,
+                CvBookSnapshot.captured_at <= hi,
+                CvBookSnapshot.price_cents.is_not(None),
+            )
+        )
+    ]
     if not prices:
-        prices = [p for (p,) in session.execute(select(CvEventSnapshot.lowest_ask_cents).where(
-            CvEventSnapshot.event_id == event_id, CvEventSnapshot.captured_at >= lo,
-            CvEventSnapshot.captured_at <= hi, CvEventSnapshot.lowest_ask_cents.is_not(None)))]
+        prices = [
+            p
+            for (p,) in session.execute(
+                select(CvEventSnapshot.lowest_ask_cents).where(
+                    CvEventSnapshot.event_id == event_id,
+                    CvEventSnapshot.captured_at >= lo,
+                    CvEventSnapshot.captured_at <= hi,
+                    CvEventSnapshot.lowest_ask_cents.is_not(None),
+                )
+            )
+        ]
     return [int(p) for p in prices if p is not None]
 
 

@@ -17,8 +17,9 @@ from sqlalchemy import select
 from volt.db import init_db, session_scope, utcnow
 from volt.scheduler import setup_logging
 
-app = typer.Typer(help="Volt Phase 0 — NYC rave ticket market watcher. Data only: no buying, no buy advice.",
-                  no_args_is_help=True)
+app = typer.Typer(
+    help="Volt Phase 0 — NYC rave ticket market watcher. Data only: no buying, no buy advice.", no_args_is_help=True
+)
 console = Console(width=None if sys.stdout.isatty() else 200)
 NY = ZoneInfo("America/New_York")
 SITES = ["crowdvolt", "dice", "ra"]
@@ -68,7 +69,9 @@ def login(site: Annotated[str, typer.Argument(help="crowdvolt")] = "crowdvolt") 
 def crawl(
     site: Annotated[str, typer.Argument(help="crowdvolt | dice | ra | all")] = "all",
     force: Annotated[bool, typer.Option("--force", help="ignore the 1-hour cache and the cadence")] = False,
-    debug_dump: Annotated[bool, typer.Option("--debug-dump", help="save HTML+screenshot to ./debug on failures")] = False,
+    debug_dump: Annotated[
+        bool, typer.Option("--debug-dump", help="save HTML+screenshot to ./debug on failures")
+    ] = False,
     max_pages: Annotated[int | None, typer.Option(help="crowdvolt: stop after N event pages")] = None,
     url: Annotated[list[str] | None, typer.Option(help="crowdvolt: crawl only these URLs")] = None,
     headed: Annotated[bool, typer.Option("--headed", help="crowdvolt: show the browser window")] = False,
@@ -115,8 +118,15 @@ def review_matches() -> None:
         for col in ("event A", "title A", "event B", "title B", "conf", "title", "venue"):
             t.add_column(col)
         for p in r["review"]:
-            t.add_row(str(p["a"]), p["a_title"][:45], str(p["b"]), p["b_title"][:45], str(p["confidence"]),
-                      str(p["title"]), str(p["venue"]))
+            t.add_row(
+                str(p["a"]),
+                p["a_title"][:45],
+                str(p["b"]),
+                p["b_title"][:45],
+                str(p["confidence"]),
+                str(p["title"]),
+                str(p["venue"]),
+            )
         console.print(t)
         t2 = Table(title="Low-confidence source links")
         for col in ("event", "title", "site", "url", "conf"):
@@ -144,8 +154,11 @@ def merge(keep: int, drop: int) -> None:
 @app.command()
 def flag(
     event_id: int,
-    scarcity: Annotated[bool | None, typer.Option("--scarcity/--no-scarcity", help="finale/relocation/make-good")] = None,
+    scarcity: Annotated[
+        bool | None, typer.Option("--scarcity/--no-scarcity", help="finale/relocation/make-good")
+    ] = None,
     added_date: Annotated[bool | None, typer.Option("--added-date/--no-added-date")] = None,
+    face: Annotated[float | None, typer.Option(help="override face value in dollars (lowest real tier)")] = None,
 ) -> None:
     """Set manual flags on an event (these are inputs, not signals)."""
     from volt.db import Event
@@ -158,7 +171,12 @@ def flag(
             e.scarcity_flag = scarcity
         if added_date is not None:
             e.added_date_flag = added_date
-        console.print(f"{e.title}: scarcity={e.scarcity_flag} added_date={e.added_date_flag}")
+        if face is not None:
+            e.face_value_cents, e.face_source = int(round(face * 100)), "MANUAL"
+        console.print(
+            f"{e.title}: scarcity={e.scarcity_flag} added_date={e.added_date_flag} "
+            f"face={_money(e.face_value_cents)} ({e.face_source})"
+        )
 
 
 @app.command()
@@ -183,21 +201,40 @@ def watchlist(limit: int = 30, all_events: Annotated[bool, typer.Option("--all")
             rows = [(e, sc) for e, sc in rows if sc.gates_passed or sc.score >= 30]
         rows.sort(key=lambda x: (-x[1].gates_passed, -x[1].score))
         t = Table(title=f"Volt watchlist · {now.astimezone(NY):%Y-%m-%d %H:%M} ET (no buy advice)")
-        for col in ("id", "event", "date", "venue", "score", "gates", "low tier", "face", "CV bid", "CV ask",
-                    "wallet", "failures"):
+        for col in (
+            "id",
+            "event",
+            "date",
+            "venue",
+            "score",
+            "gates",
+            "low tier",
+            "face",
+            "CV bid",
+            "CV ask",
+            "wallet",
+            "failures",
+        ):
             t.add_column(col, overflow="fold")
         for e, sc in rows[:limit]:
             v = s.get(Venue, e.venue_id) if e.venue_id else None
             low = lowest_available_tier(s, e.id)
             cv = latest_cv(s, e.id)
             assert e.starts_at is not None
-            t.add_row(str(e.id), e.title[:40], e.starts_at.astimezone(NY).strftime("%a %m/%d %H:%M"),
-                      (v.name if v else e.venue_name_raw or "?")[:20], f"{sc.score:.0f}",
-                      "[green]PASS[/]" if sc.gates_passed else "[red]fail[/]",
-                      _money(low["price_cents"]) + (f" (t{low['index']})" if low and low["index"] else "") if low
-                      else "—", _money(e.face_value_cents),
-                      _money(cv.highest_bid_cents) if cv else "—", _money(cv.lowest_ask_cents) if cv else "—",
-                      e.cv_wallet_type or "—", "; ".join(sc.gate_failures)[:80])
+            t.add_row(
+                str(e.id),
+                e.title[:40],
+                e.starts_at.astimezone(NY).strftime("%a %m/%d %H:%M"),
+                (v.name if v else e.venue_name_raw or "?")[:20],
+                f"{sc.score:.0f}",
+                "[green]PASS[/]" if sc.gates_passed else "[red]fail[/]",
+                _money(low["price_cents"]) + (f" (t{low['index']})" if low and low["index"] else "") if low else "—",
+                _money(e.face_value_cents),
+                _money(cv.highest_bid_cents) if cv else "—",
+                _money(cv.lowest_ask_cents) if cv else "—",
+                e.cv_wallet_type or "—",
+                "; ".join(sc.gate_failures)[:80],
+            )
         console.print(t)
         if not rows:
             console.print("Nothing scored yet; run `volt score` (or `--all` to include low scores).")
@@ -215,10 +252,18 @@ def paper() -> None:
             t.add_column(col)
         for r in p.summary(s):
             tr, ev, m = r["trade"], r["event"], r["multiple"]
-            t.add_row(ev.title[:40] if ev else str(tr.event_id), tr.opened_at.astimezone(NY).strftime("%m/%d"),
-                      (tr.buy_tier_name or "")[:25], _money(tr.buy_price_cents), str(tr.qty),
-                      tr.target_sell_at.astimezone(NY).strftime("%m/%d %H:%M"), _money(tr.sell_price_cents),
-                      f"{m:.2f}x" if m else "—", _money(tr.pnl_cents), tr.status.value)
+            t.add_row(
+                ev.title[:40] if ev else str(tr.event_id),
+                tr.opened_at.astimezone(NY).strftime("%m/%d"),
+                (tr.buy_tier_name or "")[:25],
+                _money(tr.buy_price_cents),
+                str(tr.qty),
+                tr.target_sell_at.astimezone(NY).strftime("%m/%d %H:%M"),
+                _money(tr.sell_price_cents),
+                f"{m:.2f}x" if m else "—",
+                _money(tr.pnl_cents),
+                tr.status.value,
+            )
         console.print(t)
 
 
@@ -257,8 +302,9 @@ def evaluate() -> None:
         if v is None:
             t2.add_row(comp, "—", "—", "— (need ≥4 resolved)", "")
         else:
-            t2.add_row(comp, f"{v['top_q_mean']:.2f}", f"{v['bottom_q_mean']:.2f}", f"{v['separation']:+.2f}",
-                       str(v["n"]))
+            t2.add_row(
+                comp, f"{v['top_q_mean']:.2f}", f"{v['bottom_q_mean']:.2f}", f"{v['separation']:+.2f}", str(v["n"])
+            )
     console.print(t2)
     if r["missed_winners"]:
         console.print("Missed winners: " + "; ".join(r["missed_winners"][:20]))
@@ -338,8 +384,15 @@ def status() -> None:
         for col in ("id", "site", "started (ET)", "status", "pages", "rows", "error"):
             t.add_column(col, overflow="fold")
         for r in s.scalars(select(CrawlRun).order_by(CrawlRun.id.desc()).limit(15)):
-            t.add_row(str(r.id), r.site, r.started_at.astimezone(NY).strftime("%m/%d %H:%M"), r.status,
-                      str(r.pages_fetched), str(r.rows_written), (r.error or "")[:120])
+            t.add_row(
+                str(r.id),
+                r.site,
+                r.started_at.astimezone(NY).strftime("%m/%d %H:%M"),
+                r.status,
+                str(r.pages_fetched),
+                str(r.rows_written),
+                (r.error or "")[:120],
+            )
         console.print(t)
 
 
@@ -360,8 +413,10 @@ def show(event_id: int) -> None:
         if cv:
             console.print({k: getattr(cv, k) for k in cv.__mapper__.c.keys()})
         for t in latest_tiers(s, e.id):
-            console.print(f"tier {t.provider} #{t.tier_index} {t.tier_name}: {_money(t.price_cents)} "
-                          f"{'available' if t.available else 'gone'}")
+            console.print(
+                f"tier {t.provider} #{t.tier_index} {t.tier_name}: {_money(t.price_cents)} "
+                f"{'available' if t.available else 'gone'}"
+            )
         console.print(json.dumps({"note": "informational only"}))
 
 

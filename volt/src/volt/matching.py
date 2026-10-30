@@ -31,12 +31,59 @@ MATCH_THRESHOLD = 85.0
 REVIEW_FLOOR = 60.0
 
 _TITLE_NOISE = {
-    "presents", "present", "pres", "tickets", "ticket", "nyc", "new", "york", "ny", "brooklyn", "queens",
-    "the", "at", "w", "with", "and", "ft", "feat", "featuring", "b2b", "x", "live", "tba", "usa", "united",
-    "states", "2026", "2027", "oct", "october", "nov", "november", "dec", "december", "jan", "january",
+    "presents",
+    "present",
+    "pres",
+    "tickets",
+    "ticket",
+    "nyc",
+    "new",
+    "york",
+    "ny",
+    "brooklyn",
+    "queens",
+    "the",
+    "at",
+    "w",
+    "with",
+    "and",
+    "ft",
+    "feat",
+    "featuring",
+    "b2b",
+    "x",
+    "live",
+    "tba",
+    "usa",
+    "united",
+    "states",
+    "2026",
+    "2027",
+    "oct",
+    "october",
+    "nov",
+    "november",
+    "dec",
+    "december",
+    "jan",
+    "january",
 }
-_DAYS = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
-         "mon", "tue", "wed", "thu", "fri", "sat", "sun"}
+_DAYS = {
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
+    "sun",
+}
 _DAY_CANON = {d[:3]: d[:3] for d in _DAYS}
 
 
@@ -72,6 +119,7 @@ def discriminators(title: str) -> set[str]:
 
 
 # ---------------------------------------------------------------- config loaders
+
 
 def load_venues(session: Session) -> int:
     data = load_yaml("venues.yaml")["venues"]
@@ -109,6 +157,7 @@ def load_brands(session: Session) -> int:
 
 
 # ---------------------------------------------------------------- resolution
+
 
 def resolve_venue(session: Session, name: str | None) -> Venue | None:
     n = norm(name)
@@ -154,6 +203,7 @@ def detect_brand(session: Session, title: str, promoter: str | None, lineup: lis
 
 # ---------------------------------------------------------------- matching
 
+
 @dataclass
 class MatchResult:
     event: Event
@@ -177,8 +227,14 @@ def _night_day(start: datetime) -> str:
     return "day:" + loc.strftime("%a").lower()
 
 
-def pair_confidence(title_a: str, title_b: str, start_a: datetime | None, start_b: datetime | None,
-                    venue_score: float, venue_name: str | None = None) -> tuple[float, float]:
+def pair_confidence(
+    title_a: str,
+    title_b: str,
+    start_a: datetime | None,
+    start_b: datetime | None,
+    venue_score: float,
+    venue_name: str | None = None,
+) -> tuple[float, float]:
     """Return (confidence, title_score). confidence is 0 when hard constraints fail."""
     if start_a is None or start_b is None:
         return 0.0, 0.0
@@ -194,15 +250,23 @@ def pair_confidence(title_a: str, title_b: str, start_a: datetime | None, start_
         if days and _night_day(other_start) not in days:
             return 0.0, 0.0
     ta, tb = norm_title(title_a, venue_name), norm_title(title_b, venue_name)
-    title_score = float(max(fuzz.token_set_ratio(ta, tb), fuzz.partial_ratio(ta, tb) if min(len(ta), len(tb)) >= 6 else 0))
+    title_score = float(
+        max(fuzz.token_set_ratio(ta, tb), fuzz.partial_ratio(ta, tb) if min(len(ta), len(tb)) >= 6 else 0)
+    )
     conf = min(title_score, venue_score)
     if delta > timedelta(hours=18):
         conf = min(conf, MATCH_THRESHOLD - 1)  # different calendar night: human review
     return conf, title_score
 
 
-def find_match(session: Session, title: str, starts_at: datetime | None, venue_id: int | None,
-               venue_raw: str | None, exclude_site: str | None = None) -> MatchResult | None:
+def find_match(
+    session: Session,
+    title: str,
+    starts_at: datetime | None,
+    venue_id: int | None,
+    venue_raw: str | None,
+    exclude_site: str | None = None,
+) -> MatchResult | None:
     if starts_at is None:
         return None
     lo, hi = starts_at - timedelta(days=1, hours=1), starts_at + timedelta(days=1, hours=1)
@@ -276,8 +340,17 @@ def upsert_event_from_source(
     return ev, src, created
 
 
-def _fill(session: Session, ev: Event, title: str, starts_at: datetime | None, venue: Venue | None,
-          venue_name: str | None, promoter: str | None, lineup: list[str] | None, provider: Provider | None) -> None:
+def _fill(
+    session: Session,
+    ev: Event,
+    title: str,
+    starts_at: datetime | None,
+    venue: Venue | None,
+    venue_name: str | None,
+    promoter: str | None,
+    lineup: list[str] | None,
+    provider: Provider | None,
+) -> None:
     if not ev.title:
         ev.title = title
     if ev.starts_at is None and starts_at is not None:
@@ -300,14 +373,24 @@ def _fill(session: Session, ev: Event, title: str, starts_at: datetime | None, v
 
 def merge_events(session: Session, keep: Event, drop: Event, confidence: float) -> None:
     """Re-link drop's sources and snapshots onto keep. Snapshot values are never modified."""
-    session.execute(update(EventSource).where(EventSource.event_id == drop.id)
-                    .values(event_id=keep.id, match_confidence=confidence))
+    session.execute(
+        update(EventSource).where(EventSource.event_id == drop.id).values(event_id=keep.id, match_confidence=confidence)
+    )
     for model in (*SNAPSHOT_MODELS, Score):
         session.execute(update(model).where(model.event_id == drop.id).values(event_id=keep.id))  # type: ignore[attr-defined]
     if not session.scalar(select(PaperTrade.id).where(PaperTrade.event_id == keep.id)):
         session.execute(update(PaperTrade).where(PaperTrade.event_id == drop.id).values(event_id=keep.id))
-    for attr in ("venue_id", "venue_name_raw", "brand_id", "promoter", "primary_provider", "face_value_cents",
-                 "first_sold_out_at", "cv_wallet_type", "cv_listable"):
+    for attr in (
+        "venue_id",
+        "venue_name_raw",
+        "brand_id",
+        "promoter",
+        "primary_provider",
+        "face_value_cents",
+        "first_sold_out_at",
+        "cv_wallet_type",
+        "cv_listable",
+    ):
         if getattr(keep, attr) is None and getattr(drop, attr) is not None:
             setattr(keep, attr, getattr(drop, attr))
     if not keep.lineup and drop.lineup:
@@ -320,8 +403,11 @@ def merge_events(session: Session, keep: Event, drop: Event, confidence: float) 
 
 def run_matching(session: Session) -> dict[str, Any]:
     """Pairwise pass over live events; auto-merge >= threshold, collect review candidates."""
-    events = list(session.scalars(select(Event).where(Event.merged_into_id.is_(None), Event.starts_at.is_not(None))
-                                  .order_by(Event.starts_at)))
+    events = list(
+        session.scalars(
+            select(Event).where(Event.merged_into_id.is_(None), Event.starts_at.is_not(None)).order_by(Event.starts_at)
+        )
+    )
     merged, review = 0, []
     sites_of: dict[int, set[str]] = {}
     for e in events:
@@ -330,7 +416,7 @@ def run_matching(session: Session) -> dict[str, Any]:
     for i, a in enumerate(events):
         if a.id in gone:
             continue
-        for b in events[i + 1:]:
+        for b in events[i + 1 :]:
             if b.id in gone or a.starts_at is None or b.starts_at is None:
                 continue
             if b.starts_at - a.starts_at > timedelta(days=1, hours=1):
@@ -345,8 +431,17 @@ def run_matching(session: Session) -> dict[str, Any]:
                 gone.add(b.id)
                 merged += 1
             elif conf >= REVIEW_FLOOR or (ts >= MATCH_THRESHOLD and vs >= REVIEW_FLOOR):
-                review.append({"a": a.id, "b": b.id, "a_title": a.title, "b_title": b.title,
-                               "confidence": round(conf, 1), "title": round(ts, 1), "venue": round(vs, 1)})
+                review.append(
+                    {
+                        "a": a.id,
+                        "b": b.id,
+                        "a_title": a.title,
+                        "b_title": b.title,
+                        "confidence": round(conf, 1),
+                        "title": round(ts, 1),
+                        "venue": round(vs, 1),
+                    }
+                )
     # brand is derived, so recompute it every pass (picks up brands.yaml edits, clears false positives)
     for e in events:
         if e.id not in gone:
@@ -357,7 +452,8 @@ def run_matching(session: Session) -> dict[str, Any]:
 
 def low_confidence_sources(session: Session, below: float = MATCH_THRESHOLD + 5) -> list[tuple[Event, EventSource]]:
     rows = session.execute(
-        select(Event, EventSource).join(EventSource, EventSource.event_id == Event.id)
+        select(Event, EventSource)
+        .join(EventSource, EventSource.event_id == Event.id)
         .where(EventSource.match_confidence < below, EventSource.match_confirmed.is_(None))
     )
     return [(e, s) for e, s in rows]

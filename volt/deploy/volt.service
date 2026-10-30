@@ -1,0 +1,18 @@
+[Unit]
+Description=Volt Phase 0 ticket market watcher (data only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__DIR__
+ExecStart=__UV__ run --frozen volt run
+Restart=on-failure
+RestartSec=60
+# If CrowdVolt blocks the headless browser, set CROWDVOLT_HEADLESS=false in .env and use:
+# ExecStart=/usr/bin/xvfb-run -a __UV__ run --frozen volt run
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

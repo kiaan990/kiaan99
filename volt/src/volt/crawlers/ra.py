@@ -45,13 +45,18 @@ def build_payload(area: int, start: datetime, days: int, page: int, page_size: i
     return {
         "operationName": "GET_EVENT_LISTINGS",
         "variables": {
-            "filters": {"areas": {"eq": area},
-                        "listingDate": {"gte": d0.isoformat(), "lte": (d0 + timedelta(days=days)).isoformat()}},
+            "filters": {
+                "areas": {"eq": area},
+                "listingDate": {"gte": d0.isoformat(), "lte": (d0 + timedelta(days=days)).isoformat()},
+            },
             "filterOptions": {"genre": True},
             "pageSize": page_size,
             "page": page,
-            "sort": {"listingDate": {"order": "ASCENDING"}, "score": {"order": "DESCENDING"},
-                     "titleKeyword": {"order": "ASCENDING"}},
+            "sort": {
+                "listingDate": {"order": "ASCENDING"},
+                "score": {"order": "DESCENDING"},
+                "titleKeyword": {"order": "ASCENDING"},
+            },
         },
         "query": RA_QUERY,
     }
@@ -65,8 +70,16 @@ def _local(ts: str | None) -> datetime | None:
     return dt.replace(tzinfo=NY).astimezone(UTC)
 
 
-TICKET_HOSTS = {"dice.fm": "DICE", "link.dice.fm": "DICE", "posh.vip": "POSH", "eventbrite.com": "EVENTBRITE",
-                "ticketmaster.com": "TM", "axs.com": "AXS", "tixr.com": "OTHER", "shotgun.live": "OTHER"}
+TICKET_HOSTS = {
+    "dice.fm": "DICE",
+    "link.dice.fm": "DICE",
+    "posh.vip": "POSH",
+    "eventbrite.com": "EVENTBRITE",
+    "ticketmaster.com": "TM",
+    "axs.com": "AXS",
+    "tixr.com": "OTHER",
+    "shotgun.live": "OTHER",
+}
 
 
 def ticket_links(ev: dict[str, Any]) -> list[tuple[str, str]]:
@@ -90,12 +103,15 @@ def parse_listing(item: dict[str, Any]) -> dict[str, Any]:
     tiers = []
     for i, t in enumerate(tickets, start=1):
         price = t.get("priceRetail")
-        tiers.append({
-            "name": t.get("title") or f"tier {i}", "index": i,
-            "price_cents": int(round(price * 100)) if price is not None else None,
-            "available": t.get("validType") == "VALID",
-            "state": t.get("validType"),
-        })
+        tiers.append(
+            {
+                "name": t.get("title") or f"tier {i}",
+                "index": i,
+                "price_cents": int(round(price * 100)) if price is not None else None,
+                "available": t.get("validType") == "VALID",
+                "state": t.get("validType"),
+            }
+        )
     links = ticket_links(ev)
     provider = Provider.RA if ev.get("isTicketed") else (Provider(links[0][0]) if links else None)
     return {
@@ -115,12 +131,21 @@ def parse_listing(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def apply_listing(session: Session, ctx: CrawlContext | None, rec: dict[str, Any], now: datetime,
-                  write_snapshots: bool = True) -> Event:
+def apply_listing(
+    session: Session, ctx: CrawlContext | None, rec: dict[str, Any], now: datetime, write_snapshots: bool = True
+) -> Event:
     ev, _src, _ = upsert_event_from_source(
-        session, site=SITE, external_id=rec["external_id"], url=rec["url"], title=rec["title"],
-        starts_at=rec["starts_at"], venue_name=rec["venue"], promoter=rec["promoter"], lineup=rec["lineup"],
-        provider=rec["provider"])
+        session,
+        site=SITE,
+        external_id=rec["external_id"],
+        url=rec["url"],
+        title=rec["title"],
+        starts_at=rec["starts_at"],
+        venue_name=rec["venue"],
+        promoter=rec["promoter"],
+        lineup=rec["lineup"],
+        provider=rec["provider"],
+    )
 
     def add(row: Any) -> None:
         if ctx:
@@ -132,22 +157,35 @@ def apply_listing(session: Session, ctx: CrawlContext | None, rec: dict[str, Any
         if prov == "DICE":
             ext = "link:" + url
             if not session.query(EventSource).filter_by(site="dice_link", external_id=ext).first():
-                session.add(EventSource(event_id=ev.id, site="dice_link", url=url, external_id=ext,
-                                        match_confidence=100.0))
+                session.add(
+                    EventSource(event_id=ev.id, site="dice_link", url=url, external_id=ext, match_confidence=100.0)
+                )
                 session.flush()
     if not write_snapshots:
         return ev  # page came from the 1-hour cache: no new observation
     if rec["interested"] is not None:
-        add(SignalSnapshot(event_id=ev.id, signal_name="ra_interested", value=float(rec["interested"]),
-                           captured_at=now))
+        add(
+            SignalSnapshot(event_id=ev.id, signal_name="ra_interested", value=float(rec["interested"]), captured_at=now)
+        )
     if rec["is_ticketed"] and rec["tiers"]:
         for t in rec["tiers"]:
-            add(TierSnapshot(event_id=ev.id, provider="RA", tier_name=t["name"], tier_index=t["index"],
-                             price_cents=t["price_cents"], available=t["available"], captured_at=now))
-        if ev.face_value_cents is None:
+            add(
+                TierSnapshot(
+                    event_id=ev.id,
+                    provider="RA",
+                    tier_name=t["name"],
+                    tier_index=t["index"],
+                    price_cents=t["price_cents"],
+                    available=t["available"],
+                    captured_at=now,
+                )
+            )
+        # RA lists every tier with its price, so it outranks Dice's "from" price (which can include add-ons).
+        if ev.face_value_cents is None or ev.face_source in (None, "DICE"):
             prices = [t["price_cents"] for t in rec["tiers"] if t["price_cents"] is not None]
-            if prices:
+            if prices and ev.face_source != "RA":
                 ev.face_value_cents = min(prices)
+                ev.face_source = "RA"
         if all(not t["available"] for t in rec["tiers"]):
             if ev.status != EventStatus.SOLD_OUT:
                 ev.status = EventStatus.SOLD_OUT
@@ -163,7 +201,8 @@ def crawl(force: bool = False, debug_dump: bool = False) -> dict[str, Any]:
     if cfg.get("query_sha256") != query_sha256():
         raise RuntimeError(
             f"RA query hash mismatch: config has {cfg.get('query_sha256')}, code has {query_sha256()}. "
-            "If the query change is intended, run `volt ra-query-hash --write`.")
+            "If the query change is intended, run `volt ra-query-hash --write`."
+        )
     now = utcnow()
     stats = {"events": 0, "pages": 0}
     with crawl_run(SITE, force=force, debug_dump=debug_dump) as ctx:

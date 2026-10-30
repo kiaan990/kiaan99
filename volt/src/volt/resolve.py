@@ -23,20 +23,39 @@ def resolve_event(session: Session, ev: Event, now: datetime) -> Outcome:
     assert ev.starts_at is not None
     s = ev.starts_at
     t2, t1, t0 = s - timedelta(days=2), s - timedelta(days=1), s
-    sold_signal = session.scalar(select(func.min(SignalSnapshot.captured_at)).where(
-        SignalSnapshot.event_id == ev.id, SignalSnapshot.signal_name == "dice_sold_out", SignalSnapshot.value == 1.0))
+    sold_signal = session.scalar(
+        select(func.min(SignalSnapshot.captured_at)).where(
+            SignalSnapshot.event_id == ev.id, SignalSnapshot.signal_name == "dice_sold_out", SignalSnapshot.value == 1.0
+        )
+    )
     first_sold = ev.first_sold_out_at or sold_signal
-    peak_bid = session.scalar(select(func.max(CvEventSnapshot.highest_bid_cents)).where(
-        CvEventSnapshot.event_id == ev.id, CvEventSnapshot.captured_at <= s))
-    peak_book_bid = session.scalar(select(func.max(CvBookSnapshot.price_cents)).where(
-        CvBookSnapshot.event_id == ev.id, CvBookSnapshot.side == Side.BID, CvBookSnapshot.captured_at <= s))
+    peak_bid = session.scalar(
+        select(func.max(CvEventSnapshot.highest_bid_cents)).where(
+            CvEventSnapshot.event_id == ev.id, CvEventSnapshot.captured_at <= s
+        )
+    )
+    peak_book_bid = session.scalar(
+        select(func.max(CvBookSnapshot.price_cents)).where(
+            CvBookSnapshot.event_id == ev.id, CvBookSnapshot.side == Side.BID, CvBookSnapshot.captured_at <= s
+        )
+    )
     peaks = [p for p in (peak_bid, peak_book_bid) if p is not None]
-    snap_t2 = session.scalar(select(CvEventSnapshot).where(
-        CvEventSnapshot.event_id == ev.id, CvEventSnapshot.captured_at <= t2 + HALF)
-        .order_by(CvEventSnapshot.captured_at.desc()).limit(1))
-    last_sale_t2 = session.scalar(select(CvEventSnapshot.last_sale_cents).where(
-        CvEventSnapshot.event_id == ev.id, CvEventSnapshot.captured_at <= t2,
-        CvEventSnapshot.last_sale_cents.is_not(None)).order_by(CvEventSnapshot.captured_at.desc()).limit(1))
+    snap_t2 = session.scalar(
+        select(CvEventSnapshot)
+        .where(CvEventSnapshot.event_id == ev.id, CvEventSnapshot.captured_at <= t2 + HALF)
+        .order_by(CvEventSnapshot.captured_at.desc())
+        .limit(1)
+    )
+    last_sale_t2 = session.scalar(
+        select(CvEventSnapshot.last_sale_cents)
+        .where(
+            CvEventSnapshot.event_id == ev.id,
+            CvEventSnapshot.captured_at <= t2,
+            CvEventSnapshot.last_sale_cents.is_not(None),
+        )
+        .order_by(CvEventSnapshot.captured_at.desc())
+        .limit(1)
+    )
     med_t2 = _median_ask(session, ev.id, t2)
     ref = last_sale_t2 if last_sale_t2 is not None else med_t2
     multiple = (ref / ev.face_value_cents) if (ref is not None and ev.face_value_cents) else None
@@ -66,8 +85,9 @@ def resolve_event(session: Session, ev: Event, now: datetime) -> Outcome:
 
 def resolve_all(session: Session, now: datetime | None = None) -> list[Outcome]:
     now = now or utcnow()
-    evs = session.scalars(select(Event).where(Event.merged_into_id.is_(None), Event.starts_at.is_not(None),
-                                              Event.starts_at < now))
+    evs = session.scalars(
+        select(Event).where(Event.merged_into_id.is_(None), Event.starts_at.is_not(None), Event.starts_at < now)
+    )
     outs = [resolve_event(session, e, now) for e in evs]
     session.flush()
     return outs

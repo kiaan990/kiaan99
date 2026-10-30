@@ -40,6 +40,7 @@ class ScoreResult:
 
 # ------------------------------------------------------------ helpers
 
+
 def local_night(starts_at: datetime, rollover_hour: int = 6) -> date:
     """Local calendar night of an event: a 02:00 start belongs to the previous evening."""
     loc = starts_at.astimezone(NY)
@@ -52,20 +53,33 @@ def latest_tiers(session: Session, event_id: int) -> list[TierSnapshot]:
     """Tier rows from the most recent crawl, per provider (RA has full tier lists; Dice one summary row)."""
     out: list[TierSnapshot] = []
     for prov in session.scalars(select(TierSnapshot.provider).where(TierSnapshot.event_id == event_id).distinct()):
-        last_run = session.scalar(select(TierSnapshot.crawl_run_id).where(
-            TierSnapshot.event_id == event_id, TierSnapshot.provider == prov)
-            .order_by(TierSnapshot.captured_at.desc()).limit(1))
-        out += list(session.scalars(select(TierSnapshot).where(
-            TierSnapshot.event_id == event_id, TierSnapshot.provider == prov,
-            TierSnapshot.crawl_run_id == last_run)))
+        last_run = session.scalar(
+            select(TierSnapshot.crawl_run_id)
+            .where(TierSnapshot.event_id == event_id, TierSnapshot.provider == prov)
+            .order_by(TierSnapshot.captured_at.desc())
+            .limit(1)
+        )
+        out += list(
+            session.scalars(
+                select(TierSnapshot).where(
+                    TierSnapshot.event_id == event_id,
+                    TierSnapshot.provider == prov,
+                    TierSnapshot.crawl_run_id == last_run,
+                )
+            )
+        )
     return out
 
 
 def dice_price_steps(session: Session, event_id: int, since: datetime | None = None) -> int:
     """Number of times Dice's lowest available price went up (plus a final step to sold out)."""
-    rows = list(session.execute(select(TierSnapshot.captured_at, TierSnapshot.price_cents, TierSnapshot.available)
-                                .where(TierSnapshot.event_id == event_id, TierSnapshot.provider == "DICE")
-                                .order_by(TierSnapshot.captured_at)))
+    rows = list(
+        session.execute(
+            select(TierSnapshot.captured_at, TierSnapshot.price_cents, TierSnapshot.available)
+            .where(TierSnapshot.event_id == event_id, TierSnapshot.provider == "DICE")
+            .order_by(TierSnapshot.captured_at)
+        )
+    )
     steps, prev_price, prev_avail = 0, None, None
     for at, price, avail in rows:
         if prev_avail is not None and (since is None or at >= since):
@@ -83,7 +97,7 @@ def lowest_available_tier(session: Session, event_id: int) -> dict[str, Any] | N
     avail = [t for t in tiers if t.available and t.price_cents is not None]
     if not avail:
         return None
-    t = min(avail, key=lambda x: (x.price_cents or 0))
+    t = min(avail, key=lambda x: x.price_cents or 0)
     idx = t.tier_index
     if idx is None and t.provider == "DICE":
         idx = 1 + dice_price_steps(session, event_id)
@@ -95,9 +109,11 @@ def tiers_sold_in_window(session: Session, event_id: int, now: datetime, days: i
     n = 0
     # RA (and any provider with named tiers): a tier counts when it is first seen unavailable after having
     # been seen available, and that flip happened inside the window.
-    rows = session.execute(select(TierSnapshot.tier_name, TierSnapshot.captured_at, TierSnapshot.available)
-                           .where(TierSnapshot.event_id == event_id, TierSnapshot.provider != "DICE")
-                           .order_by(TierSnapshot.tier_name, TierSnapshot.captured_at))
+    rows = session.execute(
+        select(TierSnapshot.tier_name, TierSnapshot.captured_at, TierSnapshot.available)
+        .where(TierSnapshot.event_id == event_id, TierSnapshot.provider != "DICE")
+        .order_by(TierSnapshot.tier_name, TierSnapshot.captured_at)
+    )
     state: dict[str, bool] = {}
     flipped: set[str] = set()
     for name, at, avail in rows:
@@ -110,14 +126,23 @@ def tiers_sold_in_window(session: Session, event_id: int, now: datetime, days: i
 
 
 def latest_signal(session: Session, event_id: int, name: str) -> float | None:
-    return session.scalar(select(SignalSnapshot.value).where(
-        SignalSnapshot.event_id == event_id, SignalSnapshot.signal_name == name, SignalSnapshot.value.is_not(None))
-        .order_by(SignalSnapshot.captured_at.desc()).limit(1))
+    return session.scalar(
+        select(SignalSnapshot.value)
+        .where(
+            SignalSnapshot.event_id == event_id, SignalSnapshot.signal_name == name, SignalSnapshot.value.is_not(None)
+        )
+        .order_by(SignalSnapshot.captured_at.desc())
+        .limit(1)
+    )
 
 
 def latest_cv(session: Session, event_id: int) -> CvEventSnapshot | None:
-    return session.scalar(select(CvEventSnapshot).where(CvEventSnapshot.event_id == event_id)
-                          .order_by(CvEventSnapshot.captured_at.desc()).limit(1))
+    return session.scalar(
+        select(CvEventSnapshot)
+        .where(CvEventSnapshot.event_id == event_id)
+        .order_by(CvEventSnapshot.captured_at.desc())
+        .limit(1)
+    )
 
 
 def calendar_points(night: date, cal: dict[str, Any]) -> tuple[int, str]:
@@ -134,8 +159,14 @@ def calendar_points(night: date, cal: dict[str, Any]) -> tuple[int, str]:
 
 # ------------------------------------------------------------ core
 
-def score_event(session: Session, ev: Event, now: datetime | None = None,
-                w: dict[str, Any] | None = None, cal: dict[str, Any] | None = None) -> ScoreResult:
+
+def score_event(
+    session: Session,
+    ev: Event,
+    now: datetime | None = None,
+    w: dict[str, Any] | None = None,
+    cal: dict[str, Any] | None = None,
+) -> ScoreResult:
     now = now or utcnow()
     w = w or weights()
     cal = cal or load_yaml("calendar.yaml")
@@ -189,25 +220,41 @@ def score_event(session: Session, ev: Event, now: datetime | None = None,
     # tier_velocity
     tv = c["tier_velocity"]
     sold = tiers_sold_in_window(session, ev.id, now, tv["window_days"])
-    comp["tier_velocity"] = {"points": tv["two_or_more"] if sold >= 2 else tv["one"] if sold == 1 else tv["zero"],
-                             "tiers_sold_7d": sold}
+    comp["tier_velocity"] = {
+        "points": tv["two_or_more"] if sold >= 2 else tv["one"] if sold == 1 else tv["zero"],
+        "tiers_sold_7d": sold,
+    }
     # brand_tier
     bt = c["brand_tier"]
-    comp["brand_tier"] = {"points": {1: bt["tier1"], 2: bt["tier2"]}.get(brand_tier, bt.get("tier3", 0)),
-                          "tier": brand_tier, "brand": brand.name if brand else None}
+    comp["brand_tier"] = {
+        "points": {1: bt["tier1"], 2: bt["tier2"]}.get(brand_tier, bt.get("tier3", 0)),
+        "tier": brand_tier,
+        "brand": brand.name if brand else None,
+    }
     # cv_book
     cb = c["cv_book"]
     cv = latest_cv(session, ev.id)
     face = ev.face_value_cents
-    if cv and face and cv.highest_bid_cents is not None and cv.highest_bid_cents >= face and (
-            cv.ask_count is not None and cv.bid_count is not None and cv.ask_count <= cv.bid_count):
+    if (
+        cv
+        and face
+        and cv.highest_bid_cents is not None
+        and cv.highest_bid_cents >= face
+        and (cv.ask_count is not None and cv.bid_count is not None and cv.ask_count <= cv.bid_count)
+    ):
         cvp, cvwhy = cb["strong"], "bid >= face and asks <= bids"
     elif cv and face and cv.highest_bid_cents is not None and cv.highest_bid_cents >= cb["near_face_ratio"] * face:
         cvp, cvwhy = cb["near_face"], f"bid >= {cb['near_face_ratio']}x face"
     else:
         cvp, cvwhy = cb["weak"], "weak/no book" if cv else "no CrowdVolt snapshot"
-    comp["cv_book"] = {"points": cvp, "why": cvwhy, "highest_bid": cv.highest_bid_cents if cv else None,
-                       "face": face, "asks": cv.ask_count if cv else None, "bids": cv.bid_count if cv else None}
+    comp["cv_book"] = {
+        "points": cvp,
+        "why": cvwhy,
+        "highest_bid": cv.highest_bid_cents if cv else None,
+        "face": face,
+        "asks": cv.ask_count if cv else None,
+        "bids": cv.bid_count if cv else None,
+    }
     # scarcity_event
     comp["scarcity_event"] = {"points": c["scarcity_event"]["flagged"] if ev.scarcity_flag else 0}
     # competing_supply
@@ -233,17 +280,34 @@ def has_same_night_tier1(session: Session, ev: Event) -> bool:
     assert ev.starts_at is not None
     night = local_night(ev.starts_at)
     lo, hi = ev.starts_at - timedelta(days=1), ev.starts_at + timedelta(days=1)
-    rows = session.execute(select(Event).join(Brand, Brand.id == Event.brand_id).where(
-        Event.id != ev.id, Event.merged_into_id.is_(None), Brand.tier == 1,
-        Event.starts_at >= lo, Event.starts_at <= hi, Event.status != EventStatus.CANCELLED))
+    rows = session.execute(
+        select(Event)
+        .join(Brand, Brand.id == Event.brand_id)
+        .where(
+            Event.id != ev.id,
+            Event.merged_into_id.is_(None),
+            Brand.tier == 1,
+            Event.starts_at >= lo,
+            Event.starts_at <= hi,
+            Event.status != EventStatus.CANCELLED,
+        )
+    )
     return any(o.starts_at is not None and local_night(o.starts_at) == night for (o,) in rows)
 
 
 def events_to_score(session: Session, now: datetime, days_ahead: int = 60) -> list[Event]:
-    return list(session.scalars(select(Event).where(
-        Event.merged_into_id.is_(None), Event.starts_at.is_not(None),
-        Event.starts_at >= now - timedelta(hours=12), Event.starts_at <= now + timedelta(days=days_ahead))
-        .order_by(Event.starts_at)))
+    return list(
+        session.scalars(
+            select(Event)
+            .where(
+                Event.merged_into_id.is_(None),
+                Event.starts_at.is_not(None),
+                Event.starts_at >= now - timedelta(hours=12),
+                Event.starts_at <= now + timedelta(days=days_ahead),
+            )
+            .order_by(Event.starts_at)
+        )
+    )
 
 
 def score_all(session: Session, now: datetime | None = None) -> list[ScoreResult]:
@@ -252,8 +316,18 @@ def score_all(session: Session, now: datetime | None = None) -> list[ScoreResult
     out = []
     for ev in events_to_score(session, now):
         r = score_event(session, ev, now, w, cal)
-        session.add(Score(event_id=ev.id, scored_at=now, gates_passed=r.gates_passed, gate_failures=r.gate_failures,
-                          score=r.score, components=r.components, days_to_event=r.days_to_event, note=r.note))
+        session.add(
+            Score(
+                event_id=ev.id,
+                scored_at=now,
+                gates_passed=r.gates_passed,
+                gate_failures=r.gate_failures,
+                score=r.score,
+                components=r.components,
+                days_to_event=r.days_to_event,
+                note=r.note,
+            )
+        )
         out.append(r)
     session.flush()
     return out
@@ -261,6 +335,10 @@ def score_all(session: Session, now: datetime | None = None) -> list[ScoreResult
 
 def latest_scores(session: Session) -> list[tuple[Event, Score]]:
     sub = select(Score.event_id, func.max(Score.id).label("mid")).group_by(Score.event_id).subquery()
-    rows = session.execute(select(Event, Score).join(sub, sub.c.event_id == Event.id)
-                           .join(Score, Score.id == sub.c.mid).where(Event.merged_into_id.is_(None)))
+    rows = session.execute(
+        select(Event, Score)
+        .join(sub, sub.c.event_id == Event.id)
+        .join(Score, Score.id == sub.c.mid)
+        .where(Event.merged_into_id.is_(None))
+    )
     return [(e, s) for e, s in rows]

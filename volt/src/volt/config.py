@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # The user explicitly accepted overriding CrowdVolt's robots.txt (see docs/DECISIONS.md D-002).
     crowdvolt_ignore_robots: bool = True
     crowdvolt_headless: bool = True
+    # Optional path to a Chromium binary (only needed when Playwright's own download isn't available).
+    chromium_executable: str | None = None
 
     telegram_bot_token: SecretStr | None = None
     telegram_allowed_chat_ids: list[int] = Field(default_factory=list)

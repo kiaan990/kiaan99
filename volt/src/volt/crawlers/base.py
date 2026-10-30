@@ -23,7 +23,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 import httpx
 from sqlalchemy.orm import Session
@@ -32,7 +32,6 @@ from volt.config import Settings, get_settings
 from volt.db import CrawlRun, RawCapture, session_scope, utcnow
 
 log = logging.getLogger("volt.crawl")
-T = TypeVar("T")
 
 
 class RobotsDisallowed(Exception):
@@ -115,8 +114,13 @@ class ResponseCache:
 class Politeness:
     """Per-site gatekeeper shared by httpx and Playwright fetches."""
 
-    def __init__(self, site: str, settings: Settings | None = None, ignore_robots: bool = False,
-                 sleep: Callable[[float], None] = time.sleep):
+    def __init__(
+        self,
+        site: str,
+        settings: Settings | None = None,
+        ignore_robots: bool = False,
+        sleep: Callable[[float], None] = time.sleep,
+    ):
         self.site = site
         self.s = settings or get_settings()
         self.ignore_robots = ignore_robots
@@ -134,8 +138,9 @@ class Politeness:
         if rp is None:
             rp = urllib.robotparser.RobotFileParser()
             try:
-                r = httpx.get(origin + "/robots.txt", headers={"User-Agent": self.s.user_agent},
-                              timeout=20, follow_redirects=True)
+                r = httpx.get(
+                    origin + "/robots.txt", headers={"User-Agent": self.s.user_agent}, timeout=20, follow_redirects=True
+                )
                 rp.parse(r.text.splitlines() if r.status_code == 200 else [])
             except httpx.HTTPError:
                 rp.parse([])  # unreachable robots.txt: treat as no rules
@@ -153,8 +158,9 @@ class Politeness:
         self._last_load = time.time()
 
 
-def with_backoff(fn: Callable[[], T], retries: int, base: float = 2.0,
-                 sleep: Callable[[float], None] = time.sleep) -> T:
+def with_backoff[T](
+    fn: Callable[[], T], retries: int, base: float = 2.0, sleep: Callable[[float], None] = time.sleep
+) -> T:
     attempt = 0
     while True:
         try:
@@ -163,7 +169,7 @@ def with_backoff(fn: Callable[[], T], retries: int, base: float = 2.0,
             attempt += 1
             if attempt > retries:
                 raise
-            wait = base ** attempt + random.uniform(0, 1)
+            wait = base**attempt + random.uniform(0, 1)
             log.warning("fetch failed (%s); retry %d/%d in %.1fs", e, attempt, retries, wait)
             sleep(wait)
 
@@ -262,14 +268,18 @@ def crawl_run(site: str, *, force: bool = False, debug_dump: bool = False) -> It
 class HttpFetcher:
     """Polite httpx client for RA and Dice."""
 
-    def __init__(self, site: str, ctx: CrawlContext | None = None, settings: Settings | None = None,
-                 ignore_robots: bool = False):
+    def __init__(
+        self, site: str, ctx: CrawlContext | None = None, settings: Settings | None = None, ignore_robots: bool = False
+    ):
         self.s = settings or get_settings()
         self.ctx = ctx
         self.pol = Politeness(site, self.s, ignore_robots=ignore_robots)
         self.last_from_cache = False
-        self.client = httpx.Client(headers={"User-Agent": self.s.user_agent, "Accept-Language": "en-US,en;q=0.9"},
-                                   timeout=30, follow_redirects=True)
+        self.client = httpx.Client(
+            headers={"User-Agent": self.s.user_agent, "Accept-Language": "en-US,en;q=0.9"},
+            timeout=30,
+            follow_redirects=True,
+        )
 
     def _request(self, method: str, url: str, cache_key: str, force: bool, **kw: Any) -> str:
         if not force:
