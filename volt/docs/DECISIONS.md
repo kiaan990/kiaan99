@@ -110,3 +110,10 @@ Dated 2026-10-30 unless noted. Each entry: what was decided and why.
   existing Next.js app.
 * **D-027** `CHROMIUM_EXECUTABLE` (optional) points Playwright at a specific Chromium binary; normally
   `uv run playwright install chromium` is enough.
+
+## Deployment
+
+* **D-028 (2026-10-30)** Owner chose "run locally for now": the host is the owner's Mac Mini, running a
+  per-user launchd agent (`deploy/install-macos.sh`) with `CROWDVOLT_HEADLESS=false`. The cloud build
+  session could not reach that Mac, so the owner installs it and confirms the first scheduled run in
+  `logs/volt.log`.

@@ -27,7 +27,19 @@ sudo systemctl enable --now volt
 journalctl -u volt -f               # or: tail -f logs/volt.log
 ```
 
-### nohup (macOS or no root)
+### macOS launchd (recommended on a Mac: survives reboots)
+
+```bash
+echo "CROWDVOLT_HEADLESS=false" >> .env   # a visible browser window passes Cloudflare more reliably
+deploy/install-macos.sh
+tail -f logs/volt.log
+```
+
+Keep the Mac awake (System Settings → Energy → "Prevent automatic sleeping"), and stay logged in:
+a launchd agent runs only while your user session is active.
+Stop: `launchctl bootout gui/$(id -u)/com.volt.scheduler`.
+
+### nohup (no reboot survival)
 
 ```bash
 deploy/start-nohup.sh               # writes logs/nohup.out and logs/volt.pid
